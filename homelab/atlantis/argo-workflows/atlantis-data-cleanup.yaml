@@ -1,0 +1,122 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: atlantis-data-cleanup
+spec:
+  schedules:
+    - "0 2 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 7
+  workflowSpec:
+    entrypoint: main
+    serviceAccountName: atlantis-workflows
+    podMetadata:
+      labels:
+        network-policy/allow-internal-s3-traffic: apply
+        network-policy/allow-kube-apiserver-traffic: apply
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+      runAsGroup: 1000
+      runAsUser: 1000
+    artifactGC:
+      strategy: OnWorkflowDeletion
+      serviceAccountName: atlantis-workflows
+      podMetadata:
+        labels:
+          network-policy/allow-internal-s3-traffic: apply
+          network-policy/allow-kube-apiserver-traffic: apply
+    onExit: exit-handler
+    templates:
+      - name: main
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        dag:
+          tasks:
+            - name: scale-down
+              arguments:
+                parameters:
+                  - name: name
+                    value: atlantis
+                  - name: replicaCount
+                    value: "0"
+                  - name: type
+                    value: statefulset
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+            - name: clean-data
+              dependencies:
+                - scale-down
+              template: clean-data
+
+      - name: clean-data
+        volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: atlantis-data
+        serviceAccountName: atlantis-workflows
+        securityContext:
+          runAsUser: 100
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        container:
+          image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+          securityContext:
+            runAsUser: 100
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /atlantis-data
+              name: data
+          command:
+            - sh
+            - -c
+          args:
+            - |
+              set -eu
+
+              rm -rf /atlantis-data/plugin-cache/*
+              rm -rf /atlantis-data/repos/*
+              rm -rf /atlantis-data/bin/*
+
+      - name: exit-handler
+        serviceAccountName: atlantis-workflows
+        automountServiceAccountToken: true
+        dag:
+          tasks:
+            - name: scale-up
+              arguments:
+                parameters:
+                  - name: name
+                    value: atlantis
+                  - name: replicaCount
+                    value: "1"
+                  - name: type
+                    value: statefulset
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault

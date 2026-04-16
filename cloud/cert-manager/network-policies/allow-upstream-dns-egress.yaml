@@ -1,0 +1,21 @@
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: allow-upstream-dns-egress
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app.kubernetes.io/component: controller
+#       app.kubernetes.io/instance: cert-manager
+#       app.kubernetes.io/name: cert-manager
+#   policyTypes:
+#     - Egress
+#   egress:
+#     - to:
+#         - ipBlock:
+#             cidr: 8.8.8.8/32
+#         - ipBlock:
+#             cidr: 1.1.1.1/32
+#       ports:
+#         - port: 53

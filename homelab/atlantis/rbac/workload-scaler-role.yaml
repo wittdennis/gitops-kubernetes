@@ -1,0 +1,21 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workload-scaler
+rules:
+  - verbs:
+      - get
+    resources:
+      - deployments
+      - statefulsets
+    apiGroups:
+      - apps
+  - verbs:
+      - patch
+      - update
+    resources:
+      - deployments/scale
+      - statefulsets/scale
+    apiGroups:
+      - apps

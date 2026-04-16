@@ -1,0 +1,58 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-traefik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: traefik
+  source:
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 39.0.7
+    chart: traefik
+    helm:
+      releaseName: traefik
+      valuesObject:
+        deployment:
+          kind: DaemonSet
+        api:
+          dashboard: true
+          insecure: true
+        gateway:
+          enabled: false
+        gatewayClass:
+          enabled: true
+        metrics:
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+        ocsp:
+          enabled: true
+        ports:
+          web:
+            port: 80
+            proxyProtocol:
+              trustedIPs:
+                - 10.0.10.15/32
+                - 2a02:908:a37:fb80::19/128
+          websecure:
+            port: 443
+            http3:
+              enabled: true
+            proxyProtocol:
+              trustedIPs:
+                - 10.0.10.15/32
+                - 2a02:908:a37:fb80::19/128
+        providers:
+          kubernetesGateway:
+            enabled: true
+            experimentalChannel: true

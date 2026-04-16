@@ -1,0 +1,49 @@
+# ---
+# apiVersion: cilium.io/v2
+# kind: CiliumNetworkPolicy
+# metadata:
+#   name: allow-cert-manager-kube-apiserver-egress
+# spec:
+#   endpointSelector:
+#     matchExpressions:
+#       - key: app.kubernetes.io/instance
+#         operator: In
+#         values:
+#           - cert-manager
+#       - key: app.kubernetes.io/component
+#         operator: In
+#         values:
+#           - cainjector
+#           - webhook
+#           - controller
+#           - startupapicheck
+#   egress:
+#     - toEntities:
+#         - kube-apiserver
+#       toPorts:
+#         - ports:
+#             - port: "443"
+#               protocol: TCP
+# ---
+# apiVersion: cilium.io/v2
+# kind: CiliumNetworkPolicy
+# metadata:
+#   name: allow-trust-manager-kube-apiserver-egress
+# spec:
+#   endpointSelector:
+#     matchExpressions:
+#       - key: app.kubernetes.io/instance
+#         operator: In
+#         values:
+#           - trust-manager
+#       - key: app.kubernetes.io/name
+#         operator: In
+#         values:
+#           - trust-manager
+#   egress:
+#     - toEntities:
+#         - kube-apiserver
+#       toPorts:
+#         - ports:
+#             - port: "443"
+#               protocol: TCP

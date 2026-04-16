@@ -1,0 +1,94 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-cilium
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: cloud
+    namespace: kube-system
+  ignoreDifferences:
+    - kind: Secret
+      name: cilium-ca
+      namespace: kube-system
+      jsonPointers:
+        - /data/ca.crt
+        - /data/ca.key
+    - kind: Secret
+      name: hubble-relay-client-certs
+      namespace: kube-system
+      jsonPointers:
+        - /data/ca.crt
+        - /data/tls.crt
+        - /data/tls.key
+    - kind: Secret
+      name: hubble-server-certs
+      namespace: kube-system
+      jsonPointers:
+        - /data/ca.crt
+        - /data/tls.crt
+        - /data/tls.key
+  source:
+    repoURL: https://helm.cilium.io
+    targetRevision: 1.19.3
+    chart: cilium
+    helm:
+      releaseName: cilium
+      valuesObject:
+        encryption:
+          enabled: true
+          type: wireguard
+          nodeEncryption: true
+        # routingMode: native
+        # ipv4NativeRoutingCIDR: "10.0.0.0/8"
+        kubeProxyReplacement: true
+        k8sServiceHost: "k8s.derwitt.dev"
+        k8sServicePort: "443"
+        hubble:
+          enabled: true
+          relay:
+            enabled: true
+          metrics:
+            enabled:
+              - dns:query;ignoreAAAA
+              - drop
+              - tcp
+              - flow
+              - icmp
+              - http
+            serviceMonitor:
+              enabled: true
+            dashboards:
+              enabled: true
+              namespace: victoria-metrics-stack
+          ui:
+            enabled: true
+        # loadBalancer:
+        #   mode: dsr
+        #   dsrDispatch: opt
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        # ipam:
+        #   mode: "cluster-pool"
+        #   operator:
+        #     clusterPoolIPv4PodCIDRList: ["10.128.0.0/16"]
+        #     clusterPoolIPv4MaskSize: 24
+        dashboards:
+          enabled: true
+          namespace: victoria-metrics-stack
+        envoy:
+          prometheus:
+            enabled: true
+            serviceMonitor:
+              enabled: true

@@ -1,0 +1,165 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: offload-postgres-backups
+spec:
+  schedules:
+    - "22 2 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 1
+  workflowSpec:
+    entrypoint: main
+    volumeClaimTemplates: # define volume, same syntax as k8s Pod spec
+      - metadata:
+          name: workdir # name of volume claim
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          storageClassName: proxmox-data
+          resources:
+            requests:
+              storage: 50Gi
+    podMetadata:
+      labels:
+        network-policy/allow-default-tenant-s3-traffic: apply
+        network-policy/allow-kube-apiserver-traffic: apply
+        network-policy/allow-backup-egress: apply
+    artifactGC:
+      strategy: OnWorkflowDeletion
+      serviceAccountName: storage-workflows
+      podMetadata:
+        labels:
+          network-policy/allow-default-tenant-s3-traffic: apply
+          network-policy/allow-kube-apiserver-traffic: apply
+    serviceAccountName: storage-workflows
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    volumes:
+      - name: tmp
+        emptyDir: {}
+    templates:
+      - name: main
+        dag:
+          tasks:
+            - name: retrieve-postgres-backups
+              template: retrieve-db-backups
+
+            - name: upload-backups
+              dependencies: [retrieve-postgres-backups]
+              template: restic
+
+      - name: retrieve-db-backups
+        container:
+          image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+          volumeMounts:
+            - name: workdir
+              mountPath: /mnt/vol
+          workingDir: /mnt/vol
+          command: [sh, -c]
+          args:
+            - |
+              #!/bin/sh
+              set -eu
+
+              S3_PREFIX="s3://postgres-backups"
+              ARCHIVE_NAME="postgres-backups.tar.xz"
+              mkdir backups
+
+              echo "Downloading from ${S3_PREFIX} ..."
+              aws s3 cp --recursive "$S3_PREFIX" backups
+
+              ls -la .
+
+              echo "Creating archive ${ARCHIVE_NAME} ..."
+              tar -cJf "$ARCHIVE_NAME" -C backups .
+
+              echo "Done: ${ARCHIVE_NAME}"
+              du -sch ${ARCHIVE_NAME}
+          env:
+            - name: AWS_DEFAULT_REGION
+              value: homelab
+            - name: AWS_ENDPOINT_URL
+              value: http://homelab-garage-headless.storage.svc.cluster.local:3900
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backups-read-credentials
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backups-read-credentials
+                  key: secret-key
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+
+      - name: restic
+        container:
+          image: restic/restic:0.18.1 # renovate
+          command: [sh, -c]
+          workingDir: /mnt/vol
+          args:
+            - |
+              restic init --no-cache || true
+              restic backup --no-cache --host postgres-backups /mnt/vol/postgres-backups.tar.xz
+              restic forget --no-cache --host postgres-backups --keep-last 1 --prune
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backups-backup-settings
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backups-backup-settings
+                  key: secret-key
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backups-backup-settings
+                  key: restic-password
+            - name: RESTIC_REPOSITORY
+              value: s3:https://nbg1.your-objectstorage.com/pseud0random-backups/postgres-backups
+          volumeMounts:
+            - name: workdir
+              mountPath: /mnt/vol
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault

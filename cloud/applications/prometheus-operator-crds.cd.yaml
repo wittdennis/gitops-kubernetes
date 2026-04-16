@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-prometheus-operator-crds
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: cloud
+    namespace: victoria-metrics-stack
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 28.0.1
+    chart: prometheus-operator-crds
+    helm:
+      releaseName: prometheus-operator-crds

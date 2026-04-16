@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-argo-workflows-resources
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: argo-workflows
+  source:
+    repoURL: https://github.com/wittdennis/k8s-platform
+    targetRevision: HEAD
+    path: "cloud/argo-workflows"
+    directory:
+      recurse: true

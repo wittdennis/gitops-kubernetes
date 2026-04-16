@@ -1,0 +1,24 @@
+---
+extends: default
+ignore:
+  - .forgejo
+  - .pre-commit-config.yaml
+rules:
+  line-length:
+    max: 240
+    level: warning
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation:
+    level: warning
+  braces:
+    max-spaces-inside: 1
+    max-spaces-inside-empty: 0
+  octal-values:
+    forbid-explicit-octal: false
+    forbid-implicit-octal: true
+  document-start:
+    level: error
+  key-duplicates:
+    forbid-duplicated-merge-keys: true
+    level: error

@@ -1,0 +1,25 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: workflow-executor
+rules:
+  - verbs:
+      - create
+      - patch
+    resources:
+      - workflowtaskresults
+    apiGroups:
+      - argoproj.io
+  - verbs:
+      - list
+    resources:
+      - workflowartifactgctasks
+    apiGroups:
+      - argoproj.io
+  - verbs:
+      - patch
+    resources:
+      - workflowartifactgctasks/status
+    apiGroups:
+      - argoproj.io

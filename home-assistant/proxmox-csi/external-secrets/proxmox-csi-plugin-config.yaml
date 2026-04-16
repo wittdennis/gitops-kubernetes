@@ -1,0 +1,19 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: proxmox-csi-plugin-config
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: proxmox-csi-plugin-config
+    creationPolicy: Owner
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /proxmox-csi/config
+        property: config.yaml
+      secretKey: config.yaml

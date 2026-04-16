@@ -1,0 +1,146 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: renovate
+spec:
+  schedules:
+    - "15 6-19/2 * * 1-5"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 10
+  workflowSpec:
+    entrypoint: renovate
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    artifactGC:
+      strategy: OnWorkflowDeletion
+      serviceAccountName: renovate
+      podSpecPatch: |
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+    arguments:
+      parameters:
+        - name: log-level
+          default: info
+          description: Log Level for renovate
+          value: info
+    templates:
+      - name: renovate
+        inputs:
+          parameters:
+            - name: log-level
+        steps:
+          - - name: generate-token
+              template: get-token
+          - - name: execute
+              template: run
+              arguments:
+                parameters:
+                  - name: token
+                    value: "{{steps.generate-token.outputs.result}}"
+                  - name: log-level
+                    value: "{{inputs.parameters.log-level}}"
+      - name: get-token
+        serviceAccountName: renovate
+        securityContext:
+          fsGroup: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
+          runAsNonRoot: true
+          fsGroupChangePolicy: "OnRootMismatch"
+          seccompProfile:
+            type: RuntimeDefault
+        container:
+          image: denniswitt/github-app:0.2.2 # renovate
+          args:
+            - generate-token
+            - installation
+            - "51564359"
+            - --config
+            - /config/config.yaml
+          volumeMounts:
+            - mountPath: "/tmp"
+              name: tmp
+            - name: config
+              mountPath: "/config"
+              readOnly: true
+          securityContext:
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+        volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: config
+            secret:
+              secretName: github-app-config
+              defaultMode: 0o420
+
+      - name: run
+        inputs:
+          parameters:
+            - name: token
+            - name: log-level
+        serviceAccountName: renovate
+        securityContext:
+          fsGroup: 0
+          runAsGroup: 0
+          runAsUser: 0
+          runAsNonRoot: false
+          fsGroupChangePolicy: "OnRootMismatch"
+          seccompProfile:
+            type: RuntimeDefault
+        container:
+          image: ghcr.io/renovatebot/renovate:43.125.1 # renovate
+          env:
+            - name: RENOVATE_TOKEN
+              value: "{{inputs.parameters.token}}"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: LOG_LEVEL
+              value: "{{inputs.parameters.log-level}}"
+          envFrom:
+            - secretRef:
+                name: renovate-env
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: renovate-config
+              mountPath: /opt/renovate/
+            - name: renovate-cache
+              mountPath: /renovate-cache
+          securityContext:
+            runAsGroup: 0
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            readOnlyRootFilesystem: false # needed for dynamic tool download
+            runAsNonRoot: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+            seccompProfile:
+              type: RuntimeDefault
+        volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: renovate-cache
+            emptyDir: {}
+          - name: renovate-config
+            configMap:
+              name: renovate-config

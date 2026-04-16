@@ -1,0 +1,111 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-vertical-pod-autoscaler
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: Secret
+      name: vertical-pod-autoscaler-admission-controller-tls
+      namespace: vertical-pod-autoscaler
+      jsonPointers:
+        - /data/ca.crt
+        - /data/tls.crt
+        - /data/tls.key
+    - kind: Deployment
+      group: apps
+      name: vertical-pod-autoscaler-admission-controller
+      namespace: vertical-pod-autoscaler
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1tls-secret
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: vertical-pod-autoscaler
+  source:
+    repoURL: https://cowboysysop.github.io/charts/
+    targetRevision: 11.1.1
+    chart: vertical-pod-autoscaler
+    helm:
+      releaseName: vertical-pod-autoscaler
+      values: |
+
+        admissionController:
+          podSecurityContext:
+            fsGroup: 2000
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          metrics:
+            serviceMonitor:
+              enabled: true
+        recommender:
+          podSecurityContext:
+            fsGroup: 2000
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          metrics:
+            serviceMonitor:
+              enabled: true
+        updater:
+          podSecurityContext:
+            fsGroup: 2000
+            runAsNonRoot: true
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+          metrics:
+            serviceMonitor:
+              enabled: true
+        crds:
+          podSecurityContext:
+            fsGroup: 2000
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false

@@ -1,0 +1,47 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-external-dns
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: external-dns
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns/
+    targetRevision: 1.20.0
+    chart: external-dns
+    helm:
+      releaseName: external-dns
+      values: |
+
+        serviceMonitor:
+          enabled: true
+        logFormat: json
+        logLevel: warning
+        interval: 1m # interval for dns updates
+        registry: txt
+        txtOwnerId: cluster@hetzner
+        sources:
+          - ingress
+        provider:
+          name: cloudflare
+        env:
+          - name: CF_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-provider-config
+                key: api-key
+        resources:
+          requests:
+            cpu: 10m
+            memory: 113Mi
+          limits:
+            memory: 113Mi

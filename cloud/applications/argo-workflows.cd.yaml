@@ -1,0 +1,139 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-argo-workflows
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: argo-workflows
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 1.0.10
+    chart: argo-workflows
+    helm:
+      releaseName: argo-workflows
+      values: |
+
+        workflow:
+          serviceAccount:
+            create: true
+        artifactRepositoryRef:
+          artifact-repositories:
+            annotations:
+              workflows.argoproj.io/default-artifact-repository: default-s3-artifact-repository
+            default-s3-artifact-repository:
+              archiveLogs: true
+              s3:
+                accessKeySecret:
+                  name: argo-workflows
+                  namespace: argo-workflows
+                  key: access-key
+                secretKeySecret:
+                  name: argo-workflows
+                  namespace: argo-workflows
+                  key: secret-key
+                bucket: workflows
+                insecure: true
+                endpoint: cloud-garage-default-headless.storage.svc.cluster.local:3900
+        controller:
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+          metricsConfig:
+            enabled: true
+          serviceMonitor:
+            enabled: true
+          podSecurityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          logging:
+            format: json
+          workflowDefaults:
+            spec:
+              ttlStrategy:
+                secondsAfterSuccess: 86400
+                secondsAfterFailure: 345600
+              artifactRepositoryRef:
+                configMap: artifact-repositories
+        executor:
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+        server:
+          authModes:
+            - sso
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+          logging:
+            format: json
+          podSecurityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+          sso:
+            enabled: true
+            issuer: https://auth.derwitt.site/application/o/argo-workflows/
+            clientId:
+              name: argo-workflows-oidc
+              key: client-id
+            clientSecret:
+              name: argo-workflows-oidc
+              key: client-secret
+            redirectUrl: https://workflows.derwitt.dev/oauth2/callback
+            rbac:
+              enabled: false
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-vpn-ip-allow@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+              external-dns.alpha.kubernetes.io/target: 172.30.0.7, 2a01:4f8:c012:f0b3:ac1e::7
+            hosts:
+              - workflows.derwitt.dev
+            tls:
+              - secretName: argo-workflows-ingress-tls
+                hosts:
+                  - workflows.derwitt.dev

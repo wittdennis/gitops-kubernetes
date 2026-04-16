@@ -1,0 +1,111 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-authentik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: authentik
+  source:
+    repoURL: https://charts.goauthentik.io
+    targetRevision: 2026.2.2
+    chart: authentik
+    helm:
+      releaseName: authentik
+      valuesObject:
+        global:
+          # pod security context for all pods
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+        authentik:
+          postgresql:
+            host: authentik-postgres-rw.authentik.svc.cluster.local
+            user: file:///postgres-creds/username
+            password: file:///postgres-creds/password
+          email:
+            host: smtp.protonmail.ch
+            username: auth@derwitt.site
+            password: file:///email-settings/password
+            use_tls: true
+            port: 587
+            from: "Derwitt Auth <auth@derwitt.site>"
+        server:
+          env:
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret-key
+                  key: secret-key
+          containerSecurityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          volumes:
+            - name: postgres-creds
+              secret:
+                secretName: authentik-postgres-app
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /postgres-creds
+              readOnly: true
+          route:
+            main:
+              enabled: true
+              parentRefs:
+                - group: gateway.networking.k8s.io
+                  kind: Gateway
+                  name: derwitt-site-gateway
+                  namespace: traefik
+                  sectionName: https-auth-routes
+              hostnames:
+                - auth.derwitt.site
+        worker:
+          env:
+            - name: AUTHENTIK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-secret-key
+                  key: secret-key
+          containerSecurityContext:
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop:
+                - ALL
+          volumes:
+            - name: postgres-creds
+              secret:
+                secretName: authentik-postgres-app
+            - name: email-settings
+              secret:
+                secretName: authentik-email-settings
+          volumeMounts:
+            - name: postgres-creds
+              mountPath: /postgres-creds
+              readOnly: true
+            - name: email-settings
+              mountPath: /email-settings
+              readOnly: true
+        postgresql:
+          enabled: false

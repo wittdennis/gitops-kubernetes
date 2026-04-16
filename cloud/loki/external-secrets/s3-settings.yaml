@@ -1,0 +1,25 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: s3-settings
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: s3-settings
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /loki/s3-settings
+        property: access-key
+      secretKey: access-key
+    - remoteRef:
+        conversionStrategy: Default
+        key: /loki/s3-settings
+        property: secret-key
+      secretKey: secret-key

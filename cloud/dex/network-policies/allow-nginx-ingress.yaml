@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-traefik-ingress
+spec:
+  podSelector:
+    matchLabels:
+      io.kubernetes.pod.namespace: dex
+      app.kubernetes.io/instance: dex
+      app.kubernetes.io/name: dex
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-traefik
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: traefik-traefik
+              app.kubernetes.io/name: traefik
+              io.kubernetes.pod.namespace: traefik
+      ports:
+        - port: 4141

@@ -1,0 +1,28 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: application-bootstraper
+  namespace: argocd
+spec:
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            argocd.argoproj.io/secret-type: cluster
+  template:
+    metadata:
+      name: "{{ nameNormalized }}-application-bootstraper"
+      annotations:
+        argocd.argoproj.io/sync-wave: "1"
+    spec:
+      project: k8s-platform
+      syncPolicy:
+        automated:
+          prune: true
+      source:
+        repoURL: https://github.com/wittdennis/k8s-platform
+        targetRevision: HEAD
+        path: "{{ nameNormalized }}/applications"
+      destination:
+        name: homelab

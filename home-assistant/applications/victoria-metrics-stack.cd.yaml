@@ -1,0 +1,452 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-victoria-metrics-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: Secret
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /data/admin-password
+    - kind: Deployment
+      group: apps
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1secret
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: home-assistant
+    namespace: victoria-metrics-stack
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts
+    targetRevision: 0.74.1
+    chart: victoria-metrics-k8s-stack
+    helm:
+      releaseName: vm-stack
+      values: |
+
+        argocdReleaseOverride: vm-stack
+
+        kubeControllerManager:
+          enabled: false
+
+        defaultRules:
+          rules:
+            RequestErrorsToAPI:
+              create: false
+          groups:
+            kubernetesSystemScheduler:
+              create: false
+            kubeScheduler:
+              create: false
+            vmagent:
+              create: false
+
+        victoria-metrics-operator:
+          enabled: false
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+              cpu: 50m
+
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+          securityContext:
+            fsGroup: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+
+        vmagent:
+          spec:
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 50m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmagent
+                resources:
+                  requests:
+                    cpu: 186m
+                    memory: 213Mi
+                  limits:
+                    memory: 213Mi
+                    cpu: 500m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            initContainers:
+              - name: config-init
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            externalLabels:
+              cluster: home-assistant
+          ingress:
+            enabled: false
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+            hosts:
+              - vmagent.home.derwitt.net
+            tls:
+              - secretName: vmagent-ingress-tls
+                hosts:
+                  - vmagent.home.derwitt.net
+
+        vmalert:
+          spec:
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100M
+                  limits:
+                    cpu: 50m
+                    memory: 100M
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmalert
+                resources:
+                  requests:
+                    cpu: 30m
+                    memory: 150Mi
+                  limits:
+                    memory: 150Mi
+                    cpu: 100m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+          ingress:
+            enabled: false
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+            hosts:
+              - vmalert.home.derwitt.net
+            tls:
+              - secretName: vmalert-ingress-tls
+                hosts:
+                  - vmalert.home.derwitt.net
+
+        vmsingle:
+          spec:
+            resources:
+              requests:
+                cpu: 822m
+                memory: 1710Mi
+              limits:
+                memory: 1710Mi
+                cpu: 1200m
+            securityContext:
+              runAsUser: 65534
+              fsGroup: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: vmsingle
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            storage:
+              accessModes:
+                - ReadWriteOnce
+              storageClassName: proxmox-data
+              resources:
+                requests:
+                  storage: 20Gi
+          ingress:
+            enabled: false
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+            hosts:
+              - metrics.home.derwitt.net
+            tls:
+              - secretName: victoria-ingress-tls
+                hosts:
+                  - metrics.home.derwitt.net
+
+        alertmanager:
+          enabled: true
+          spec:
+            image:
+              tag: v0.32.0 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
+            containers:
+              - name: alertmanager
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    cpu: 100m
+                    memory: 100Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 50m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            replicaCount: 2
+            useStrictSecurity: true
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 256Mi
+                  storageClassName: proxmox-data
+            secrets:
+              - pagerduty-routing-key
+              - healthchecks-io-watchdog-url
+          config:
+            templates:
+              - "/etc/vm/configs/**/*.tmpl"
+            inhibit_rules:
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = critical
+                target_matchers:
+                  - severity =~ warning|info
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = warning
+                target_matchers:
+                  - severity = info
+              - equal:
+                  - namespace
+                source_matchers:
+                  - alertname = InfoInhibitor
+                target_matchers:
+                  - severity = info
+            route:
+              group_by: [alertname, namespace]
+              receiver: blackhole
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 3h
+              routes:
+                - receiver: healthchecks_io
+                  group_wait: 10s
+                  repeat_interval: 5m
+                  match:
+                    alertname: Watchdog
+                - match:
+                    alertname: InfoInhibitor
+                  receiver: blackhole
+                - receiver: PagerDuty
+                  continue: false
+            receivers:
+              - name: blackhole
+              - name: healthchecks_io
+                webhook_configs:
+                  - url_file: /etc/vm/secrets/healthchecks-io-watchdog-url/url
+              - name: PagerDuty
+                pagerduty_configs:
+                  - routing_key_file: /etc/vm/secrets/pagerduty-routing-key/routing-key
+                    severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
+                    description: >-
+                      {{ .CommonLabels.cluster }}/{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}
+          ingress:
+            enabled: false
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+            hosts:
+              - alerts.home.derwitt.net
+            tls:
+              - secretName: alertmanager-ingress-tls
+                hosts:
+                  - alerts.home.derwitt.net
+
+        defaultDatasources:
+          extra:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc.cluster.local
+              uid: Loki
+              access: proxy
+              version: 1
+              orgId: 1
+              isDefault: false
+              editable: false
+              jsonData:
+                httpMethod: GET
+
+        grafana:
+          enabled: false
+          resources:
+            requests:
+              cpu: 14m
+              memory: 282Mi
+            limits:
+              cpu: 1000m
+              memory: 282Mi
+          sidecar:
+            dashboards:
+              enabled: true
+              searchNamespace: ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+                cpu: 100m
+          initChownData:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50Mi
+              limits:
+                cpu: 50m
+                memory: 50Mi
+          downloadDashboards:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 1000m
+                memory: 256Mi
+          envFromSecrets:
+            - name: grafana-oidc-credentials
+          plugins:
+            - grafana-clock-panel
+            - loki
+          grafana.ini:
+            server:
+              root_url: "https://graphs.home.derwitt.net"
+            auth.azuread:
+              name: "Azure AD"
+              enabled: true
+              allow_sign_up: true
+              auto_login: false
+              scopes: "openid email profile"
+              auth_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/authorize
+              token_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/token
+              allowed_domains: ""
+              allowed_groups: ""
+              allowed_organizations: "6ddad1f1-1d3f-43bf-ad7a-445edf40fd73"
+              role_attribute_strict: false
+              allow_assign_grafana_admin: true
+              skip_org_role_sync: false
+              use_pkce: true
+          ingress:
+            enabled: false
+            ingressClassName: nginx
+            annotations:
+              cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+            path: /
+            hosts:
+              - graphs.home.derwitt.net
+            tls:
+              - secretName: grafana-ingress-tls
+                hosts:
+                  - graphs.home.derwitt.net

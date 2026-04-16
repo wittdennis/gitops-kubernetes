@@ -1,0 +1,80 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-descheduler
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: kube-system
+  source:
+    repoURL: https://kubernetes-sigs.github.io/descheduler
+    targetRevision: 0.35.1
+    chart: descheduler
+    helm:
+      releaseName: descheduler
+      values: |
+
+        kind: Deployment
+        replicas: 3
+        leaderElection:
+          enabled: true
+        cmdOptions:
+          v: 3
+          logging-format: json
+        service:
+          enabled: true
+        serviceMonitor:
+         enabled: true
+        deschedulingInterval: 15m
+        deschedulerPolicy:
+          profiles:
+            - name: default
+              pluginConfig:
+                - name: DefaultEvictor
+                  args:
+                    ignorePvcPods: true
+                    evictLocalStoragePods: true
+                    nodeFit: true
+                    minReplicas: 2
+                - name: RemoveDuplicates
+                - name: RemovePodsHavingTooManyRestarts
+                  args:
+                    podRestartThreshold: 100
+                    includingInitContainers: true
+                - name: RemovePodsViolatingNodeAffinity
+                  args:
+                    nodeAffinityType:
+                      - requiredDuringSchedulingIgnoredDuringExecution
+                - name: RemovePodsViolatingNodeTaints
+                - name: RemovePodsViolatingInterPodAntiAffinity
+                - name: RemovePodsViolatingTopologySpreadConstraint
+                - name: LowNodeUtilization
+                  args:
+                    thresholds:
+                      cpu: 30
+                      memory: 30
+                      pods: 20
+                    targetThresholds:
+                      cpu: 70
+                      memory: 70
+                      pods: 100
+              plugins:
+                balance:
+                  enabled:
+                    - RemoveDuplicates
+                    - RemovePodsViolatingTopologySpreadConstraint
+                    - LowNodeUtilization
+                deschedule:
+                  enabled:
+                    - RemovePodsHavingTooManyRestarts
+                    - RemovePodsViolatingNodeTaints
+                    - RemovePodsViolatingNodeAffinity
+                    - RemovePodsViolatingInterPodAntiAffinity

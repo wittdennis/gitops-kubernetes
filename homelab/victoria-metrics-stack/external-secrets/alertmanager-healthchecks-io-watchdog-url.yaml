@@ -1,0 +1,19 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-healthchecks-io-watchdog-url
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: healthchecks-io-watchdog-url
+    creationPolicy: Owner
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /victoria-metrics-stack/alertmanager/healthchecks-io
+        property: url
+      secretKey: url

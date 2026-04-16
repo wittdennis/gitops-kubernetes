@@ -1,0 +1,15 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-world-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: atlantis
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"

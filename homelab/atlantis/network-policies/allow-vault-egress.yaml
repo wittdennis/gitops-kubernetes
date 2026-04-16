@@ -1,0 +1,19 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-vault-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: atlantis
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: hashicorp-vault
+            app.kubernetes.io/instance: vault
+            app.kubernetes.io/name: vault
+            component: server
+      toPorts:
+        - ports:
+            - port: "8200"

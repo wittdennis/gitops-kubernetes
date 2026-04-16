@@ -1,0 +1,50 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-linkwarden
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: linkwarden
+  source:
+    repoURL: https://charts.derwitt.dev
+    chart: linkwarden
+    targetRevision: 1.0.0
+    helm:
+      valuesObject:
+        linkwarden:
+          postgres:
+            existingSecret: linkwarden-postgres-app
+          meilisearch:
+            host: linkwarden-meilisearch.linkwarden.svc.cluster.local:7700
+            existingSecret: linkwarden-meilisearch-master-key
+          auth:
+            existingSecret: linkwarden-auth-secret
+            disableRegistration: true
+            disableCredentialLogin: true
+            authentik:
+              enabled: true
+              existingSecret: linkwarden-authentik-app
+              issuer: https://auth.derwitt.site/application/o/linkwarden
+              clientId: linkwarden
+              customName: "Login"
+          disablePreservation: true
+        persistence:
+          storageClass: proxmox-data
+        route:
+          enabled: true
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik
+          hostnames:
+            - links.derwitt.site

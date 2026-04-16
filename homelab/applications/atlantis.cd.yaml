@@ -1,0 +1,101 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-atlantis
+  namespace: argocd
+spec:
+  project: k8s-platform
+  destination:
+    name: homelab
+    namespace: atlantis
+  syncPolicy:
+    automated:
+      prune: true
+  source:
+    repoURL: https://runatlantis.github.io/helm-charts
+    chart: atlantis
+    targetRevision: 6.2.0
+    helm:
+      releaseName: atlantis
+      values: |
+
+        image:
+          repository: ghcr.io/wittdennis/atlantis
+          tag: 1.1.84 # renovate: datasource=docker depName=ghcr.io/wittdennis/atlantis versioning=docker
+        orgAllowlist: git.derwitt.site/homelab/terraform
+        logLevel: "warn"
+        gitea: {}
+        environment:
+          ATLANTIS_GITEA_USER: atlantis-bot
+          ATLANTIS_GITEA_BASE_URL: https://git.derwitt.site
+          ATLANTIS_WRITE_GIT_CREDS: "true"
+          ATLANTIS_EMOJI_REACTION: eyes
+          ATLANTIS_AUTODISCOVER_MODE: disabled
+          ATLANTIS_DISABLE_AUTOPLAN: "true"
+          ATLANTIS_SILENCE_ALLOWLIST_ERRORS: "true"
+          ATLANTIS_SILENCE_FORK_PR_ERRORS: "true"
+          ATLANTIS_SILENCE_NO_PROJECTS: "true"
+          ATLANTIS_SILENCE_VCS_STATUS_NO_PLANS: "true"
+          ATLANTIS_SILENCE_VCS_STATUS_NO_PROJECTS: "true"
+        environmentSecrets:
+          - name: ATLANTIS_GITEA_TOKEN
+            secretKeyRef:
+              name: atlantis-config
+              key: forgejo-user-token
+          - name: ATLANTIS_GITEA_WEBHOOK_SECRET
+            secretKeyRef:
+              name: atlantis-config
+              key: forgejo-webhook-secret
+        loadEnvFromSecrets:
+          - atlantis-environment
+        volumeClaim:
+          dataStorage: 5Gi
+          storageClassName: proxmox-data
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          runAsUser: 100
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+        statefulSet:
+          securityContext:
+            fsGroup: 1000
+            runAsUser: 100
+            runAsGroup: 1000
+            fsGroupChangePolicy: "OnRootMismatch"
+            seccompProfile:
+              type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 10m
+            memory: 50Mi
+          limits:
+            memory: 256Mi
+        service:
+          type: ClusterIP
+        ingress:
+          enabled: false
+        webhook_ingress:
+          enabled: false
+        route:
+          main:
+            enabled: true
+            hostnames:
+              - atlantis.derwitt.site
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+        repoConfig: |
+
+          repos:
+            - id: git.derwitt.site/homelab/terraform
+              apply_requirements: [mergeable]
+              allowed_overrides: [workflow]
+              allow_custom_workflows: true
+              delete_source_branch_on_merge: true

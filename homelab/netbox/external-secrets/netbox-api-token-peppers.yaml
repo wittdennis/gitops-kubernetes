@@ -1,0 +1,27 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: netbox-api-token-peppers
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: netbox-api-token-peppers
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        api-token-peppers.yaml: |
+          API_TOKEN_PEPPERS:
+            1: "{{ .pepper_1 }}"
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: netbox/token-peppers
+        property: "1"
+      secretKey: "pepper_1"

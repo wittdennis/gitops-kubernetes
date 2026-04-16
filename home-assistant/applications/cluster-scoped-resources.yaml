@@ -1,0 +1,23 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-cluster-scoped-resources
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: home-assistant
+  source:
+    repoURL: https://github.com/wittdennis/k8s-platform
+    targetRevision: HEAD
+    path: "home-assistant/cluster-scoped"
+    directory:
+      recurse: true

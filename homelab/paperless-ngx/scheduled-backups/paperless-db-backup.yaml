@@ -1,0 +1,15 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: paperless-ngx-db-backup
+spec:
+  schedule: "0 17 2 * * *" # At 2:17 every day
+  backupOwnerReference: self
+  cluster:
+    name: paperless-ngx-postgres
+  method: plugin
+  target: prefer-standby
+  immediate: true
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

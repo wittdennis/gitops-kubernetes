@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: scale-workload
+spec:
+  entrypoint: scale-workload
+  artifactGC:
+    strategy: OnWorkflowDeletion
+    serviceAccountName: atlantis-workflows
+    podMetadata:
+      labels:
+        network-policy/allow-internal-s3-traffic: apply
+        network-policy/allow-kube-apiserver-traffic: apply
+  podGC:
+    strategy: OnWorkflowSuccess
+  podMetadata:
+    labels:
+      network-policy/allow-kube-apiserver-traffic: apply
+      network-policy/allow-internal-s3-traffic: apply
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  arguments:
+    parameters:
+      - name: replicaCount
+      - name: name
+        default: atlantis
+      - name: type
+        default: statefulset
+  templates:
+    - name: scale-workload
+      serviceAccountName: atlantis-workflows
+      automountServiceAccountToken: true
+      inputs:
+        parameters:
+          - name: replicaCount
+          - name: name
+          - name: type
+      container:
+        image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          runAsGroup: 1000
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        command:
+          - sh
+          - -c
+        args:
+          - |
+            set -eu
+
+            kubectl scale --replicas={{inputs.parameters.replicaCount}} {{inputs.parameters.type}}/{{inputs.parameters.name}}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault

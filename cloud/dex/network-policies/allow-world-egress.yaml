@@ -1,0 +1,17 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-world-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      io.kubernetes.pod.namespace: dex
+      app.kubernetes.io/instance: dex
+      app.kubernetes.io/name: dex
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"

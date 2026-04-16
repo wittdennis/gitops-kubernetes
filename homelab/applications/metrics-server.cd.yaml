@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-metrics-server
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  ignoreDifferences:
+    - kind: APIService
+      group: apiregistration.k8s.io
+      name: v1beta1.metrics.k8s.io
+      jsonPointers:
+        - /spec/insecureSkipTLSVerify
+  destination:
+    name: homelab
+    namespace: kube-system
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server/
+    targetRevision: 3.13.0
+    chart: metrics-server
+    helm:
+      releaseName: metrics-server
+      valuesObject:
+        apiService:
+          insecureSkipTLSVerify: false
+        tls:
+          type: cert-manager

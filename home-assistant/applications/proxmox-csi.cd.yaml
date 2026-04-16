@@ -1,0 +1,43 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-proxmox-csi
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: home-assistant
+    namespace: proxmox-csi
+  source:
+    repoURL: oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
+    targetRevision: 0.5.7
+    path: "."
+    helm:
+      releaseName: proxmox-csi-plugin
+      valuesObject:
+        node:
+          nodeSelector:
+            node.cloudprovider.kubernetes.io/platform: metal
+          tolerations:
+            - operator: Exists
+
+        existingConfigSecret: proxmox-csi-plugin-config
+
+        storageClass:
+          - name: proxmox-data
+            storage: local-lvm
+            reclaimPolicy: Delete
+            fstype: xfs
+            mountOptions:
+              - discard
+
+        logVerbosityLevel: 5
+
+        metrics:
+          enabled: true

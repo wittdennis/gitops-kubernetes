@@ -1,0 +1,17 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: argo-workflows-rules
+spec:
+  groups:
+    - name: argo-workflows.rules
+      rules:
+        - alert: ArgoWorkflowFailed
+          annotations:
+            description: "An Argo-Workflow in namespace {{ $labels.exported_namespace }} has failed. Please investigate."
+            summary: Argo Workflow has failed.
+          expr: increase(argo_workflows_total_count{phase=~"(Error|Failed)"}[10m]) > 0
+          for: 5m
+          labels:
+            severity: warning

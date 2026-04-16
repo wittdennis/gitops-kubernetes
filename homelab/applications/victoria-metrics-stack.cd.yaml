@@ -1,0 +1,502 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-victoria-metrics-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: Secret
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /data/admin-password
+    - kind: Deployment
+      group: apps
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1secret
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: victoria-metrics-stack
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts
+    targetRevision: 0.74.1
+    chart: victoria-metrics-k8s-stack
+    helm:
+      releaseName: vm-stack
+      values: |
+
+        argocdReleaseOverride: vm-stack
+
+        # deployed with own helm chart to separate namespaces
+        victoria-metrics-operator:
+          enabled: false
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+              cpu: 50m
+
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+          securityContext:
+            fsGroup: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+
+        kubeScheduler:
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+        kubeControllerManager:
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                    serverName: localhost
+
+        kubeEtcd:
+          service:
+            selector:
+              component: kube-controller-manager
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                    certFile: /etcd-cert/client.crt
+                    keyFile: /etcd-cert/client.key
+
+        vmagent:
+          spec:
+            extraArgs:
+              promscrape.maxScrapeSize: "67108864"  # 64MB
+              enableTCP6: "true"
+            additionalScrapeConfigs:
+              name: additional-scrape-configs
+              key: additional.yaml
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            volumes:
+              - name: etcd-client-cert
+                secret:
+                  secretName: etcd-client-certificate
+                  items:
+                    - key: client.crt
+                      path: client.crt
+                    - key: client.key
+                      path: client.key
+              - name: netbox-api-token
+                secret:
+                  secretName: netbox-api-token
+                  items:
+                    - key: api-token
+                      path: api-token
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 50m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmagent
+                volumeMounts:
+                  - mountPath: /etcd-cert
+                    name: etcd-client-cert
+                  - mountPath: /netbox
+                    name: netbox-api-token
+                resources:
+                  requests:
+                    cpu: 186m
+                    memory: 213Mi
+                  limits:
+                    memory: 213Mi
+                    cpu: 500m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            initContainers:
+              - name: config-init
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            externalLabels:
+              cluster: home
+          route:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - vmagent.derwitt.site
+          ingress:
+            enabled: false
+
+        vmalert:
+          spec:
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100M
+                  limits:
+                    cpu: 50m
+                    memory: 100M
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmalert
+                resources:
+                  requests:
+                    cpu: 30m
+                    memory: 150Mi
+                  limits:
+                    memory: 150Mi
+                    cpu: 100m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+          ingress:
+            enabled: false
+
+        vmsingle:
+          spec:
+            extraArgs:
+              enableTCP6: "true"
+            resources:
+              requests:
+                cpu: 822m
+                memory: 1710Mi
+              limits:
+                memory: 1710Mi
+                cpu: 1200m
+            securityContext:
+              runAsUser: 65534
+              fsGroup: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: vmsingle
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            storage:
+              accessModes:
+                - ReadWriteOnce
+              storageClassName: proxmox-data
+              resources:
+                requests:
+                  storage: 20Gi
+          route:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - metrics.derwitt.site
+          ingress:
+            enabled: false
+
+        alertmanager:
+          enabled: true
+          spec:
+            image:
+              tag: v0.32.0 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
+            containers:
+              - name: alertmanager
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    cpu: 100m
+                    memory: 100Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 50m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            replicaCount: 2
+            useStrictSecurity: true
+            securityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              fsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 256Mi
+                  storageClassName: proxmox-data
+            secrets:
+              - pagerduty-routing-key
+              - healthchecks-io-watchdog-url
+          config:
+            templates:
+              - "/etc/vm/configs/**/*.tmpl"
+            inhibit_rules:
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = critical
+                target_matchers:
+                  - severity =~ warning|info
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = warning
+                target_matchers:
+                  - severity = info
+              - equal:
+                  - namespace
+                source_matchers:
+                  - alertname = InfoInhibitor
+                target_matchers:
+                  - severity = info
+            route:
+              group_by: [alertname, namespace]
+              receiver: blackhole
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 3h
+              routes:
+                - receiver: healthchecks_io
+                  group_wait: 10s
+                  repeat_interval: 5m
+                  match:
+                    alertname: Watchdog
+                - match:
+                    alertname: InfoInhibitor
+                  receiver: blackhole
+                - receiver: PagerDuty
+                  continue: false
+            receivers:
+              - name: blackhole
+              - name: healthchecks_io
+                webhook_configs:
+                  - url_file: /etc/vm/secrets/healthchecks-io-watchdog-url/url
+              - name: PagerDuty
+                pagerduty_configs:
+                  - routing_key_file: /etc/vm/secrets/pagerduty-routing-key/routing-key
+                    severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
+                    description: >-
+                      {{ .CommonLabels.cluster }}/{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}
+          route:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - alerts.derwitt.site
+          ingress:
+            enabled: false
+
+        defaultDatasources:
+          extra:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc.cluster.local
+              uid: Loki
+              access: proxy
+              version: 1
+              orgId: 1
+              isDefault: false
+              editable: false
+              jsonData:
+                httpMethod: GET
+
+        grafana:
+          enabled: true
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+            limits:
+              cpu: 1000m
+              memory: 2048Mi
+          sidecar:
+            dashboards:
+              enabled: true
+              searchNamespace: ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                memory: 256Mi
+                cpu: 500m
+          initChownData:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50Mi
+              limits:
+                cpu: 50m
+                memory: 50Mi
+          downloadDashboards:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 1000m
+                memory: 256Mi
+          envFromSecrets:
+            - name: grafana-oidc-credentials
+          plugins:
+            - grafana-clock-panel
+            - loki
+          grafana.ini:
+            server:
+              root_url: "https://graphs.derwitt.site"
+            auth:
+              oauth_auto_login: true
+              signout_redirect_url: https://auth.derwitt.site/application/o/grafana/end-session/
+            auth.generic_oauth:
+              name: Authentik
+              allow_assign_grafana_admin: true
+              allow_sign_up: true
+              client_id: grafana
+              api_url: https://auth.derwitt.site/application/o/userinfo/
+              auth_url: https://auth.derwitt.site/application/o/authorize/
+              enabled: true
+              scopes: openid profile email
+              token_url: https://auth.derwitt.site/application/o/token/
+              use_refresh_token: true
+              role_attribute_path: "contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'"
+          route:
+            main:
+              enabled: true
+              parentRefs:
+                - group: gateway.networking.k8s.io
+                  kind: Gateway
+                  name: derwitt-site-gateway
+                  namespace: traefik
+              hostnames:
+                - graphs.derwitt.site
+          ingress:
+            enabled: false

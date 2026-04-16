@@ -1,0 +1,38 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-talos-cloud-controller-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: kube-system
+  source:
+    repoURL: oci://ghcr.io/siderolabs/charts/talos-cloud-controller-manager
+    targetRevision: 0.5.4
+    path: "."
+    helm:
+      releaseName: talos-ccm
+      valuesObject:
+        replicaCount: 2
+        enabledControllers:
+          - cloud-node
+          - node-csr-approval
+      # transformations:
+      #   - name: metal-nodes
+      #     nodeSelector:
+      #       - matchExpressions:
+      #           - key: node.cloudprovider.kubernetes.io/platform
+      #             operator: In
+      #             values:
+      #               - metal
+      #     labels:
+      #       topology.kubernetes.io/region: homelab-01
+      #       topology.kubernetes.io/zone: kangaroochops

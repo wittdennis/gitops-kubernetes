@@ -1,0 +1,68 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-victoria-metrics-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: Secret
+      name: victoria-metrics-operator-validation
+      namespace: victoria-metrics-operator
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: victoria-metrics-operator-admission
+      jqPathExpressions:
+        - ".webhooks[]?.clientConfig.caBundle"
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: home-assistant
+    namespace: victoria-metrics-operator
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts
+    targetRevision: 0.61.0
+    chart: victoria-metrics-operator
+    helm:
+      releaseName: victoria-metrics-operator
+      values: |
+
+        resources:
+          requests:
+            cpu: 42m
+            memory: 106Mi
+          limits:
+            memory: 106Mi
+            cpu: 100m
+        podSecurityContext:
+          runAsUser: 65534
+          runAsGroup: 65534
+          fsGroup: 65534
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+        crds:
+          update:
+            enabled: true
+        operator:
+          disable_prometheus_converter: false
+          prometheus_converter_add_argocd_ignore_annotations: true
+          enable_converter_ownership: true
+        serviceMonitor:
+          enabled: true

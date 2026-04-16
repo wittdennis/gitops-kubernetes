@@ -1,0 +1,75 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-linkwarden-meilisearch
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  destination:
+    name: homelab
+    namespace: linkwarden
+  syncPolicy:
+    automated:
+      prune: true
+  source:
+    # Repository: https://github.com/meilisearch/meilisearch-kubernetes/tree/main/charts/meilisearch
+    # Values: https://github.com/meilisearch/meilisearch-kubernetes/blob/main/charts/meilisearch/values.yaml
+    repoURL: https://meilisearch.github.io/meilisearch-kubernetes
+    chart: meilisearch
+    targetRevision: 0.32.0
+    helm:
+      releaseName: linkwarden-meilisearch
+      valuesObject:
+        image:
+          repository: docker.io/getmeili/meilisearch
+          tag: v1.42.1 # datasource=docker depName=docker.io/getmeili/meilisearch versioning=semver
+          pullPolicy: IfNotPresent
+        securityContext:
+          runAsNonRoot: true
+          runAsGroup: 1000
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        auth:
+          existingMasterKeySecret: linkwarden-meilisearch-master-key
+        serviceAccount:
+          automountServiceAccountToken: true
+        environment:
+          MEILI_ENV: production
+          MEILI_NO_ANALYTICS: "true"
+          MEILI_HTTP_ADDR: "0.0.0.0:7700"
+          MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: "true"
+        persistence:
+          enabled: true
+          storageClass: proxmox-data
+          size: 1Gi
+        podSecurityContext:
+          runAsNonRoot: true
+          fsGroup: 51251
+          seccompProfile:
+            type: RuntimeDefault
+        topologySpreadConstraints:
+          - maxSkew: 1
+            topologyKey: kubernetes.io/hostname
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/instance: linkwarden-meilisearch
+                app.kubernetes.io/name: linkwarden-meilisearch
+        ingress:
+          enabled: false
+          annotations:
+            cert-manager.io/cluster-issuer: derwitt-net-cluster-issuer
+          hosts:
+            - linkwarden-meilisearch.home.derwitt.net
+          tls:
+            - secretName: meilisearch-ingress-cert
+              hosts:
+                - linkwarden-meilisearch.home.derwitt.net
+        resources:
+          requests:
+            cpu: 11m
+            memory: 866M

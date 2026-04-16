@@ -1,0 +1,172 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-hashicorp-vault
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: hashicorp-vault
+  source:
+    repoURL: https://helm.releases.hashicorp.com
+    targetRevision: 0.32.0
+    chart: vault
+    helm:
+      releaseName: vault
+      values: |-
+
+        global:
+          enabled: true
+          tlsDisable: false
+        injector:
+          enabled: false
+        csi:
+          enabled: false
+        server:
+          image:
+            repository: hashicorp/vault
+            tag: "2.0.0" # renovate: datasource=docker depName=hashicorp/vault versioning=docker
+          dataStorage:
+            enabled: true
+            size: 2Gi
+            storageClass: proxmox-data
+          # service:
+          #   annotations:
+          #     traefik.ingress.kubernetes.io/service.serverstransport: traefik-insecure-skip-verify-transport@kubernetescrd
+          #     traefik.ingress.kubernetes.io/service.serversscheme: https
+          #   active:
+          #     annotations:
+          #       traefik.ingress.kubernetes.io/service.serverstransport: traefik-insecure-skip-verify-transport@kubernetescrd
+          #       traefik.ingress.kubernetes.io/service.serversscheme: https
+          statefulSet:
+            securityContext:
+              pod:
+                runAsUser: 100
+                runAsGroup: 1000
+                fsGroup: 1000
+                seccompProfile:
+                  type: RuntimeDefault
+              container:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                    - ALL
+          volumes:
+            - name: tmp
+              emptyDir: {}
+            - name: vault-server-cert
+              secret:
+                defaultMode: 420
+                secretName: vault-server-cert
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /vault/userconfig/vault-server-cert
+              name: vault-server-cert
+              readOnly: true
+          extraEnvironmentVars:
+            VAULT_SEAL_TYPE: azurekeyvault
+            VAULT_AZUREKEYVAULT_VAULT_NAME: pseud0r4ndom-local-vault
+            VAULT_AZUREKEYVAULT_KEY_NAME: hashicorp-vault-seal-key
+            VAULT_CACERT: /vault/userconfig/vault-server-cert/ca.crt
+          extraSecretEnvironmentVars:
+            - envName: AZURE_TENANT_ID
+              secretName: azure-key-vault-seal
+              secretKey: tenant-id
+            - envName: AZURE_CLIENT_ID
+              secretName: azure-key-vault-seal
+              secretKey: client-id
+            - envName: AZURE_CLIENT_SECRET
+              secretName: azure-key-vault-seal
+              secretKey: client-secret
+          logFormat: json
+          networkPolicy:
+            enabled: false
+          readinessProbe:
+            enabled: true
+            path: "/v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204"
+          livenessProbe:
+            enabled: true
+            path: "/v1/sys/health?standbyok=true"
+            initialDelaySeconds: 60
+          standalone:
+            enabled: false
+          ha:
+            enabled: true
+            disruptionBudget:
+              enabled: true
+            replicas: 3
+            raft:
+              enabled: true
+              setNodeId: true
+              config: |
+                ui = true
+
+                listener "tcp" {
+                  address = "[::]:8200"
+                  cluster_address = "[::]:8201"
+                  telemetry {
+                    unauthenticated_metrics_access = "true"
+                  }
+                  tls_cert_file = "/vault/userconfig/vault-server-cert/tls.crt"
+                  tls_key_file = "/vault/userconfig/vault-server-cert/tls.key"
+                  tls_client_ca_file = "/vault/userconfig/vault-server-cert/ca.crt"
+                }
+
+                storage "raft" {
+                  path = "/vault/data"
+                  retry_join {
+                    leader_api_addr = "https://vault-0.vault-internal:8200"
+                    leader_ca_cert_file = "/vault/userconfig/vault-server-cert/ca.crt"
+                    leader_client_cert_file = "/vault/userconfig/vault-server-cert/tls.crt"
+                    leader_client_key_file = "/vault/userconfig/vault-server-cert/tls.key"
+                  }
+                  retry_join {
+                    leader_api_addr = "https://vault-1.vault-internal:8200"
+                    leader_ca_cert_file = "/vault/userconfig/vault-server-cert/ca.crt"
+                    leader_client_cert_file = "/vault/userconfig/vault-server-cert/tls.crt"
+                    leader_client_key_file = "/vault/userconfig/vault-server-cert/tls.key"
+                  }
+                  retry_join {
+                    leader_api_addr = "https://vault-3.vault-internal:8200"
+                    leader_ca_cert_file = "/vault/userconfig/vault-server-cert/ca.crt"
+                    leader_client_cert_file = "/vault/userconfig/vault-server-cert/tls.crt"
+                    leader_client_key_file = "/vault/userconfig/vault-server-cert/tls.key"
+                  }
+
+                  autopilot {
+                    cleanup_dead_servers = "true"
+                    last_contact_threshold = "200ms"
+                    last_contact_failure_threshold = "10m"
+                    max_trailing_logs = 250000
+                    min_quorum = 3
+                    server_stabilization_time = "10s"
+                  }
+                }
+
+                service_registration "kubernetes" {}
+                max_lease_ttl = "87660h"
+
+                telemetry {
+                  prometheus_retention_time = "60s"
+                  disable_hostname = true
+                }
+          ingress:
+            enabled: false
+        ui:
+          enabled: true
+        serverTelemetry:
+          serviceMonitor:
+            enabled: true
+            selectors: {}
+            interval: 60s
+            scrapeTimeout: 10s

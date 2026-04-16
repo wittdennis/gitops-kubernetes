@@ -1,0 +1,19 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-internal-s3-traffic
+spec:
+  endpointSelector:
+    matchLabels:
+      network-policy/allow-internal-s3-traffic: apply
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            storage/tenant: default
+            io.kubernetes.pod.namespace: storage
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            storage/tenant: default
+            io.kubernetes.pod.namespace: storage

@@ -1,0 +1,77 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-cert-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: cert-manager
+  source:
+    repoURL: https://charts.jetstack.io
+    targetRevision: v1.20.2
+    chart: cert-manager
+    helm:
+      releaseName: cert-manager
+      values: |
+
+        crds:
+          enabled: true
+        config:
+          apiVersion: controller.config.cert-manager.io/v1alpha1
+          kind: ControllerConfiguration
+          enableGatewayAPI: true
+        extraArgs:
+          - --logging-format=json
+        dns01RecursiveNameservers: "8.8.8.8:53,1.1.1.1:53"
+        dns01RecursiveNameserversOnly: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            memory: 100Mi
+        webhook:
+          replicaCount: 3
+          extraArgs:
+            - --logging-format=json
+          networkPolicy:
+            enabled: false
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+        cainjector:
+          enabled: true
+          replicaCount: 3
+          podDisruptionBudget:
+            enabled: true
+            minAvailable: 1
+          extraArgs:
+            - --logging-format=json
+          resources:
+            requests:
+              cpu: 10m
+              memory: 114Mi
+            limits:
+              cpu: 500m
+              memory: 114Mi
+        startupapicheck:
+          extraArgs:
+            - --logging-format=json
+            - -v
+        prometheus:
+          servicemonitor:
+            enabled: true

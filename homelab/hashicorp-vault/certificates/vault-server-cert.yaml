@@ -1,0 +1,65 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vault-server-cert
+spec:
+  secretName: vault-server-cert
+  duration: 8766h # 1 year
+  renewBefore: 360h # 15d
+  subject:
+    organizations:
+      - derwitt
+  isCA: false
+  privateKey:
+    algorithm: Ed25519
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  dnsNames:
+    - "vault-internal"
+    - "vault-internal.hashicorp-vault"
+    - "vault-internal.hashicorp-vault.svc"
+    - "vault-internal.hashicorp-vault.svc.cluster.local"
+    - "*.vault-internal"
+    - "*.vault-internal.hashicorp-vault"
+    - "*.vault-internal.hashicorp-vault.svc"
+    - "*.vault-internal.hashicorp-vault.svc.cluster.local"
+    - "vault-ui"
+    - "vault-ui.hashicorp-vault"
+    - "vault-ui.hashicorp-vault.svc"
+    - "vault-ui.hashicorp-vault.svc.cluster.local"
+    - "*.vault-ui"
+    - "*.vault-ui.hashicorp-vault"
+    - "*.vault-ui.hashicorp-vault.svc"
+    - "*.vault-ui.hashicorp-vault.svc.cluster.local"
+    - "vault"
+    - "vault.hashicorp-vault"
+    - "vault.hashicorp-vault.svc"
+    - "vault.hashicorp-vault.svc.cluster.local"
+    - "*.vault"
+    - "*.vault.hashicorp-vault"
+    - "*.vault.hashicorp-vault.svc"
+    - "*.vault.hashicorp-vault.svc.cluster.local"
+    - "vault-active"
+    - "vault-active.hashicorp-vault"
+    - "vault-active.hashicorp-vault.svc"
+    - "vault-active.hashicorp-vault.svc.cluster.local"
+    - "*.vault-active"
+    - "*.vault-active.hashicorp-vault"
+    - "*.vault-active.hashicorp-vault.svc"
+    - "*.vault-active.hashicorp-vault.svc.cluster.local"
+    - "vault-standby"
+    - "vault-standby.hashicorp-vault"
+    - "vault-standby.hashicorp-vault.svc"
+    - "vault-standby.hashicorp-vault.svc.cluster.local"
+    - "*.vault-standby"
+    - "*.vault-standby.hashicorp-vault"
+    - "*.vault-standby.hashicorp-vault.svc"
+    - "*.vault-standby.hashicorp-vault.svc.cluster.local"
+  ipAddresses:
+    - 127.0.0.1
+  issuerRef:
+    name: cluster-ca-issuer
+    kind: ClusterIssuer

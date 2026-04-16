@@ -1,0 +1,94 @@
+# ---
+# apiVersion: cilium.io/v2
+# kind: CiliumNetworkPolicy
+# metadata:
+#   name: allow-startupapicheck-webhook-ingress
+# spec:
+#   endpointSelector:
+#     matchLabels:
+#       app.kubernetes.io/instance: cert-manager
+#       app.kubernetes.io/component: webhook
+#   ingress:
+#     - fromEndpoints:
+#         - matchLabels:
+#             app.kubernetes.io/component: startupapicheck
+#             app.kubernetes.io/instance: cert-manager
+#             io.kubernetes.pod.namespace: cert-manager
+#       toPorts:
+#         - ports:
+#             - port: https
+#               protocol: TCP
+# ---
+# apiVersion: cilium.io/v2
+# kind: CiliumNetworkPolicy
+# metadata:
+#   name: allow-startupapicheck-webhook-egress
+# spec:
+#   endpointSelector:
+#     matchLabels:
+#       app.kubernetes.io/component: startupapicheck
+#       app.kubernetes.io/instance: cert-manager
+#       io.kubernetes.pod.namespace: cert-manager
+#   egress:
+#     - toFQDNs:
+#         - matchName: cert-manager-webhook.cert-manager.svc
+#       toPorts:
+#         - ports:
+#             - port: "443"
+
+#     # - toEndpoints:
+#     #     - matchLabels:
+#     #         app.kubernetes.io/instance: cert-manager
+#     #         app.kubernetes.io/component: webhook
+#     #   toPorts:
+#     #     - ports:
+#     #         - port: "10250"
+#     #           protocol: TCP
+# # ---
+# # apiVersion: networking.k8s.io/v1
+# # kind: NetworkPolicy
+# # metadata:
+# #   name: allow-startupapicheck-webhook-ingress
+# # spec:
+# #   policyTypes:
+# #     - Ingress
+# #   podSelector:
+# #     matchLabels:
+# #       app.kubernetes.io/instance: cert-manager
+# #       app.kubernetes.io/component: webhook
+# #   ingress:
+# #     - from:
+# #         - namespaceSelector:
+# #             matchLabels:
+# #               kubernetes.io/metadata.name: cert-manager
+# #           podSelector:
+# #             matchLabels:
+# #               app.kubernetes.io/component: startupapicheck
+# #               app.kubernetes.io/instance: cert-manager
+# #       ports:
+# #         - port: 10250
+# #           protocol: TCP
+# # ---
+# # apiVersion: networking.k8s.io/v1
+# # kind: NetworkPolicy
+# # metadata:
+# #   name: allow-startupapicheck-webhook-egress
+# # spec:
+# #   policyTypes:
+# #     - Egress
+# #   podSelector:
+# #     matchLabels:
+# #       app.kubernetes.io/instance: cert-manager
+# #       app.kubernetes.io/component: startupapicheck
+# #   egress:
+# #     - to:
+# #         - namespaceSelector:
+# #             matchLabels:
+# #               kubernetes.io/metadata.name: cert-manager
+# #           podSelector:
+# #             matchLabels:
+# #               app.kubernetes.io/instance: cert-manager
+# #               app.kubernetes.io/component: webhook
+# #       ports:
+# #         - port: 10250
+# #           protocol: TCP

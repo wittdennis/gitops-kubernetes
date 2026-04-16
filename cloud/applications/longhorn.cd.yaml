@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-longhorn
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    - pre-delete-finalizer.argocd.argoproj.io
+    - pre-delete-finalizer.argocd.argoproj.io/cleanup
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: longhorn-system
+  source:
+    repoURL: https://charts.longhorn.io
+    targetRevision: 1.11.1
+    chart: longhorn
+    helm:
+      releaseName: longhorn
+      values: |
+
+        networkPolicies:
+          enabled: false
+        preUpgradeChecker:
+          jobEnabled: false
+        persistence:
+          defaultClass: false
+          defaultClassReplicaCount: 3
+          defaultFsType: ext4
+        longhornManager:
+          log:
+            format: json
+        metrics:
+          serviceMonitor:
+            enabled: true
+        ingress:
+          enabled: true
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+            traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+          ingressClassName: traefik
+          host: longhorn.derwitt.dev
+          tls: true
+          tlsSecret: longhorn-ingress-tls

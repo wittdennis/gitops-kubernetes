@@ -1,0 +1,15 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-kube-apiserver-traffic
+spec:
+  endpointSelector:
+    matchLabels:
+      network-policy/allow-kube-apiserver-traffic: apply
+  ingress:
+    - fromEntities:
+        - kube-apiserver
+  egress:
+    - toEntities:
+        - kube-apiserver

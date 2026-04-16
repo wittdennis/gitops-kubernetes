@@ -1,0 +1,47 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: linkwarden-postgres
+spec:
+  instances: 2
+  logLevel: warning
+  enablePDB: false
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: linkwarden
+      owner: linkwarden
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgres
+    major: 18
+  managed:
+    roles:
+      - name: linkwarden
+        superuser: false
+        createdb: false
+        login: true
+  postgresql:
+    shared_preload_libraries:
+      - pg_partman_bgw
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: backup-store
+  resources:
+    requests:
+      cpu: 100m
+      ephemeral-storage: 50Mi
+      memory: 128Mi
+  storage:
+    size: 2Gi
+    storageClass: proxmox-data
+  walStorage:
+    size: 5Gi
+    storageClass: proxmox-data

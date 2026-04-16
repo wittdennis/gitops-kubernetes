@@ -1,0 +1,82 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-yopass
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    name: cloud
+    namespace: yopass
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  source:
+    # Repository: https://github.com/cloudhippie/charts
+    # Values: https://github.com/cloudhippie/charts/blob/master/stable/yopass/values.yaml
+    # ArtifactHub: https://artifacthub.io/packages/helm/cloudhippie/yopass
+    repoURL: oci://ghcr.io/cloudhippie/charts/yopass
+    path: "."
+    targetRevision: 8.4.0
+    helm:
+      releaseName: yopass
+      valuesObject:
+        image:
+          tag: 13.1.0 # datasource=docker depName=docker.io/jhaals/yopass versioning=docker
+        serviceAccount:
+          create: false
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        podSecurityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: [ALL]
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        memcached:
+          serviceAccount:
+            create: false
+            automountServiceAccountToken: false
+          enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          podSecurityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+            allowPrivilegeEscalation: false
+        ingress:
+          enabled: true
+          className: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+            traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
+          hosts:
+            - host: otp.derwitt.dev
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+                - otp.derwitt.dev
+              secretName: yopass-ingress-tls

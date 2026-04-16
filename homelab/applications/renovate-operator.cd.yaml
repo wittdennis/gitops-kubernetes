@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-renovate-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: renovate-operator
+  source:
+    repoURL: oci://ghcr.io/mogenius/helm-charts/renovate-operator
+    path: "."
+    targetRevision: 4.3.3
+    helm:
+      releaseName: renovate-operator
+      valuesObject:
+        route:
+          enabled: true
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik
+          hostnames:
+            - renovate.derwitt.site

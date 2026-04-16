@@ -1,0 +1,116 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-paperless-ngx-valkey
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: paperless-ngx
+  source:
+    repoURL: oci://ghcr.io/valkey-io/valkey-helm/valkey
+    path: "."
+    targetRevision: 0.9.4
+    helm:
+      releaseName: paperless-ngx-valkey
+      valuesObject:
+        image:
+          registry: "docker.io"
+          repository: valkey/valkey
+          pullPolicy: IfNotPresent
+          tag: "9.0.3" # renovate: datasource=docker depName=valkey/valkey versioning=docker
+        auth:
+          enabled: true
+          usersExistingSecret: paperless-ngx-valkey-credentials
+          aclUsers:
+            default:
+              permissions: "~* &* +@all"
+              passwordKey: default-password
+            replication:
+              permissions: "~* &* +psync +replconf +ping"
+              passwordKey: "replication-password"
+            paperless:
+              permissions: "~* &* +@all"
+              passwordKey: "paperless-password"
+        replica:
+          enabled: true
+          replicas: 2
+          replicationUser: "replication"
+          persistence:
+            size: 5Gi
+            storageClass: proxmox-data
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          privileged: false
+          capabilities:
+            drop:
+              - ALL
+        metrics:
+          enabled: true
+          exporter:
+            extraEnvs:
+              REDIS_USER: "default"
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              seccompProfile:
+                type: RuntimeDefault
+              runAsUser: 1000
+              runAsGroup: 1000
+              runAsNonRoot: true
+              privileged: false
+              capabilities:
+                drop:
+                  - ALL
+          serviceMonitor:
+            enabled: true
+          podMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+            rules:
+              - alert: PaperlessValkeyDown
+                annotations:
+                  summary: Valkey instance {{ "{{ $labels.instance }}" }} down
+                  description: Valkey instance {{ "{{ $labels.instance }}" }} is down.
+                expr: |
+                  redis_up{service="{{ include "valkey.fullname" . }}-metrics"} == 0
+                for: 2m
+                labels:
+                  severity: warning
+              - alert: PaperlessValkeyMemoryHigh
+                annotations:
+                  summary: Valkey instance {{ "{{ $labels.instance }}" }} is using too much memory
+                  description: |
+                    Valkey instance {{ "{{ $labels.instance }}" }} is using {{ "{{ $value }}" }}% of its available memory.
+                expr: |
+                  redis_memory_used_bytes{service="{{ include "valkey.fullname" . }}-metrics"} * 100
+                  /
+                  redis_memory_max_bytes{service="{{ include "valkey.fullname" . }}-metrics"}
+                  > 90 <= 100
+                for: 2m
+                labels:
+                  severity: warning
+              - alert: PaperlessValkeyKeyEviction
+                annotations:
+                  summary: Valkey instance {{ "{{ $labels.instance }}" }} has evicted keys
+                  description: |
+                    Valkey instance {{ "{{ $labels.instance }}" }} has evicted {{ "{{ $value }}" }} keys in the last 5 minutes.
+                expr: |
+                  increase(redis_evicted_keys_total{service="{{ include "valkey.fullname" . }}-metrics"}[5m]) > 0
+                for: 1s
+                labels:
+                  severity: warning

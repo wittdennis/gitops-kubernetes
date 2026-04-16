@@ -1,0 +1,24 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: hcloud
+spec:
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: hcloud
+    creationPolicy: Owner
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /kube-system/hcloud
+        property: network
+      secretKey: network
+    - remoteRef:
+        conversionStrategy: Default
+        key: /kube-system/hcloud
+        property: token
+      secretKey: token

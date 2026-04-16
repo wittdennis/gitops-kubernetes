@@ -1,0 +1,9 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ClusterImageCatalog
+metadata:
+  name: postgres
+spec:
+  images:
+    - major: 18
+      image: ghcr.io/wittdennis/cloudnative-pg-postgres-18:18.3.3 # renovate

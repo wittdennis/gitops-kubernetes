@@ -1,0 +1,150 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: vault-offsite-snapshot
+spec:
+  schedules:
+    - "0 0 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 7
+  workflowSpec:
+    entrypoint: backup
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    artifactGC:
+      strategy: OnWorkflowDeletion
+      serviceAccountName: vault
+    templates:
+      - name: backup
+        steps:
+          - - name: create-snapshot
+              template: snapshot
+          - - name: upload-snapshot
+              template: restic
+              arguments:
+                artifacts:
+                  - name: snapshot
+                    from: "{{steps.create-snapshot.outputs.artifacts.vault-snapshot}}"
+
+      - name: snapshot
+        automountServiceAccountToken: true
+        serviceAccountName: vault
+        outputs:
+          artifacts:
+            - name: vault-snapshot
+              path: /tmp/backup.snap
+              s3:
+                key: "{{workflow.name}}/backup.snap"
+        securityContext:
+          fsGroup: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
+          runAsNonRoot: true
+          fsGroupChangePolicy: "OnRootMismatch"
+          seccompProfile:
+            type: RuntimeDefault
+        container:
+          image: hashicorp/vault:2.0.0 # renovate
+          command: [sh, -c]
+          args:
+            - |
+              echo "Getting service account token"
+              export JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+              echo "Logging into vault service account"
+              export VAULT_TOKEN=$(vault write -field=token auth/kubernetes/login role="vault-snapshot-role" jwt="${JWT}")
+
+              echo "Taking snapshot"
+              vault operator raft snapshot save /tmp/backup.snap
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - mountPath: /vault/userconfig/vault-server-cert
+              name: vault-server-cert
+              readOnly: true
+          env:
+            - name: VAULT_ADDR
+              value: https://vault-active.hashicorp-vault.svc.cluster.local:8200
+            - name: VAULT_CACERT
+              value: /vault/userconfig/vault-server-cert/ca.crt
+          securityContext:
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+        volumes:
+          - name: tmp
+            emptyDir: {}
+          - name: vault-server-cert
+            secret:
+              defaultMode: 420
+              secretName: vault-server-cert
+
+      - name: restic
+        serviceAccountName: vault
+        inputs:
+          artifacts:
+            - name: snapshot
+              path: /tmp/backup.snap
+        securityContext:
+          fsGroup: 1000
+          runAsGroup: 1000
+          runAsUser: 1000
+          runAsNonRoot: true
+          fsGroupChangePolicy: "OnRootMismatch"
+          seccompProfile:
+            type: RuntimeDefault
+        container:
+          image: restic/restic:0.18.1 # renovate
+          command: [sh, -c]
+          args:
+            - |
+              restic init --no-cache || true
+              restic backup --no-cache --host vault /tmp/backup.snap
+              restic forget --no-cache --keep-last 90 --prune
+          env:
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vault-backup-settings
+                  key: restic-password
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: vault-backup-settings
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vault-backup-settings
+                  key: secret-key
+            - name: RESTIC_REPOSITORY
+              value: s3:https://nbg1.your-objectstorage.com/pseud0random-backups/vault-cloud
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
+          securityContext:
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+        volumes:
+          - name: tmp
+            emptyDir: {}

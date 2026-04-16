@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-plugin-barman-cloud
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    namespace: cloud-native-postgres-operator
+    name: cloud
+  project: k8s-platform
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated:
+      prune: true
+  source:
+    # Values: https://github.com/cloudnative-pg/charts/blob/main/charts/plugin-barman-cloud/values.yaml
+    repoURL: https://cloudnative-pg.github.io/charts
+    targetRevision: 0.6.0
+    chart: plugin-barman-cloud
+    helm:
+      releaseName: plugin-barman-cloud
+      valuesObject:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        podSecurityContext:
+          runAsGroup: 10001
+          runAsUser: 10001

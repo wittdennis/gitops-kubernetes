@@ -1,0 +1,9 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: cluster-ca-transport
+spec:
+  insecureSkipVerify: false
+  rootCAsSecrets:
+    - cluster-ca-secret

@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-argo-workflows-resources
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: argo-workflows
+  source:
+    repoURL: https://github.com/wittdennis/k8s-platform
+    targetRevision: HEAD
+    path: "homelab/argo-workflows"
+    directory:
+      recurse: true

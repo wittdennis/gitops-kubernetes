@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/master/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: create-bucket
+spec:
+  entrypoint: create-bucket
+  securityContext:
+    runAsGroup: 1000
+    runAsUser: 100
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  serviceAccountName: storage-workflows
+  activeDeadlineSeconds: 1200
+  arguments:
+    parameters:
+      - name: bucket-name
+        description: Name of the bucket to create
+  podGC:
+    strategy: OnPodCompletion
+  templates:
+    - name: create-bucket
+      inputs:
+        parameters:
+          - name: bucket-name
+      container:
+        image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+        command: [sh, -c]
+        args:
+          - |
+            set -eu
+
+            kubectl exec --stdin --tty homelab-garage-0 -- ./garage bucket create {{ inputs.parameters.bucket-name }}
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+      volumes:
+        - name: tmp
+          emptyDir: {}

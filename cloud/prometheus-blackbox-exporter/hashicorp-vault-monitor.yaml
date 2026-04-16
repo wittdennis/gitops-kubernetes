@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: blackbox-exporter-hashicorp-vault
+spec:
+  endpoints:
+    - interval: 60s
+      metricRelabelings:
+        - replacement: https://vault.derwitt.dev
+          targetLabel: instance
+        - replacement: hashicorp-vault
+          targetLabel: target
+      params:
+        module:
+          - http_2xx
+        target:
+          - https://vault.derwitt.dev/ui/vault/auth?with=token
+      path: /probe
+      port: http
+      scheme: http
+      scrapeTimeout: 30s
+  jobLabel: prometheus-blackbox-exporter
+  namespaceSelector:
+    matchNames:
+      - prometheus-blackbox-exporter
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-blackbox-exporter
+      app.kubernetes.io/name: prometheus-blackbox-exporter

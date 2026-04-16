@@ -1,0 +1,517 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-victoria-metrics-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: Secret
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /data/admin-password
+    - kind: Deployment
+      group: apps
+      name: vm-stack-grafana
+      namespace: victoria-metrics-stack
+      jsonPointers:
+        - /spec/template/metadata/annotations/checksum~1secret
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  destination:
+    name: cloud
+    namespace: victoria-metrics-stack
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts
+    targetRevision: 0.74.1
+    chart: victoria-metrics-k8s-stack
+    helm:
+      releaseName: vm-stack
+      values: |
+
+        argocdReleaseOverride: vm-stack
+
+        defaultRules:
+          rules:
+            RequestErrorsToAPI:
+              create: false
+            etcdMemberCommunicationSlow:
+              create: false
+
+        victoria-metrics-operator:
+          enabled: false
+
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+          securityContext:
+            fsGroup: 65534
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 100Mi
+              cpu: 50m
+
+        kubeControllerManager:
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                    serverName: localhost
+
+        kubeEtcd:
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+                    certFile: /etcd-cert/client.crt
+                    keyFile: /etcd-cert/client.key
+
+        kubeScheduler:
+          vmScrape:
+            spec:
+              endpoints:
+                - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+                  # bearerTokenSecret:
+                  #   key: ""
+                  port: http-metrics
+                  scheme: https
+                  tlsConfig:
+                    insecureSkipVerify: true
+                    caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+        vmagent:
+          spec:
+            extraArgs:
+              enableTCP6: "true"
+            additionalScrapeConfigs:
+              name: additional-scrape-configs
+              key: additional.yaml
+            volumes:
+              - name: etcd-client-cert
+                secret:
+                  secretName: etcd-client-certificate
+                  items:
+                    - key: client.crt
+                      path: client.crt
+                    - key: client.key
+                      path: client.key
+              - name: netbox-api-token
+                secret:
+                  secretName: netbox-api-token
+                  items:
+                    - key: api-token
+                      path: api-token
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 100m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmagent
+                volumeMounts:
+                  - mountPath: /etcd-cert
+                    name: etcd-client-cert
+                  - mountPath: /netbox
+                    name: netbox-api-token
+                resources:
+                  requests:
+                    cpu: 186m
+                    memory: 213Mi
+                  limits:
+                    memory: 213Mi
+                    cpu: 500m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            initContainers:
+              - name: config-init
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            externalLabels:
+              cluster: cloud
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+            hosts:
+              - vmagent.derwitt.dev
+            tls:
+              - secretName: vmagent-ingress-tls
+                hosts:
+                  - vmagent.derwitt.dev
+
+        vmalert:
+          spec:
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100M
+                  limits:
+                    cpu: 50m
+                    memory: 100M
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: vmalert
+                resources:
+                  requests:
+                    cpu: 30m
+                    memory: 150Mi
+                  limits:
+                    memory: 150Mi
+                    cpu: 100m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+            hosts:
+              - vmalert.derwitt.dev
+            tls:
+              - secretName: vmalert-ingress-tls
+                hosts:
+                  - vmalert.derwitt.dev
+
+        vmsingle:
+          spec:
+            extraArgs:
+              enableTCP6: "true"
+            resources:
+              requests:
+                cpu: 822m
+                memory: 2048Mi
+              limits:
+                memory: 2048Mi
+                cpu: 1200m
+            securityContext:
+              runAsUser: 1000
+              fsGroup: 1000
+              runAsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: vmsingle
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            storage:
+                accessModes:
+                  - ReadWriteOnce
+                storageClassName: longhorn
+                resources:
+                  requests:
+                    storage: 20Gi
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+            hosts:
+              - metrics.derwitt.dev
+            tls:
+              - secretName: victoria-ingress-tls
+                hosts:
+                  - metrics.derwitt.dev
+
+        alertmanager:
+          enabled: true
+          spec:
+            image:
+              tag: v0.32.0 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
+            containers:
+              - name: alertmanager
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    cpu: 100m
+                    memory: 100Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+              - name: config-reloader
+                resources:
+                  requests:
+                    cpu: 10m
+                    memory: 100Mi
+                  limits:
+                    memory: 100Mi
+                    cpu: 50m
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  readOnlyRootFilesystem: true
+                  runAsNonRoot: true
+                  capabilities:
+                    drop:
+                      - ALL
+            replicaCount: 2
+            useStrictSecurity: true
+            securityContext:
+              runAsUser: 1000
+              runAsGroup: 1000
+              fsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 256Mi
+                  storageClassName: longhorn
+            secrets:
+              - pagerduty-routing-key
+              - healthchecks-io-watchdog-url
+          config:
+            templates:
+              - "/etc/vm/configs/**/*.tmpl"
+            inhibit_rules:
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = critical
+                target_matchers:
+                  - severity =~ warning|info
+              - equal:
+                  - namespace
+                  - alertname
+                source_matchers:
+                  - severity = warning
+                target_matchers:
+                  - severity = info
+              - equal:
+                  - namespace
+                source_matchers:
+                  - alertname = InfoInhibitor
+                target_matchers:
+                  - severity = info
+            route:
+              group_by: [alertname, namespace]
+              receiver: blackhole
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 3h
+              routes:
+                - receiver: healthchecks_io
+                  group_wait: 10s
+                  repeat_interval: 5m
+                  match:
+                    alertname: Watchdog
+                - match:
+                    alertname: InfoInhibitor
+                  receiver: blackhole
+                - receiver: PagerDuty
+                  continue: true
+            receivers:
+              - name: blackhole
+              - name: healthchecks_io
+                webhook_configs:
+                  - url_file: /etc/vm/secrets/healthchecks-io-watchdog-url/url
+              - name: PagerDuty
+                pagerduty_configs:
+                  - routing_key_file: /etc/vm/secrets/pagerduty-routing-key/routing-key
+                    severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
+                    description: >-
+                      {{ .CommonLabels.cluster }}/{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+            hosts:
+              - alerts.derwitt.dev
+            tls:
+              - secretName: alertmanager-ingress-tls
+                hosts:
+                  - alerts.derwitt.dev
+
+        defaultDatasources:
+          extra:
+            - name: Loki
+              type: loki
+              url: http://loki-gateway.loki.svc.cluster.local
+              uid: Loki
+              access: proxy
+              version: 1
+              orgId: 1
+              isDefault: false
+              editable: false
+              jsonData:
+                httpMethod: GET
+
+        grafana:
+          forceDeployDatasource: true
+          resources:
+            requests:
+              cpu: 14m
+              memory: 282Mi
+            limits:
+              cpu: 1000m
+              memory: 282Mi
+          sidecar:
+            dashboards:
+              enabled: true
+              searchNamespace: ALL
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100Mi
+              limits:
+                cpu: 1000m
+                memory: 200Mi
+          initChownData:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 50Mi
+              limits:
+                cpu: 50m
+                memory: 50Mi
+          downloadDashboards:
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 1000m
+                memory: 128Mi
+          envFromSecrets:
+            - name: grafana-oidc-credentials
+          plugins:
+            - grafana-clock-panel
+            - loki
+          grafana.ini:
+            server:
+              root_url: "https://graphs.derwitt.dev"
+            auth.azuread:
+              name: "Azure AD"
+              enabled: true
+              allow_sign_up: true
+              auto_login: false
+              scopes: "openid email profile"
+              auth_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/authorize
+              token_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/token
+              allowed_domains: ""
+              allowed_groups: ""
+              allowed_organizations: "6ddad1f1-1d3f-43bf-ad7a-445edf40fd73"
+              role_attribute_strict: false
+              allow_assign_grafana_admin: true
+              skip_org_role_sync: false
+              use_pkce: true
+          ingress:
+            enabled: true
+            ingressClassName: traefik
+            annotations:
+              cert-manager.io/cluster-issuer: letsencrypt
+              traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
+            path: /
+            hosts:
+              - graphs.derwitt.dev
+            tls:
+              - secretName: grafana-ingress-tls
+                hosts:
+                  - graphs.derwitt.dev

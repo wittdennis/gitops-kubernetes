@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/master/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: set-bucket-retention
+spec:
+  entrypoint: main
+  securityContext:
+    runAsGroup: 1000
+    runAsUser: 1000
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  serviceAccountName: storage-workflows
+  activeDeadlineSeconds: 1200
+  arguments:
+    parameters:
+      - name: bucket-name
+        description: Name of the bucket to create
+      - name: expiration-days
+        description: The number of days until a object should be deleted
+  podGC:
+    strategy: OnPodCompletion
+  templates:
+    - name: main
+      inputs:
+        parameters:
+          - name: bucket-name
+          - name: expiration-days
+      container:
+        image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+        workingDir: /tmp
+        command: [sh, -c]
+        args:
+          - |
+            set -eu
+
+            cat > lifecycle.json << 'EOF'
+            {
+              "Rules": [
+                {
+                  "ID": "lifecycle",
+                  "Status": "Enabled",
+                  "Expiration": {
+                    "Days": {{ inputs.parameters.expiration-days }}
+                  }
+                }
+              ]
+            }
+            EOF
+
+            cat lifecycle.json
+
+            echo "Setting bucket lifecycle..."
+            aws s3api put-bucket-lifecycle-configuration \
+                --bucket {{ inputs.parameters.bucket-name }} \
+                --lifecycle-configuration file://lifecycle.json
+        env:
+          - name: AWS_REGION
+            value: homelab
+          - name: AWS_ENDPOINT_URL
+            value: http://homelab-garage-headless.storage.svc.cluster.local:3900
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: access-key
+                name: admin-credentials
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secret-key
+                name: admin-credentials
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+      volumes:
+        - name: tmp
+          emptyDir: {}

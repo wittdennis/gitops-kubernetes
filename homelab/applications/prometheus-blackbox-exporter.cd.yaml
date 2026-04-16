@@ -1,0 +1,63 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-prometheus-blackbox-exporter
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: prometheus-blackbox-exporter
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 11.9.1
+    chart: prometheus-blackbox-exporter
+    helm:
+      releaseName: prometheus-blackbox-exporter
+      values: |
+
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            memory: 100Mi
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          seccompProfile:
+            type: RuntimeDefault
+        config:
+          modules:
+            http_2xx:
+              prober: http
+              timeout: 5s
+              http:
+                valid_status_codes: [200,301,302,307,308]
+                fail_if_not_ssl: true
+                follow_redirects: false
+                preferred_ip_protocol: "ip4"
+                tls_config:
+                  insecure_skip_verify: false
+            http_2xx_invalid_tls:
+              prober: http
+              timeout: 5s
+              http:
+                valid_status_codes: [200,301,302,307,308]
+                fail_if_not_ssl: true
+                follow_redirects: false
+                preferred_ip_protocol: "ip4"
+                tls_config:
+                  insecure_skip_verify: true
+        serviceMonitor:
+          selfMonitor:
+            enabled: true

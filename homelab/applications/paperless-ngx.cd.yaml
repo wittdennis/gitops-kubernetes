@@ -1,0 +1,84 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-paperless-ngx
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: paperless-ngx
+  source:
+    repoURL: https://charts.derwitt.dev
+    chart: paperless-ngx
+    targetRevision: 1.1.5
+    helm:
+      valuesObject:
+        ocr:
+          language: deu
+
+        redis:
+          connectionSecret:
+            name: valkey-connection-url
+            key: url
+
+        database:
+          engine: postgresql
+          host: paperless-ngx-postgres-rw.paperless-ngx.svc.cluster.local
+          userSecret:
+            name: paperless-ngx-postgres-app
+            key: user
+          passwordSecret:
+            name: paperless-ngx-postgres-app
+            key: password
+
+        hosting:
+          secretKey:
+            create: false
+            name: paperless-ngx-secret-key
+
+        auth:
+          sso:
+            providersSecret:
+              name: paperless-ngx-sso-settings
+              key: providers-config
+            autoSignup: true
+            syncGroups: true
+            disableRegularLogin: true
+
+        tweaks:
+          apps: allauth.socialaccount.providers.openid_connect
+
+        email:
+          sending:
+            host: smtp.protonmail.ch
+            user: noreply@derwitt.site
+            port: 587
+            useTls: true
+            passwordSecret:
+              name: email-settings
+              key: password
+
+        route:
+          enabled: true
+          hostnames:
+            - documents.derwitt.site
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik
+
+        persistence:
+          data:
+            storageClass: proxmox-data
+            size: 1Gi
+          media:
+            storageClass: proxmox-data
+            size: 100Gi

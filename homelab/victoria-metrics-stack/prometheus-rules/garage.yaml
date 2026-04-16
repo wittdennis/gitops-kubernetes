@@ -1,0 +1,17 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: garage-rules
+spec:
+  groups:
+    - name: garage.rules
+      rules:
+        - alert: GarageClusterUnhealthy
+          annotations:
+            description: "Garage cluster for tenant {{ $labels.tenant }} in namespace {{ $labels.namespace }} is unhealthy. Please investigate."
+            summary: Garage cluster is unhealthy.
+          expr: sum (cluster_healthy{system="garage"}) by (namespace, tenant) == 0
+          for: 15m
+          labels:
+            severity: critical

@@ -1,0 +1,25 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: foundry-caq-read-key
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: foundry-caq-read-key
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /storage/foundry-caq
+        property: read-access-key-id
+      secretKey: access-key-id
+    - remoteRef:
+        conversionStrategy: Default
+        key: /storage/foundry-caq
+        property: read-secret-key
+      secretKey: secret-key

@@ -1,0 +1,185 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-kyverno
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+    - pre-delete-finalizer.argocd.argoproj.io
+    - pre-delete-finalizer.argocd.argoproj.io/cleanup
+spec:
+  project: k8s-platform
+  ignoreDifferences:
+    - kind: ClusterRole
+      name: kyverno
+      jqPathExpressions:
+        - .rules
+  destination:
+    name: homelab
+    namespace: kyverno
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  source:
+    # Repository: https://github.com/kyverno/kyverno
+    # ArtifactHub: https://artifacthub.io/packages/helm/kyverno/kyverno?modal=changelog
+    # Values: https://github.com/kyverno/kyverno/blob/main/charts/kyverno/values.yaml
+    repoURL: oci://ghcr.io/kyverno/charts/kyverno
+    path: "."
+    targetRevision: 3.7.1
+    helm:
+      releaseName: kyverno
+      valuesObject:
+        grafana:
+          enabled: true
+          annotations:
+            grafana_folder: "Kyverno"
+        features:
+          policyExceptions:
+            enabled: true
+            namespace: "*"
+          logging:
+            format: json
+        admissionController:
+          replicas: 3
+          podSecurityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          container:
+            resources:
+              requests:
+                cpu: 100m
+                memory: 150M
+              limits:
+                memory: 400M
+          serviceMonitor:
+            enabled: true
+          rbac:
+            clusterRole:
+              extraResources:
+                - apiGroups:
+                    - barmancloud.cnpg.io
+                  resources:
+                    - objectstores
+                  verbs:
+                    - get
+                    - list
+        backgroundController:
+          replicas: 2
+          podSecurityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 100Mi
+            limits:
+              memory: 500Mi
+          serviceMonitor:
+            enabled: true
+          rbac:
+            clusterRole:
+              extraResources:
+                - apiGroups:
+                    - barmancloud.cnpg.io
+                  resources:
+                    - objectstores
+                  verbs:
+                    - "*"
+        cleanupController:
+          replicas: 2
+          podSecurityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 40M
+            limits:
+              memory: 300M
+          serviceMonitor:
+            enabled: true
+        reportsController:
+          replicas: 2
+          podSecurityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 250m
+              memory: 273M
+            limits:
+              memory: 450M
+          extraArgs:
+            aggregationWorkers: 20 # increasing the worker size increases the consuming capability for policy reports reducing etcd load
+          serviceMonitor:
+            enabled: true
+        cleanupJobs:
+          admissionReports:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100M
+          clusterAdmissionReports:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100M
+          ephemeralReports:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100M
+          clusterEphemeralReports:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100M
+          updateRequests:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault
+            resources:
+              requests:
+                cpu: 50m
+                memory: 100M
+        crds:
+          migration:
+            podSecurityContext:
+              runAsUser: 65534
+              runAsGroup: 65534
+              seccompProfile:
+                type: RuntimeDefault

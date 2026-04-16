@@ -1,0 +1,20 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: derwitt-net-cloudflare-api-token
+  namespace: cert-manager
+spec:
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: derwitt-net-cloudflare-api-token
+    creationPolicy: Owner
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /cloudflare
+        property: derwitt-net-api-token
+      secretKey: api-token

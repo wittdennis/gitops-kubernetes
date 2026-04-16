@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-argo-workflows-ingress
+spec:
+  podSelector:
+    matchLabels:
+      io.kubernetes.pod.namespace: dex
+      app.kubernetes.io/instance: dex
+      app.kubernetes.io/name: dex
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argo-workflows
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/component: server
+              app.kubernetes.io/instance: argo-workflows
+              app.kubernetes.io/name: argo-workflows-server
+      ports:
+        - port: 4141

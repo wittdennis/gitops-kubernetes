@@ -1,0 +1,61 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-traefik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: traefik
+  source:
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 39.0.7
+    chart: traefik
+    helm:
+      releaseName: traefik
+      valuesObject:
+        deployment:
+          kind: DaemonSet
+        api:
+          dashboard: true
+          insecure: true
+        gateway:
+          enabled: false
+        gatewayClass:
+          enabled: true
+        metrics:
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+        ocsp:
+          enabled: true
+        ports:
+          web:
+            port: 80
+          websecure:
+            port: 443
+            http3:
+              enabled: false
+        providers:
+          kubernetesGateway:
+            enabled: true
+            experimentalChannel: true
+        service:
+          annotations:
+            load-balancer.hetzner.cloud/network-zone: eu-central
+            load-balancer.hetzner.cloud/name: lb-worker-traefik
+            load-balancer.hetzner.cloud/use-private-ip: "true"
+            load-balancer.hetzner.cloud/disable-private-ingress: "true"
+            # load-balancer.hetzner.cloud/uses-proxyprotocol: "true" # using the proxy protocol introduces problems when routing cluster internal resources through the lb
+            load-balancer.hetzner.cloud/protocol: "tcp"
+            load-balancer.hetzner.cloud/algorithm-type: "round_robin"
+            load-balancer.hetzner.cloud/type: lb11
+            load-balancer.hetzner.cloud/node-selector: "!node-role.kubernetes.io/control-plane"

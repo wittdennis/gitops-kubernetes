@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-trust-manager
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: cert-manager
+  source:
+    repoURL: https://charts.jetstack.io
+    targetRevision: v0.22.0
+    chart: trust-manager
+    helm:
+      releaseName: trust-manager
+      values: |
+
+        crds:
+          enabled: true
+          keep: true
+        app:
+          logFormat: json
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            memory: 100Mi
+        secretTargets:
+          enabled: true
+          authorizedSecrets:
+            - operator-ca-tls
+            - cluster-ca-secret

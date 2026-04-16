@@ -1,0 +1,81 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-chartmuseum
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: chartmuseum
+  source:
+    repoURL: https://chartmuseum.github.io/charts
+    targetRevision: 3.10.4
+    chart: chartmuseum
+    helm:
+      releaseName: chartmuseum
+      values: |
+
+        replicaCount: 2
+        image:
+          tag: v0.16.5 # renovate: datasource=docker depName=ghcr.io/helm/chartmuseum versioning=docker
+        env:
+          open:
+            STORAGE: microsoft
+            STORAGE_MICROSOFT_CONTAINER: charts
+            STORAGE_MICROSOFT_PREFIX: ""
+            ENABLE_METRICS: true
+            CHART_URL: https://charts.derwitt.dev
+            AUTH_ANONYMOUS_GET: true
+            DISABLE_API: false
+            # BEARER_AUTH: true
+            # AUTH_REALM: "https://auth.derwitt.dev"
+            # AUTH_SERVICE: "auth.derwitt.dev"
+          existingSecret: chartmuseum-secrets
+          existingSecretMappings:
+            BASIC_AUTH_USER: basic-auth-user
+            BASIC_AUTH_PASS: basic-auth-pass
+            AZURE_STORAGE_ACCOUNT: azure-storage-account
+            AZURE_STORAGE_ACCESS_KEY: azure-storage-access-key
+            ARTIFACT_HUB_REPO_ID: artifacthub-repo-id
+        serviceMonitor:
+          enabled: true
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 80m
+            memory: 64Mi
+        securityContext:
+          fsGroup: 1000
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        ingress:
+          enabled: true
+          ingressClassName: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+            traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
+          hosts:
+            - name: charts.derwitt.dev
+              tls: true
+              tlsSecret: charts-derwitt-dev-ingress-tls

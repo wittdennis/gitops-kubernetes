@@ -1,0 +1,78 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-oauth2-proxy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: oauth2-proxy
+  source:
+    repoURL: https://oauth2-proxy.github.io/manifests
+    targetRevision: 10.4.3
+    chart: oauth2-proxy
+    helm:
+      releaseName: oauth2-proxy
+      valuesObject:
+        replicaCount: 3
+        config:
+          existingSecret: oauth2-proxy-secrets
+          cookieName: "dev_derwitt_id"
+          configFile: |
+            provider = "oidc"
+            redirect_url = "https://id.derwitt.dev/oauth2/callback"
+            scope = "openid email profile"
+            pass_access_token = true
+            pass_authorization_header = true
+            set_authorization_header = true
+            email_domains = [
+                "*"
+            ]
+            upstreams = [
+                "static://202"
+            ]
+            set_xauthrequest = true
+            skip_jwt_bearer_tokens = true
+            silence_ping_logging = true
+            skip_provider_button = true
+        ingress:
+          enabled: true
+          className: traefik
+          annotations:
+            cert-manager.io/cluster-issuer: letsencrypt
+            traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
+          hosts:
+            - id.derwitt.dev
+          tls:
+            - secretName: oauth2-proxy-ingress-tls
+              hosts:
+                - id.derwitt.dev
+        extraArgs:
+          - --provider=azure
+          - --azure-tenant=6ddad1f1-1d3f-43bf-ad7a-445edf40fd73
+          - --oidc-issuer-url=https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/v2.0
+          - --whitelist-domain=*.derwitt.dev
+          - --cookie-domain=.derwitt.dev
+        resources:
+          requests:
+            cpu: 10m
+            memory: 100Mi
+          limits:
+            memory: 100Mi
+        podSecurityContext:
+          runAsUser: 65534
+          runAsGroup: 65534
+          fsGroup: 65534
+          seccompProfile:
+            type: RuntimeDefault
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true

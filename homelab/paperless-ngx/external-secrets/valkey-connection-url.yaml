@@ -1,0 +1,25 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: valkey-connection-url
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: valkey-connection-url
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        url: "redis://paperless:{{ .paperless_password }}@paperless-ngx-valkey.paperless-ngx.svc.cluster.local:6379"
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /paperless-ngx/valkey-credentials
+        property: paperless-password
+      secretKey: paperless_password

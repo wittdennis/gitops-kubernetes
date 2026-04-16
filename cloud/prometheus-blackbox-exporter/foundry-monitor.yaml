@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: blackbox-exporter-foundry
+spec:
+  endpoints:
+    - interval: 60s
+      metricRelabelings:
+        - replacement: https://vtt.code-and-quest.de
+          targetLabel: instance
+        - replacement: foundry
+          targetLabel: target
+      params:
+        module:
+          - http_200_strict
+        target:
+          - https://vtt.code-and-quest.de/join
+      path: /probe
+      port: http
+      scheme: http
+      scrapeTimeout: 30s
+  jobLabel: prometheus-blackbox-exporter
+  namespaceSelector:
+    matchNames:
+      - prometheus-blackbox-exporter
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-blackbox-exporter
+      app.kubernetes.io/name: prometheus-blackbox-exporter

@@ -1,0 +1,205 @@
+# ---
+# apiVersion: gateway.networking.k8s.io/v1
+# kind: Gateway
+# metadata:
+#   name: derwitt-site-gateway
+#   annotations:
+#     cert-manager.io/cluster-issuer: derwitt-site-cluster-issuer
+# spec:
+#   gatewayClassName: cilium
+#   listeners:
+#     - name: https-paperless-ngx-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "documents.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: paperless-ngx-https-gateway-tls
+
+#     - name: https-memos-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "memos.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: memos-https-gateway-tls
+
+#     - name: https-netbox-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "netbox.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: netbox-https-gateway-tls
+
+#     - name: https-vault-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "vault.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: vault-https-gateway-tls
+
+#     - name: https-workflows-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "workflows.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: workflows-https-gateway-tls
+
+#     - name: https-vmagent-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "vmagent.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: vmagent-https-gateway-tls
+
+#     - name: https-metrics-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "metrics.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: metrics-https-gateway-tls
+
+#     - name: https-alerts-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "alerts.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: alerts-https-gateway-tls
+
+#     - name: https-continuous-deployment-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "cd.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: argocd-https-gateway-tls
+
+#     - name: https-auth-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "auth.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: auth-gateway-tls
+
+#     - name: https-graphs-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "graphs.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: graphs-derwitt-site-tls
+
+#     - name: https-s3-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "s3.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: s3-derwitt-site-tls
+
+#     - name: https-s3-routes-wildcard
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "*.s3.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: wildcard-s3-derwitt-site-tls
+
+#     - name: https-links-routes
+#       port: 443
+#       protocol: HTTPS
+#       hostname: "links.derwitt.site"
+#       allowedRoutes:
+#         namespaces:
+#           from: All
+#       tls:
+#         mode: Terminate
+#         certificateRefs:
+#           - group: ""
+#             kind: Secret
+#             name: links-derwitt-site-tls

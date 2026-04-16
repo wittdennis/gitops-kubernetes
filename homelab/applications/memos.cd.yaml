@@ -1,0 +1,39 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-memos
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: memos
+  source:
+    repoURL: https://charts.derwitt.dev
+    chart: memos
+    targetRevision: 1.1.2
+    helm:
+      valuesObject:
+        memos:
+          databaseDriver: postgres
+          existingDsnSecret:
+            name: memos-postgres-app
+            key: fqdn-uri
+        replicaCount: 2
+        persistence:
+          enabled: false
+        route:
+          enabled: true
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik
+          hostnames:
+            - memos.derwitt.site

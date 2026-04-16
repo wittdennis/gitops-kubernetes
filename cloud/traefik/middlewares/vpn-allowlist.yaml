@@ -1,0 +1,10 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: vpn-ip-allow
+spec:
+  ipAllowList:
+    sourceRange:
+      - 172.30.0.0/24
+      - 2a01:4f8:c012:f0b3:ac1e::/120

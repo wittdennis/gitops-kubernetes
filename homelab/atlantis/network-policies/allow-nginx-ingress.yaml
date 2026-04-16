@@ -1,0 +1,15 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-nginx-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app: atlantis
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: traefik-traefik
+            app.kubernetes.io/name: traefik
+            io.kubernetes.pod.namespace: traefik

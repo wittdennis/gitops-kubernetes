@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-proxmox-csi
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: proxmox-csi
+  source:
+    repoURL: oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
+    path: "."
+    targetRevision: 0.5.7
+    helm:
+      releaseName: proxmox-csi-plugin
+      valuesObject:
+        node:
+          nodeSelector:
+            node.cloudprovider.kubernetes.io/platform: metal
+          tolerations:
+            - operator: Exists
+
+        nodeSelector:
+          node-role.kubernetes.io/control-plane: ""
+        tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            effect: NoSchedule
+
+        existingConfigSecret: proxmox-csi-plugin-config
+
+        storageClass:
+          - name: proxmox-data
+            storage: local-lvm
+            reclaimPolicy: Delete
+            fstype: xfs
+            mountOptions:
+              - discard
+
+        logVerbosityLevel: 5
+
+        metrics:
+          enabled: true
