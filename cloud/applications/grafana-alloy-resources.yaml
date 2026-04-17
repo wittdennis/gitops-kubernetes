@@ -15,7 +15,7 @@ spec:
     name: cloud
     namespace: grafana-alloy
   source:
-    repoURL: https://github.com/wittdennis/k8s-platform
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
     targetRevision: HEAD
     path: "cloud/grafana-alloy"
     directory:

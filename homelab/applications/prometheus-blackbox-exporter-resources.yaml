@@ -15,7 +15,7 @@ spec:
     name: homelab
     namespace: prometheus-blackbox-exporter
   source:
-    repoURL: https://github.com/wittdennis/k8s-platform
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
     targetRevision: HEAD
     path: "homelab/prometheus-blackbox-exporter"
     directory:

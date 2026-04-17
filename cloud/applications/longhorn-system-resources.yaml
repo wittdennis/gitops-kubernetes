@@ -15,7 +15,7 @@ spec:
     name: cloud
     namespace: longhorn-system
   source:
-    repoURL: https://github.com/wittdennis/k8s-platform
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
     targetRevision: HEAD
     path: "cloud/longhorn-system"
     directory:

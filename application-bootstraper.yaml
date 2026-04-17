@@ -21,7 +21,7 @@ spec:
         automated:
           prune: true
       source:
-        repoURL: https://github.com/wittdennis/k8s-platform
+        repoURL: https://git.derwitt.site/homelab/yggdrasil
         targetRevision: HEAD
         path: "{{ nameNormalized }}/applications"
       destination:

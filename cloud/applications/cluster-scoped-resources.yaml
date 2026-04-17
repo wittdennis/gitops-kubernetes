@@ -16,7 +16,7 @@ spec:
   destination:
     name: cloud
   source:
-    repoURL: https://github.com/wittdennis/k8s-platform
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
     targetRevision: HEAD
     path: "cloud/cluster-scoped"
     directory:
