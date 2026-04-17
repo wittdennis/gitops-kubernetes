@@ -53,7 +53,7 @@ spec:
 
       - name: retrieve-db-backups
         container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.21 # renovate
+          image: ghcr.io/wittdennis/devops-tools:1.2.22 # renovate
           volumeMounts:
             - name: workdir
               mountPath: /mnt/vol
