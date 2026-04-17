@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/netbox-community/netbox-chart/netbox
     path: "."
-    targetRevision: 8.1.2
+    targetRevision: 8.1.3
     helm:
       releaseName: netbox
       valuesObject:
