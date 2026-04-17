@@ -57,7 +57,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: denniswitt/github-app:0.2.2 # renovate
+          image: denniswitt/github-app:0.2.3 # renovate
           args:
             - generate-token
             - installation
