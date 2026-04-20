@@ -5,7 +5,7 @@ metadata:
   name: forgejo-homelab
 spec:
   schedule: "15 6-19/2 * * 1-5"
-  image: ghcr.io/renovatebot/renovate:43.133.0 # renovate
+  image: ghcr.io/renovatebot/renovate:43.134.0 # renovate
   parallelism: 5
   provider:
     name: forgejo
