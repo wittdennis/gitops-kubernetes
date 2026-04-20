@@ -20,7 +20,7 @@ spec:
     # ArtifactHub: https://artifacthub.io/packages/helm/cloudhippie/yopass
     repoURL: oci://ghcr.io/cloudhippie/charts/yopass
     path: "."
-    targetRevision: 8.4.1
+    targetRevision: 8.5.0
     helm:
       releaseName: yopass
       valuesObject:
