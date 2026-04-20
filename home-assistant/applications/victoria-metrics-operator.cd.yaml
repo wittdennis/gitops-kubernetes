@@ -31,7 +31,7 @@ spec:
     namespace: victoria-metrics-operator
   source:
     repoURL: https://victoriametrics.github.io/helm-charts
-    targetRevision: 0.61.0
+    targetRevision: 0.61.1
     chart: victoria-metrics-operator
     helm:
       releaseName: victoria-metrics-operator
