@@ -40,7 +40,7 @@ spec:
           - name: name
           - name: type
       container:
-        image: ghcr.io/wittdennis/devops-tools:1.2.24 # renovate
+        image: ghcr.io/wittdennis/devops-tools:1.2.25 # renovate
         securityContext:
           capabilities:
             drop:
