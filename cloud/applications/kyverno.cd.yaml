@@ -29,7 +29,7 @@ spec:
     # Values: https://github.com/kyverno/kyverno/blob/main/charts/kyverno/values.yaml
     repoURL: oci://ghcr.io/kyverno/charts/kyverno
     path: "."
-    targetRevision: 3.7.1
+    targetRevision: 3.7.2
     helm:
       releaseName: kyverno
       valuesObject:
