@@ -76,7 +76,7 @@ spec:
           enabled: true
           meta:
             storageClass: "longhorn"
-            size: 2Gi
+            size: 5Gi
             # used only for daemon sets
             hostPath: /var/lib/garage/meta
           data:
