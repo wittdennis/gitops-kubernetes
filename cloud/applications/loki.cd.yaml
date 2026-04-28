@@ -20,8 +20,7 @@ spec:
     targetRevision: 13.3.1
     helm:
       releaseName: loki
-      values: |
-
+      valuesObject:
         global:
           dnsService: "kube-dns"
           dnsNamespace: "kube-system"
@@ -128,7 +127,7 @@ spec:
         backend:
           replicas: 2
           persistence:
-            size: 2Gi
+            size: 1Gi
             storageClass: longhorn
           extraArgs:
             - -config.expand-env=true
@@ -189,7 +188,7 @@ spec:
         write:
           replicas: 2
           persistence:
-            size: 2Gi
+            size: 1Gi
             storageClass: longhorn
           extraArgs:
             - -config.expand-env=true
