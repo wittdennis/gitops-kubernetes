@@ -104,7 +104,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: ghcr.io/renovatebot/renovate:43.163.0 # renovate
+          image: ghcr.io/renovatebot/renovate:43.163.1 # renovate
           env:
             - name: RENOVATE_TOKEN
               value: "{{inputs.parameters.token}}"
