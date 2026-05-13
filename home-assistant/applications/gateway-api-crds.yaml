@@ -2,13 +2,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: homelab-gateway-api-crds
+  name: home-assistant-gateway-api-crds
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   destination:
-    name: homelab
+    name: home-assistant
     namespace: kube-system
   project: k8s-platform
   syncPolicy:
