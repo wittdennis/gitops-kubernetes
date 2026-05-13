@@ -2,14 +2,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: homelab-gateway-api-crds
+  name: gateway-api
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  destination:
-    name: homelab
-    namespace: kube-system
   project: k8s-platform
   syncPolicy:
     automated:
@@ -17,6 +14,9 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - ApplyOutOfSyncOnly=true
+  destination:
+    name: cloud
+    namespace: kube-system
   source:
     repoURL: https://github.com/kubernetes-sigs/gateway-api
     targetRevision: v1.5.1
