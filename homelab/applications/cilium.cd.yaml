@@ -51,7 +51,7 @@ spec:
           type: wireguard
           nodeEncryption: true
         gatewayAPI:
-          enabled: true
+          enabled: false
           enableProxyProtocol: false
           externalTrafficPolicy: Cluster
           enableAppProtocol: true
