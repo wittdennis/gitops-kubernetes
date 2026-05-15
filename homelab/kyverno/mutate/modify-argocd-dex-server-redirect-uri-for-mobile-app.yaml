@@ -1,0 +1,42 @@
+---
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: modify-argocd-dex-server-redirect-uri-for-mobile-app
+  annotations:
+    policies.kyverno.io/title: Modify Argo-CD dex-server redirect uri for mobile app
+    policies.kyverno.io/category: Security
+    policies.kyverno.io/subject: Pod
+spec:
+  rules:
+    - name: modify-argocd-dex-server-redirect-uri-for-mobile-app
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              names:
+                - argocd-dex-server-*
+              operations:
+                - CREATE
+      mutate:
+        patchStrategicMerge:
+          spec:
+            automountServiceAccountToken: false
+            securityContext:
+              runAsNonRoot: true
+              runAsUser: 1000
+              runAsGroup: 1000
+              fsGroup: 1000
+              seccompProfile:
+                type: RuntimeDefault
+            containers:
+              - name: apply
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  runAsNonRoot: true
+                  runAsUser: 1000
+                  runAsGroup: 1000
+                  capabilities:
+                    drop:
+                      - ALL
