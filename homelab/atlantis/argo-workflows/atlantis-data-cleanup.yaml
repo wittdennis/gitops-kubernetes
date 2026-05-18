@@ -71,7 +71,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.28 # renovate
+          image: ghcr.io/wittdennis/devops-tools:1.2.29 # renovate
           securityContext:
             runAsUser: 100
             runAsGroup: 1000
