@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: https://charts.derwitt.dev
     chart: linkwarden
-    targetRevision: 1.0.1
+    targetRevision: 1.0.2
     helm:
       valuesObject:
         linkwarden:
