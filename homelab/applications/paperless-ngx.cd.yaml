@@ -65,6 +65,9 @@ spec:
               name: email-settings
               key: password
 
+        deploymentStrategy:
+          type: Recreate
+
         route:
           enabled: true
           hostnames:
