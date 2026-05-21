@@ -66,6 +66,8 @@ spec:
                 capabilities:
                   drop:
                     - ALL
+                  add:
+                    - IPC_LOCK
           volumes:
             - name: tmp
               emptyDir: {}
