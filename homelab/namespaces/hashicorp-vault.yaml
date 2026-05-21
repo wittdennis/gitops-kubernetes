@@ -5,3 +5,4 @@ metadata:
   name: hashicorp-vault
   labels:
     argo-workflows: "true"
+    pod-security.kubernetes.io/enforce: restricted
