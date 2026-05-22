@@ -54,6 +54,10 @@ spec:
 
         tweaks:
           apps: allauth.socialaccount.providers.openid_connect
+          timezone: Europe/Berlin
+
+        documentConsumption:
+          dateOrder: DMY
 
         email:
           sending:
