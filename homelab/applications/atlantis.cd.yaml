@@ -15,7 +15,7 @@ spec:
   source:
     repoURL: https://runatlantis.github.io/helm-charts
     chart: atlantis
-    targetRevision: 6.4.0
+    targetRevision: 6.5.0
     helm:
       releaseName: atlantis
       values: |
