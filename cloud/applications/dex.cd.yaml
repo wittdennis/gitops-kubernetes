@@ -16,7 +16,7 @@ spec:
     namespace: dex
   source:
     repoURL: https://charts.dexidp.io
-    targetRevision: 0.24.0
+    targetRevision: 0.24.1
     chart: dex
     helm:
       releaseName: dex
