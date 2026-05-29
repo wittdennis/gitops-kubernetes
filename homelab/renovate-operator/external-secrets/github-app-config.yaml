@@ -1,0 +1,30 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: github-app-config
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: github-app-config
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /renovate-operator/github-app
+        property: client-id
+      secretKey: client-id
+    - remoteRef:
+        conversionStrategy: Default
+        key: /renovate-operator/github-app
+        property: installation-id
+      secretKey: installation-id
+    - remoteRef:
+        conversionStrategy: Default
+        key: /renovate-operator/github-app
+        property: private-key.pem
+      secretKey: private-key.pem
