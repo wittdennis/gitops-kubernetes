@@ -20,7 +20,7 @@ spec:
         }
   extraEnvFrom:
     - secretRef:
-        name: renovate-env
+        name: renovate-env-temp
   githubAppReference:
     appIdSecretKey: client-id
     installationIdSecretKey: installation-id
