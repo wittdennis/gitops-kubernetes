@@ -168,7 +168,7 @@ spec:
           - name: vault-snapshot
             path: /tmp/backup.snap
       container:
-        image: hashicorp/vault:2.0.1 # renovate
+        image: hashicorp/vault:2.0.2 # renovate
         command: [sh, -c]
         args:
           - |
