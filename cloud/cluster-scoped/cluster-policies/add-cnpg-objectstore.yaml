@@ -35,8 +35,8 @@ spec:
         data:
           spec:
             configuration:
-              destinationPath: s3://postgres-backups/
-              endpointURL: http://cloud-garage-default-headless.storage.svc.cluster.local:3900
+              destinationPath: s3://pseud0random-cnpg-backups-cloud/
+              endpointURL: https://fsn1.your-objectstorage.com
               s3Credentials:
                 region:
                   name: postgres-backups-credentials
