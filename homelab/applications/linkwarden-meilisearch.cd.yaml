@@ -25,7 +25,7 @@ spec:
       valuesObject:
         image:
           repository: docker.io/getmeili/meilisearch
-          tag: v1.45.2 # datasource=docker depName=docker.io/getmeili/meilisearch versioning=semver
+          tag: v1.46.0 # datasource=docker depName=docker.io/getmeili/meilisearch versioning=semver
           pullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
