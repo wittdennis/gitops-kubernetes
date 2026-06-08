@@ -1,0 +1,16 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-workflows-s3-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      network-policy/allow-workflows-s3-egress: apply
+  egress:
+    - toFQDNs:
+        - matchName: "fsn1.your-objectstorage.com"
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
