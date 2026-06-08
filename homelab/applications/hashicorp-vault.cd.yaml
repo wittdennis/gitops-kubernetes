@@ -16,7 +16,7 @@ spec:
     namespace: hashicorp-vault
   source:
     repoURL: https://helm.releases.hashicorp.com
-    targetRevision: 0.32.0
+    targetRevision: 0.33.0
     chart: vault
     helm:
       releaseName: vault
