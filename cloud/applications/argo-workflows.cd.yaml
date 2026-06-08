@@ -40,9 +40,9 @@ spec:
                   name: argo-workflows
                   namespace: argo-workflows
                   key: secret-key
-                bucket: workflows
-                insecure: true
-                endpoint: cloud-garage-default-headless.storage.svc.cluster.local:3900
+                bucket: pseud0random-workflows-cloud
+                insecure: false
+                endpoint: fsn1.your-objectstorage.com
         controller:
           volumeMounts:
             - name: tmp
