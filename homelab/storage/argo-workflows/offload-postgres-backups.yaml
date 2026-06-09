@@ -115,7 +115,7 @@ spec:
 
       - name: restic
         container:
-          image: restic/restic:0.18.1 # renovate
+          image: restic/restic:0.19.0 # renovate
           command: [sh, -c]
           workingDir: /mnt/vol
           args:

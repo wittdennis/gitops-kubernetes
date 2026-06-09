@@ -46,7 +46,7 @@ spec:
       automountServiceAccountToken: true
       serviceAccountName: vault
       container:
-        image: restic/restic:0.18.1 # renovate
+        image: restic/restic:0.19.0 # renovate
         command: [sh, -c]
         args:
           - |
@@ -115,7 +115,7 @@ spec:
             s3:
               key: "{{workflow.name}}/backup.snap"
       container:
-        image: restic/restic:0.18.1 # renovate
+        image: restic/restic:0.19.0 # renovate
         command: [sh, -c]
         args:
           - |
