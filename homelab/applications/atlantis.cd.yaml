@@ -22,7 +22,7 @@ spec:
 
         image:
           repository: ghcr.io/wittdennis/atlantis
-          tag: 1.1.96 # renovate: datasource=docker depName=ghcr.io/wittdennis/atlantis versioning=docker
+          tag: 1.1.97 # renovate: datasource=docker depName=ghcr.io/wittdennis/atlantis versioning=docker
         orgAllowlist: git.derwitt.site/homelab/terraform
         logLevel: "warn"
         gitea: {}
