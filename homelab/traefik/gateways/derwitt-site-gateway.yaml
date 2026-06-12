@@ -36,6 +36,20 @@ spec:
             kind: Secret
             name: renovate-https-gateway-tls
 
+    - name: https-renovate-webhook-routes
+      port: 443
+      protocol: HTTPS
+      hostname: "renovate-webhook.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: renovate-webhook-https-gateway-tls
+
     - name: https-paperless-ngx-routes
       port: 443
       protocol: HTTPS
