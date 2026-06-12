@@ -21,6 +21,17 @@ spec:
     helm:
       releaseName: renovate-operator
       valuesObject:
+        webhook:
+          enabled: true
+          route:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - renovate-webhook.derwitt.site
         route:
           enabled: true
           parentRefs:
