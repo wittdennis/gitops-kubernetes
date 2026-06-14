@@ -50,7 +50,7 @@ spec:
           - name: write
           - name: owner
       container:
-        image: ghcr.io/wittdennis/devops-tools:1.2.33 # renovate
+        image: ghcr.io/wittdennis/devops-tools:1.2.34 # renovate
         command: [sh, -c]
         args:
           - |
