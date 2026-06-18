@@ -53,7 +53,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: hashicorp/vault:2.0.2 # renovate
+          image: hashicorp/vault:2.0.3 # renovate
           command: [sh, -c]
           args:
             - |
