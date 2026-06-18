@@ -16,7 +16,7 @@ spec:
     namespace: kube-system
   source:
     repoURL: https://charts.hetzner.cloud
-    targetRevision: 1.32.0
+    targetRevision: 1.33.0
     chart: hcloud-cloud-controller-manager
     helm:
       releaseName: hccm
