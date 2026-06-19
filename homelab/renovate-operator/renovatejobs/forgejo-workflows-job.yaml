@@ -5,7 +5,7 @@ metadata:
   name: forgejo-workflows
 spec:
   schedule: "15 6-19/2 * * 1-5"
-  image: ghcr.io/renovatebot/renovate:43.232.0 # renovate
+  image: ghcr.io/renovatebot/renovate:43.232.1 # renovate
   parallelism: 5
   provider:
     name: forgejo
