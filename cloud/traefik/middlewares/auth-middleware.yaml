@@ -14,3 +14,4 @@ spec:
       - X-Auth-Request-Access-Token
       - Authorization
       - Set-Cookie
+    maxResponseBodySize: 8192
