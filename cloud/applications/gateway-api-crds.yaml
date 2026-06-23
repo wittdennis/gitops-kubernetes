@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cloud-gateway-api
+  name: cloud-gateway-api-crds
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
