@@ -38,6 +38,8 @@ spec:
             enabled: true
           serviceMonitor:
             enabled: true
+          persistence:
+            storageClass: proxmox-data
         persistence:
           storageClass: proxmox-data
         podSecurityContext:
