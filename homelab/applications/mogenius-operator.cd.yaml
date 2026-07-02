@@ -29,3 +29,34 @@ spec:
         envVars:
           MO_API_SERVER: "wss://k8s-ws.mogenius.com/ws"
           MO_EVENT_SERVER: "wss://k8s-dispatcher.mogenius.com/ws"
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        valkey:
+          metrics:
+            enabled: true
+          serviceMonitor:
+            enabled: true
+        persistence:
+          storageClass: proxmox-data
+        podSecurityContext:
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
