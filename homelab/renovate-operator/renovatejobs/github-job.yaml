@@ -18,11 +18,9 @@ spec:
             "$schema": "https://docs.renovatebot.com/renovate-schema.json",
             "extends": ["local>wittdennis/renovate-config"]
         }
-  extraEnvFrom:
-    - secretRef:
-        name: renovate-env
   githubAppReference:
     appIdSecretKey: client-id
     installationIdSecretKey: installation-id
     pemSecretKey: private-key.pem
     secretName: github-app-config
+  secretRef: renovate-env

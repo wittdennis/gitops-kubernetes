@@ -19,8 +19,6 @@ spec:
           "$schema": "https://docs.renovatebot.com/renovate-schema.json",
           "extends": ["local>renovate/config#main"],
         }
-  extraEnvFrom:
-    - secretRef:
-        name: renovate-env
   discoveryFilters:
     - "workflows/**"
+  secretRef: renovate-env
