@@ -110,7 +110,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: restic/restic:0.19.0 # renovate
+          image: restic/restic:0.19.1 # renovate
           command: [sh, -c]
           args:
             - |
