@@ -31,7 +31,7 @@ spec:
                 name: derwitt-site-gateway
                 namespace: traefik
             hostnames:
-              - renovate-webhook.derwitt.site
+              - api.renovate.derwitt.site
         route:
           enabled: true
           parentRefs:
