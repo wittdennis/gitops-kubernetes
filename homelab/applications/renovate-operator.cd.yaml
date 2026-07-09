@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/mogenius/helm-charts/renovate-operator
     path: "."
-    targetRevision: 5.0.1
+    targetRevision: 5.1.0
     helm:
       releaseName: renovate-operator
       valuesObject:
