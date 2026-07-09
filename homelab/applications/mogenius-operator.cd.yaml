@@ -21,6 +21,10 @@ spec:
     helm:
       releaseName: netbox
       valuesObject:
+        features:
+          autoUpgrade:
+            enabled: false
+
         global:
           cluster_name: "Homelab"
           apiKeySecret:
