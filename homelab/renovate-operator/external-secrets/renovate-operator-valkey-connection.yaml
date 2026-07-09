@@ -16,7 +16,7 @@ spec:
       engineVersion: v2
       mergePolicy: Replace
       data:
-        valkey-url: redis://:{{ .defaultPassword }}@renovate-operator-valkey.renovate-operator.svc.cluster.local:6379
+        valkey-url: redis://:{{ .defaultPassword | urlquery | replace "+" "%20" }}@renovate-operator-valkey.renovate-operator.svc.cluster.local:6379
   data:
     - remoteRef:
         conversionStrategy: Default
