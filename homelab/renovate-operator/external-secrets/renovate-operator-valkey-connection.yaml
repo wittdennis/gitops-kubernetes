@@ -2,24 +2,24 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: renovate-operator-valkey-credentials
+  name: renovate-operator-valkey-connection
 spec:
   refreshInterval: "1h0m0s"
   secretStoreRef:
     name: vault-backend-platform
     kind: ClusterSecretStore
   target:
-    name: renovate-operator-valkey-credentials
+    name: renovate-operator-valkey-connection
     creationPolicy: Owner
     deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        valkey-url: redis://default:{{ .defaultPassword }}@renovate-operator-valkey.renovate-operator.svc.cluster.local:6379
   data:
     - remoteRef:
         conversionStrategy: Default
         key: /renovate-operator/valkey/credentials
         property: default-password
-      secretKey: default-password
-    - remoteRef:
-        conversionStrategy: Default
-        key: /renovate-operator/valkey/credentials
-        property: replication-password
-      secretKey: replication-password
+      secretKey: defaultPassword

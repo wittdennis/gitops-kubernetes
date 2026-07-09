@@ -21,6 +21,11 @@ spec:
     helm:
       releaseName: renovate-operator
       valuesObject:
+        valkey:
+          enabled: false # prevents deploying valkey via subchart
+          existingSecret: renovate-operator-valkey-connection
+          existingSecretKey: valkey-url
+
         webhook:
           enabled: true
           route:
