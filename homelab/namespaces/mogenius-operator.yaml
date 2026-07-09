@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: mogenius-operator
   labels:
-    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce: privileged

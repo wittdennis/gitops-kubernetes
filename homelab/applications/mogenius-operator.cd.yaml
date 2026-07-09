@@ -1,64 +1,64 @@
-# ---
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: homelab-mogenius-operator
-#   namespace: argocd
-#   finalizers:
-#     - resources-finalizer.argocd.argoproj.io
-# spec:
-#   project: k8s-platform
-#   syncPolicy:
-#     automated:
-#       prune: true
-#   destination:
-#     name: homelab
-#     namespace: mogenius-operator
-#   source:
-#     repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator
-#     path: "."
-#     targetRevision: v2.23.2
-#     helm:
-#       releaseName: netbox
-#       valuesObject:
-#         global:
-#           cluster_name: "Homelab"
-#           apiKeySecret:
-#             secretName: mogenius-operator-api-secret
-#             secretKey: api-key
-#         envVars:
-#           MO_API_SERVER: "wss://k8s-ws.mogenius.com/ws"
-#           MO_EVENT_SERVER: "wss://k8s-dispatcher.mogenius.com/ws"
-#         metrics:
-#           enabled: true
-#           serviceMonitor:
-#             enabled: true
-#         valkey:
-#           metrics:
-#             enabled: true
-#           serviceMonitor:
-#             enabled: true
-#           persistence:
-#             storageClass: proxmox-data
-#         persistence:
-#           storageClass: proxmox-data
-#         podSecurityContext:
-#           fsGroup: 1000
-#           fsGroupChangePolicy: OnRootMismatch
-#           runAsGroup: 1000
-#           runAsNonRoot: true
-#           runAsUser: 1000
-#           seccompProfile:
-#             type: RuntimeDefault
-#         containerSecurityContext:
-#           allowPrivilegeEscalation: false
-#           capabilities:
-#             drop:
-#               - ALL
-#           privileged: false
-#           readOnlyRootFilesystem: true
-#           runAsGroup: 1000
-#           runAsNonRoot: true
-#           runAsUser: 1000
-#           seccompProfile:
-#             type: RuntimeDefault
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-mogenius-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: mogenius-operator
+  source:
+    repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator
+    path: "."
+    targetRevision: v2.23.2
+    helm:
+      releaseName: netbox
+      valuesObject:
+        global:
+          cluster_name: "Homelab"
+          apiKeySecret:
+            secretName: mogenius-operator-api-secret
+            secretKey: api-key
+        envVars:
+          MO_API_SERVER: "wss://k8s-ws.mogenius.com/ws"
+          MO_EVENT_SERVER: "wss://k8s-dispatcher.mogenius.com/ws"
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        valkey:
+          metrics:
+            enabled: true
+          serviceMonitor:
+            enabled: true
+          persistence:
+            storageClass: proxmox-data
+        persistence:
+          storageClass: proxmox-data
+        podSecurityContext:
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
