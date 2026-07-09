@@ -21,6 +21,8 @@ spec:
     helm:
       releaseName: renovate-operator
       valuesObject:
+        replicaCount: 2
+
         valkey:
           enabled: false # prevents deploying valkey via subchart
           existingSecret: renovate-operator-valkey-connection
