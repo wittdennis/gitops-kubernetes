@@ -23,6 +23,11 @@ spec:
       valuesObject:
         replicaCount: 2
 
+        config:
+          deleteSuccessfulJobs: true
+          logStorage:
+            mode: valkey
+
         valkey:
           enabled: false # prevents deploying valkey via subchart
           existingSecret: renovate-operator-valkey-connection
