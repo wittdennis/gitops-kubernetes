@@ -19,7 +19,7 @@ spec:
     path: "."
     targetRevision: 0.10.0
     helm:
-      releaseName: netbox-valkey
+      releaseName: renovate-operator-valkey
       valuesObject:
         image:
           registry: "docker.io"
