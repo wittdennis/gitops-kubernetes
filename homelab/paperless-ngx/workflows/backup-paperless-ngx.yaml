@@ -86,7 +86,7 @@ spec:
               s3:
                 key: "{{workflow.name}}/paperless-ngx-data.tar.xz"
         container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.37 # renovate
+          image: ghcr.io/wittdennis/devops-tools:1.2.38 # renovate
           volumeMounts:
             - name: tmp
               mountPath: /tmp
@@ -137,7 +137,7 @@ spec:
               s3:
                 key: "{{workflow.name}}/paperless-ngx-postgres.tar.xz"
         container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.37 # renovate
+          image: ghcr.io/wittdennis/devops-tools:1.2.38 # renovate
           volumeMounts:
             - name: tmp
               mountPath: /tmp

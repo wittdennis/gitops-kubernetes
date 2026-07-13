@@ -26,7 +26,7 @@ spec:
         parameters:
           - name: bucket-name
       container:
-        image: ghcr.io/wittdennis/devops-tools:1.2.37 # renovate
+        image: ghcr.io/wittdennis/devops-tools:1.2.38 # renovate
         command: [sh, -c]
         args:
           - |
