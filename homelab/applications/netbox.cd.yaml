@@ -23,9 +23,9 @@ spec:
       valuesObject:
         replicaCount: 3
         image:
-          registry: ghcr.io
-          repository: wittdennis/netbox
-          tag: 1.0.10 # renovate: datasource=docker depName=ghcr.io/wittdennis/netbox versioning=docker
+          registry: git.derwitt.site
+          repository: containers/netbox
+          tag: 1.0.14 # renovate: datasource=docker depName=git.derwitt.site/containers/netbox versioning=docker
         plugins:
           - netbox_prometheus_sd
           - netbox_reorder_rack
