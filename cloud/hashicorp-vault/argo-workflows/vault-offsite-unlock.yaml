@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: vault-offsite-unlock
+spec:
+  entrypoint: unlock
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  podGC:
+    strategy: OnPodCompletion
+  templates:
+    - name: unlock
+      automountServiceAccountToken: true
+      serviceAccountName: vault
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+        fsGroupChangePolicy: "OnRootMismatch"
+        seccompProfile:
+          type: RuntimeDefault
+      container:
+        image: docker.io/restic/restic:0.19.1 # renovate
+        command: [sh, -c]
+        args:
+          - restic unlock --no-cache
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+        env:
+          - name: RESTIC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: vault-backup-settings
+                key: restic-password
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: vault-backup-settings
+                key: access-key
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: vault-backup-settings
+                key: secret-key
+          - name: RESTIC_REPOSITORY
+            value: s3:https://nbg1.your-objectstorage.com/pseud0random-backups/vault-cloud
+        securityContext:
+          runAsGroup: 1000
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+              - ALL
+          seccompProfile:
+            type: RuntimeDefault
+      volumes:
+        - name: tmp
+          emptyDir: {}
