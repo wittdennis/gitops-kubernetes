@@ -137,7 +137,7 @@ spec:
                     leader_client_key_file = "/vault/userconfig/vault-server-cert/tls.key"
                   }
                   retry_join {
-                    leader_api_addr = "https://vault-3.vault-internal:8200"
+                    leader_api_addr = "https://vault-2.vault-internal:8200"
                     leader_ca_cert_file = "/vault/userconfig/vault-server-cert/ca.crt"
                     leader_client_cert_file = "/vault/userconfig/vault-server-cert/tls.crt"
                     leader_client_key_file = "/vault/userconfig/vault-server-cert/tls.key"
