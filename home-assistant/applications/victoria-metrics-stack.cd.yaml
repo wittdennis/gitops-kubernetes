@@ -48,9 +48,11 @@ spec:
             RequestErrorsToAPI:
               create: false
           groups:
-            kubernetesSystemScheduler:
+            kubernetes-system-scheduler:
               create: false
-            kubeScheduler:
+            kube-scheduler.rules:
+              create: false
+            kubernetes-system-controller-manager:
               create: false
             vmagent:
               create: false
