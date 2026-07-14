@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: homelab-renovate-operator-valkey
+  name: homelab-mogenius-operator-valkey
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -13,13 +13,13 @@ spec:
       prune: true
   destination:
     name: homelab
-    namespace: renovate-operator
+    namespace: mogenius-operator
   source:
     repoURL: oci://ghcr.io/valkey-io/valkey-helm/valkey
     path: "."
     targetRevision: 0.10.0
     helm:
-      releaseName: renovate-operator-valkey
+      releaseName: mogenius-operator-valkey
       valuesObject:
         image:
           registry: "docker.io"
@@ -28,7 +28,7 @@ spec:
           tag: "9.1.0" # renovate: datasource=docker depName=valkey/valkey versioning=docker
         auth:
           enabled: true
-          usersExistingSecret: renovate-operator-valkey-credentials
+          usersExistingSecret: mogenius-operator-valkey-credentials
           aclUsers:
             default:
               permissions: "~* &* +@all"
@@ -79,7 +79,7 @@ spec:
           prometheusRule:
             enabled: true
             rules:
-              - alert: RenovateOperatorValkeyDown
+              - alert: MogeniusOperatorValkeyDown
                 annotations:
                   summary: Valkey instance {{ "{{ $labels.instance }}" }} down
                   description: Valkey instance {{ "{{ $labels.instance }}" }} is down.
@@ -88,7 +88,7 @@ spec:
                 for: 2m
                 labels:
                   severity: warning
-              - alert: RenovateOperatorValkeyMemoryHigh
+              - alert: MogeniusOperatorValkeyMemoryHigh
                 annotations:
                   summary: Valkey instance {{ "{{ $labels.instance }}" }} is using too much memory
                   description: |
@@ -101,7 +101,7 @@ spec:
                 for: 2m
                 labels:
                   severity: warning
-              - alert: RenovateOperatorValkeyKeyEviction
+              - alert: MogeniusOperatorValkeyKeyEviction
                 annotations:
                   summary: Valkey instance {{ "{{ $labels.instance }}" }} has evicted keys
                   description: |
