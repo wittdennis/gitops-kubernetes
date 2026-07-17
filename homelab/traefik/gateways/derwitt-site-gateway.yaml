@@ -5,6 +5,7 @@ metadata:
   name: derwitt-site-gateway
   annotations:
     cert-manager.io/cluster-issuer: derwitt-site-cluster-issuer
+    cert-manager.io/issue-temporary-certificate: "true"
 spec:
   gatewayClassName: traefik
   listeners:
