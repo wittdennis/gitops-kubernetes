@@ -5,7 +5,7 @@ metadata:
   name: github-all
 spec:
   schedule: "15 6-19/2 * * 1-5"
-  image: ghcr.io/renovatebot/renovate:43.265.2 # renovate
+  image: ghcr.io/renovatebot/renovate:43.265.4 # renovate
   parallelism: 5
   provider:
     name: github
