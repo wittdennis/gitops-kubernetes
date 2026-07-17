@@ -8,6 +8,20 @@ metadata:
 spec:
   gatewayClassName: traefik
   listeners:
+    - name: https-radicale-routes
+      port: 443
+      protocol: HTTPS
+      hostname: "calendar.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: radicale-https-gateway-tls
+
     - name: https-atlantis-routes
       port: 443
       protocol: HTTPS
