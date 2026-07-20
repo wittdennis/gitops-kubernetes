@@ -23,7 +23,8 @@ spec:
         config:
           auth:
             type: htpasswd
-            existingSecret: radicale-auth-htpasswd
+            htpasswd:
+              existingSecret: radicale-auth-htpasswd
 
         persistence:
           data:
