@@ -19,12 +19,12 @@ spec:
     chart: radicale
     targetRevision: 2.0.1
     helm:
-      config:
-        auth:
-          type: htpasswd
-          existingSecret: radicale-auth-htpasswd
-
       valuesObject:
+        config:
+          auth:
+            type: htpasswd
+            existingSecret: radicale-auth-htpasswd
+
         persistence:
           data:
             enabled: true
