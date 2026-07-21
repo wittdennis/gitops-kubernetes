@@ -25,6 +25,14 @@ spec:
           autoUpgrade:
             enabled: false
 
+        externalKeyValueStore:
+          enabled: true
+          host: mogenius-operator-valkey.mogenius-operator.svc.cluster.local
+          username: default
+          existingSecret:
+            name: mogenius-operator-valkey-credentials
+            key: default-password
+
         global:
           cluster_name: "Homelab"
           apiKeySecret:
@@ -38,12 +46,7 @@ spec:
           serviceMonitor:
             enabled: true
         valkey:
-          metrics:
-            enabled: true
-          serviceMonitor:
-            enabled: true
-          persistence:
-            storageClass: proxmox-data
+          enabled: false
         persistence:
           storageClass: proxmox-data
         podSecurityContext:
