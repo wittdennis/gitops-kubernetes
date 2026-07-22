@@ -22,6 +22,8 @@ spec:
   extraEnv:
     - name: LOG_LEVEL
       value: debug
+    - name: RENOVATE_REPORT_TYPE
+      value: "logging"
     - name: RENOVATE_ONBOARDING_CONFIG
       value: |
         {
