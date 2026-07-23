@@ -38,6 +38,13 @@ spec:
         valkey:
           enabled: false
 
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+          dashboard:
+            enabled: true
+
         webhook:
           enabled: true
           route:
