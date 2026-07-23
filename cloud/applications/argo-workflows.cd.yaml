@@ -16,7 +16,7 @@ spec:
     namespace: argo-workflows
   source:
     repoURL: https://argoproj.github.io/argo-helm
-    targetRevision: 1.0.21
+    targetRevision: 1.0.22
     chart: argo-workflows
     helm:
       releaseName: argo-workflows
