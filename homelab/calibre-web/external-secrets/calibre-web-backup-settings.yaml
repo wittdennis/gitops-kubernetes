@@ -1,0 +1,30 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: calibre-web-backup-settings
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: calibre-web-backup-settings
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: calibre-web/backup
+        property: restic-password
+      secretKey: restic-password
+    - remoteRef:
+        conversionStrategy: Default
+        key: shared/hetzner-backup-bucket-credentials
+        property: access-key
+      secretKey: access-key
+    - remoteRef:
+        conversionStrategy: Default
+        key: shared/hetzner-backup-bucket-credentials
+        property: secret-key
+      secretKey: secret-key
