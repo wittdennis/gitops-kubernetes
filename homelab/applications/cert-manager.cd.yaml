@@ -29,7 +29,11 @@ spec:
           enableGatewayAPI: true
         extraArgs:
           - --logging-format=json
-        dns01RecursiveNameservers: "8.8.8.8:53,1.1.1.1:53"
+        # plain port 53 queries never leave the network, the isp answers them
+        # from its own resolver which does not see the acme challenge records.
+        # doh (rfc 8484) over 443 cannot be intercepted, ip literals avoid
+        # needing to resolve the resolver itself
+        dns01RecursiveNameservers: "https://1.1.1.1/dns-query,https://8.8.8.8/dns-query"
         dns01RecursiveNameserversOnly: true
         resources:
           requests:
