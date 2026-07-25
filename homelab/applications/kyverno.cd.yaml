@@ -176,6 +176,14 @@ spec:
               requests:
                 cpu: 50m
                 memory: 100M
+        # the kyverno-api subchart always emits metadata.labels/annotations on its
+        # CRDs; left empty they render as `{}`, which the API server drops and
+        # ArgoCD then reports as permanent drift
+        kyverno-api:
+          labels:
+            app.kubernetes.io/part-of: kyverno
+          annotations:
+            app.kubernetes.io/part-of: kyverno
         crds:
           migration:
             podSecurityContext:
