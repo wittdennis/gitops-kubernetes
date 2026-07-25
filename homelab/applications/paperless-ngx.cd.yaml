@@ -42,6 +42,10 @@ spec:
           secretKey:
             create: false
             name: paperless-ngx-secret-key
+          # traefik runs as a daemonset, so match the whole pod network by prefix.
+          # matching is prefix based, CIDR notation never matches
+          trustedProxies:
+            - "10.244."
 
         auth:
           sso:
