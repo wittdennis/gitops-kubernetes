@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: https://charts.derwitt.dev
     chart: paperless-ngx
-    targetRevision: 2.0.0
+    targetRevision: 2.0.1
     helm:
       valuesObject:
         ocr:
