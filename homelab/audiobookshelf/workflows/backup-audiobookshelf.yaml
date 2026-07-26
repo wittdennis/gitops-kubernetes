@@ -1,0 +1,153 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: audiobookshelf-backup
+spec:
+  schedules:
+    - "56 2 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 1
+  workflowSpec:
+    entrypoint: main
+    onExit: exit-handler
+    podMetadata:
+      labels:
+        network-policy/allow-default-tenant-s3-traffic: apply
+        network-policy/allow-kube-apiserver-traffic: apply
+        network-policy/allow-backup-egress: apply
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccountName: audiobookshelf-workflows
+    # the volumes are read straight by restic instead of being staged into an archive first:
+    # the media volume does not fit into an emptyDir, and audio files never change once
+    # imported, so incremental snapshots stay cheap
+    volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: audiobookshelf-config
+        persistentVolumeClaim:
+          claimName: homelab-audiobookshelf-config
+          readOnly: true
+      - name: audiobookshelf-metadata
+        persistentVolumeClaim:
+          claimName: homelab-audiobookshelf-metadata
+          readOnly: true
+      - name: audiobookshelf-media
+        persistentVolumeClaim:
+          claimName: homelab-audiobookshelf-media
+          readOnly: true
+    templates:
+      - name: main
+        dag:
+          tasks:
+            # the volumes are ReadWriteOnce and the sqlite database must not be copied while
+            # the server writes to it
+            - name: scale-down
+              arguments:
+                parameters:
+                  - name: name
+                    value: homelab-audiobookshelf
+                  - name: namespace
+                    value: audiobookshelf
+                  - name: replicaCount
+                    value: "0"
+                  - name: type
+                    value: deployment
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true
+
+            - name: backup
+              dependencies: [scale-down]
+              template: restic
+
+      - name: restic
+        container:
+          image: restic/restic:0.19.1 # renovate
+          command: [sh, -c]
+          args:
+            - |
+              set -eu
+
+              restic init --no-cache || true
+
+              # metadata/backups holds audiobookshelf's own backup archives. they are freshly
+              # compressed on every run, so they would deduplicate against nothing
+              restic backup --no-cache --host audiobookshelf \
+                --exclude /mnt/metadata/backups \
+                /mnt/config /mnt/metadata /mnt/media
+
+              # deduplication makes older snapshots nearly free here, unlike the archive based
+              # backups of the other workloads
+              restic forget --no-cache --host audiobookshelf \
+                --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: audiobookshelf-backup-settings
+                  key: access-key
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: audiobookshelf-backup-settings
+                  key: secret-key
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: audiobookshelf-backup-settings
+                  key: restic-password
+            - name: RESTIC_REPOSITORY
+              value: s3:https://nbg1.your-objectstorage.com/pseud0random-backups/audiobookshelf
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: audiobookshelf-config
+              mountPath: /mnt/config
+              readOnly: true
+            - name: audiobookshelf-metadata
+              mountPath: /mnt/metadata
+              readOnly: true
+            - name: audiobookshelf-media
+              mountPath: /mnt/media
+              readOnly: true
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 1000
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+
+      - name: exit-handler
+        steps:
+          - - name: scale-up
+              arguments:
+                parameters:
+                  - name: name
+                    value: homelab-audiobookshelf
+                  - name: namespace
+                    value: audiobookshelf
+                  - name: replicaCount
+                    value: "1"
+                  - name: type
+                    value: deployment
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true

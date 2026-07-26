@@ -1,0 +1,59 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-audiobookshelf
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: audiobookshelf
+  source:
+    repoURL: https://charts.derwitt.dev
+    chart: audiobookshelf
+    targetRevision: 1.0.0
+    helm:
+      valuesObject:
+        audiobookshelf:
+          timezone: Europe/Berlin
+
+        # the image ships a newer ffmpeg than the version check accepts, which would make it
+        # pull its own copy over the network on first start
+        binaries:
+          skipCheck: true
+          ffmpegPath: /usr/bin/ffmpeg
+          ffprobePath: /usr/bin/ffprobe
+
+        persistence:
+          config:
+            enabled: true
+            className: proxmox-data
+            size: 2Gi
+          metadata:
+            enabled: true
+            className: proxmox-data
+            size: 20Gi
+
+        # one volume for all libraries, split into folders from the app UI
+        mediaMounts:
+          - name: media
+            mountPath: /media
+            className: proxmox-data
+            size: 100Gi
+            accessMode: ReadWriteOnce
+
+        route:
+          enabled: true
+          hostnames:
+            - audiobooks.derwitt.site
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik

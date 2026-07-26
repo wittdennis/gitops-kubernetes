@@ -274,3 +274,17 @@ spec:
           - group: ""
             kind: Secret
             name: books-derwitt-site-tls
+
+    - name: https-audiobooks-routes
+      port: 443
+      protocol: HTTPS
+      hostname: "audiobooks.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: audiobooks-derwitt-site-tls
