@@ -76,7 +76,7 @@ spec:
               s3:
                 key: "{{workflow.name}}/radicale-data.tar.xz"
         container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.39 # renovate
+          image: ghcr.io/wittdennis/devops-tools:1.2.40 # renovate
           volumeMounts:
             - name: tmp
               mountPath: /tmp
