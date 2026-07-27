@@ -25,7 +25,7 @@
 #     - name: https-memos-routes
 #       port: 443
 #       protocol: HTTPS
-#       hostname: "memos.derwitt.site"
+#       hostname: "notes.derwitt.site"
 #       allowedRoutes:
 #         namespaces:
 #           from: All

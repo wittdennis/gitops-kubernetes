@@ -21,6 +21,7 @@ spec:
     helm:
       valuesObject:
         memos:
+          instanceUrl: notes.derwitt.site
           databaseDriver: postgres
           existingDsnSecret:
             name: memos-postgres-app
@@ -36,4 +37,4 @@ spec:
               name: derwitt-site-gateway
               namespace: traefik
           hostnames:
-            - memos.derwitt.site
+            - notes.derwitt.site
