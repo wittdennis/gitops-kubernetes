@@ -42,6 +42,7 @@ spec:
           MEILI_NO_ANALYTICS: "true"
           MEILI_HTTP_ADDR: "0.0.0.0:7700"
           MEILI_EXPERIMENTAL_DUMPLESS_UPGRADE: "true"
+          MEILI_UPGRADE_DB: "true"
         persistence:
           enabled: true
           storageClass: proxmox-data
