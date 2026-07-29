@@ -25,7 +25,7 @@ spec:
       releaseName: yopass
       valuesObject:
         image:
-          tag: 14.7.0 # datasource=docker depName=docker.io/jhaals/yopass versioning=docker
+          tag: 14.8.0 # datasource=docker depName=docker.io/jhaals/yopass versioning=docker
         serviceAccount:
           create: false
         securityContext:
