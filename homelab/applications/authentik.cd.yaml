@@ -36,6 +36,7 @@ spec:
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf
             - authentik-blueprint-kubernetes
+            - authentik-blueprint-argo-workflows
           secrets: []
         authentik:
           postgresql:
