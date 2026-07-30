@@ -33,6 +33,7 @@ spec:
         blueprints:
           configMaps:
             - authentik-blueprint-base
+            - authentik-blueprint-memos
           secrets: []
         authentik:
           postgresql:
