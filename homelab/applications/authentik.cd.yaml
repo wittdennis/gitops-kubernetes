@@ -43,6 +43,7 @@ spec:
             - authentik-blueprint-paperless-ngx
             - authentik-blueprint-forgejo
             - authentik-blueprint-argocd
+            - authentik-blueprint-vault
           secrets: []
         authentik:
           postgresql:
