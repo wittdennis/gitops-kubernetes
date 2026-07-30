@@ -30,6 +30,10 @@ spec:
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault
+        blueprints:
+          configMaps:
+            - authentik-blueprint-base
+          secrets: []
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local

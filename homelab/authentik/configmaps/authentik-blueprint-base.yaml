@@ -1,0 +1,232 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-base
+data:
+  groups.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-groups
+    entries:
+      # groups whose membership authentik terraform actively managed (no lifecycle.ignore_changes)
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: SuperUsers
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Argo Workflows Admins
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Netbox Admins
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Paperless Admins
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
+      # groups terraform only seeded membership for once, then ignored via lifecycle.ignore_changes = [users]
+      # membership is left untouched here on purpose - omitting `users` from attrs adopts the group without touching it
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: k8s-admins
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: k8s-readers
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Grafana Admins
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Linkwarden Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Memos Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Vault Admins
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Vault Readers
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Audiobookshelf Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Audiobookshelf Admins
+      # groups with no membership managed by terraform at all
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Netbox Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Paperless Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: VCS Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: VCS Admins
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: VCS Restricted Users
+  users.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-users
+    entries:
+      # name/email intentionally omitted - terraform ignored changes to them (set once on account creation), adopt as-is
+      - model: authentik_core.user
+        state: present
+        identifiers:
+          username: dennis
+        attrs:
+          type: internal
+          is_active: true
+  property-mappings.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-property-mappings
+    entries:
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        identifiers:
+          name: email-unsecure-email-verified-true
+        attrs:
+          scope_name: email
+          expression: |
+            return {
+                "email": request.user.email,
+                "email_verified": True
+            }
+      # replaces the default profile mapping, which emits a groups claim of its own containing the raw
+      # authentik group names and would overwrite the dedicated groups scope below
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        identifiers:
+          name: audiobookshelf-profile
+        attrs:
+          scope_name: profile
+          expression: |
+            return {
+                "name": request.user.name,
+                "given_name": request.user.name,
+                "preferred_username": request.user.username,
+                "nickname": request.user.username,
+            }
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        identifiers:
+          name: audiobookshelf-groups
+        attrs:
+          scope_name: groups
+          expression: |
+            # audiobookshelf matches the groups claim against these literal role names, they are not configurable
+            GROUP_TO_ROLE = [
+                ("SuperUsers", "admin"),
+                ("Audiobookshelf Admins", "admin"),
+                ("Audiobookshelf Users", "user"),
+            ]
+
+            roles = list(dict.fromkeys(
+                role
+                for group, role in GROUP_TO_ROLE
+                if request.user.groups.filter(name=group).exists()
+            ))
+
+            # audiobookshelf picks the highest role it recognises from the list
+            return {"groups": roles}
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        identifiers:
+          name: audiobookshelf-permissions
+        attrs:
+          scope_name: abspermissions
+          expression: |
+            # only applies to non-admin roles, admins always get full permissions
+            return {
+                "abspermissions": {
+                    "canDownload": True,
+                    "canUpload": False,
+                    "canDelete": False,
+                    "canUpdate": False,
+                    "canAccessExplicitContent": False,
+                    "canAccessAllLibraries": True,
+                    "canAccessAllTags": True,
+                    "canCreateEReader": False,
+                    "tagsAreDenylist": False,
+                    "allowedLibraries": [],
+                    "allowedTags": [],
+                }
+            }
+      - model: authentik_providers_oauth2.scopemapping
+        state: present
+        identifiers:
+          name: forgejo
+        attrs:
+          scope_name: forgejo
+          expression: |
+            GROUP_TO_ROLE = {
+                "VCS Users": "user",
+                "VCS Restricted Users": "restricted",
+                "VCS Admins": "admin",
+                "SuperUsers": "admin",
+            }
+
+            forgejo_claims = {}
+            roles = list(dict.fromkeys(
+                role
+                for group, role in GROUP_TO_ROLE.items()
+                if request.user.groups.filter(name=group).exists()
+            ))
+
+            if roles:
+                forgejo_claims["forgejo_groups"] = roles
+
+            return forgejo_claims
+  certificates.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-signing-certs
+    entries:
+      # adopt-only: certificate/key material stays terraform-managed until the Vault-backed
+      # secret blueprint (authentik-blueprint-certificates) replaces this file
+      - model: authentik_crypto.certificatekeypair
+        state: present
+        identifiers:
+          name: Derwitt Signing Key (ECDSA)
+      - model: authentik_crypto.certificatekeypair
+        state: present
+        identifiers:
+          name: Derwitt Signing Key (ED25519)
+      - model: authentik_crypto.certificatekeypair
+        state: present
+        identifiers:
+          name: Derwitt Signing Key (RSA)
