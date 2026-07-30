@@ -35,6 +35,7 @@ spec:
             - authentik-blueprint-base
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf
+            - authentik-blueprint-kubernetes
           secrets: []
         authentik:
           postgresql:
