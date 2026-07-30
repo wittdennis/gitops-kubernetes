@@ -28,6 +28,7 @@ spec:
           configFile: |
             provider = "oidc"
             redirect_url = "https://id.derwitt.dev/oauth2/callback"
+            reverse_proxy = true
             scope = "openid email profile"
             pass_access_token = true
             pass_authorization_header = true
