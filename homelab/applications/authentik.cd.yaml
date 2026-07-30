@@ -38,6 +38,7 @@ spec:
             - authentik-blueprint-kubernetes
             - authentik-blueprint-argo-workflows
             - authentik-blueprint-grafana
+            - authentik-blueprint-netbox
           secrets: []
         authentik:
           postgresql:
