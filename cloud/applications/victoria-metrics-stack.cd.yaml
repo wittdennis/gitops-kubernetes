@@ -404,6 +404,10 @@ spec:
                     alertname: InfoInhibitor
                   receiver: blackhole
                 - receiver: PagerDuty
+                  match:
+                    cluster: external
+                  group_by: [alertname, instance]
+                - receiver: PagerDuty
                   continue: true
             receivers:
               - name: blackhole
