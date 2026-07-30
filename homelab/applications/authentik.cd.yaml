@@ -41,6 +41,7 @@ spec:
             - authentik-blueprint-netbox
             - authentik-blueprint-linkwarden
             - authentik-blueprint-paperless-ngx
+            - authentik-blueprint-forgejo
           secrets: []
         authentik:
           postgresql:
