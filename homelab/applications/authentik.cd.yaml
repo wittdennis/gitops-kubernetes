@@ -39,6 +39,7 @@ spec:
             - authentik-blueprint-argo-workflows
             - authentik-blueprint-grafana
             - authentik-blueprint-netbox
+            - authentik-blueprint-linkwarden
           secrets: []
         authentik:
           postgresql:
