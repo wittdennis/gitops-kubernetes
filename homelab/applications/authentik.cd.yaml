@@ -40,6 +40,7 @@ spec:
             - authentik-blueprint-grafana
             - authentik-blueprint-netbox
             - authentik-blueprint-linkwarden
+            - authentik-blueprint-paperless-ngx
           secrets: []
         authentik:
           postgresql:
