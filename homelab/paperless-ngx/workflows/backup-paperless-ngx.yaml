@@ -29,6 +29,9 @@ spec:
       seccompProfile:
         type: RuntimeDefault
     serviceAccountName: paperless-ngx-workflows
+    # data/media are read straight by restic instead of being staged into an archive first:
+    # documents only grow over time and are never rewritten once ingested, so incremental
+    # snapshots stay cheap and skipping the tar step avoids doubling storage/time on each run
     volumes:
       - name: tmp
         emptyDir: {}
@@ -60,74 +63,17 @@ spec:
                 name: scale-workload
                 clusterScope: true
 
-            - name: copy-data
-              dependencies: [scale-down]
-              template: copy-data
-
             - name: retrieve-db-backup
               dependencies: [scale-down]
               template: retrieve-db-backups
 
             - name: upload-backup
-              dependencies: [copy-data, retrieve-db-backup]
+              dependencies: [scale-down, retrieve-db-backup]
               template: restic
               arguments:
                 artifacts:
-                  - name: data-backup-archive
-                    from: "{{tasks.copy-data.outputs.artifacts.data-backup-archive}}"
                   - name: db-backup-archive
                     from: "{{tasks.retrieve-db-backup.outputs.artifacts.db-backup-archive}}"
-
-      - name: copy-data
-        outputs:
-          artifacts:
-            - name: data-backup-archive
-              path: /tmp/paperless-ngx-data.tar.xz
-              s3:
-                key: "{{workflow.name}}/paperless-ngx-data.tar.xz"
-        container:
-          image: ghcr.io/wittdennis/devops-tools:1.2.40 # renovate
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
-            - name: paperless-ngx-data
-              mountPath: /mnt/paperless-ngx-data
-            - name: paperless-ngx-media
-              mountPath: /mnt/paperless-ngx-media
-          workingDir: /tmp
-          command: [sh, -c]
-          args:
-            - |
-              #!/bin/sh
-              set -eu
-
-              mkdir -p /tmp/data
-              cp -R /mnt/paperless-ngx-data/. /tmp/data
-
-              mkdir -p /tmp/media
-              cp -R /mnt/paperless-ngx-media/. /tmp/media
-
-              ARCHIVE="/tmp/paperless-ngx-data.tar.xz"
-              echo "Creating archive $ARCHIVE ..."
-              tar -cJf "$ARCHIVE" -C /tmp media data
-              du -sch $ARCHIVE
-          securityContext:
-            capabilities:
-              drop:
-                - ALL
-            runAsGroup: 1000
-            runAsUser: 1000
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            seccompProfile:
-              type: RuntimeDefault
-        securityContext:
-          runAsUser: 1000
-          runAsGroup: 1000
-          runAsNonRoot: true
-          seccompProfile:
-            type: RuntimeDefault
 
       - name: retrieve-db-backups
         outputs:
@@ -200,16 +146,16 @@ spec:
           artifacts:
             - name: db-backup-archive
               path: /tmp/backup/db-backup.tar.xz
-            - name: data-backup-archive
-              path: /tmp/backup/data-backup.tar.xz
         container:
           image: restic/restic:0.19.1 # renovate
           command: [sh, -c]
           args:
             - |
               restic init --no-cache || true
-              restic backup --no-cache --host paperless-ngx /tmp/backup
-              restic forget --no-cache --host paperless-ngx --keep-last 7 --prune
+              restic backup --no-cache --host paperless-ngx \
+                /mnt/paperless-ngx-data /mnt/paperless-ngx-media /tmp/backup
+              restic forget --no-cache --host paperless-ngx \
+                --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -231,6 +177,12 @@ spec:
           volumeMounts:
             - mountPath: /tmp
               name: tmp
+            - name: paperless-ngx-data
+              mountPath: /mnt/paperless-ngx-data
+              readOnly: true
+            - name: paperless-ngx-media
+              mountPath: /mnt/paperless-ngx-media
+              readOnly: true
           securityContext:
             capabilities:
               drop:
