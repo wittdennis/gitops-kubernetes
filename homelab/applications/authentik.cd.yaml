@@ -54,6 +54,7 @@ spec:
             - authentik-blueprint-linkwarden
             - authentik-blueprint-paperless-ngx
             - authentik-blueprint-vault
+            - authentik-blueprint-oauth2-proxy
             - authentik-blueprint-certificates
         authentik:
           postgresql:

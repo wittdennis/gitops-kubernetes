@@ -2,43 +2,37 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: authentik-blueprint-vault
+  name: authentik-blueprint-oauth2-proxy
 spec:
   refreshInterval: "1h0m0s"
   secretStoreRef:
     name: vault-backend-platform
     kind: ClusterSecretStore
   target:
-    name: authentik-blueprint-vault
+    name: authentik-blueprint-oauth2-proxy
     creationPolicy: Owner
     deletionPolicy: Delete
     template:
       engineVersion: v2
       mergePolicy: Replace
       data:
-        vault.yaml: |
+        oauth2-proxy.yaml: |
           version: 1
           metadata:
-            name: derwitt-site-vault
+            name: derwitt-site-oauth2-proxy
           entries:
             - model: authentik_providers_oauth2.oauth2provider
               state: present
-              id: vault_provider
+              id: oauth2_proxy_provider
               identifiers:
-                client_id: vault
+                client_id: oauth2-proxy
               attrs:
-                name: Hashicorp Vault
+                name: OAuth2 Proxy
                 authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
                 invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
                 allowed_redirect_uris:
                   - matching_mode: strict
-                    url: https://vault.derwitt.site/ui/vault/auth/oidc/oidc/callback
-                    redirect_uri_type: authorization
-                  - matching_mode: strict
-                    url: https://vault.derwitt.dev/ui/vault/auth/oidc/oidc/callback
-                    redirect_uri_type: authorization
-                  - matching_mode: strict
-                    url: https://vault.derwitt.dev/oidc/callback
+                    url: https://id.derwitt.dev/oauth2/callback
                     redirect_uri_type: authorization
                 include_claims_in_id_token: true
                 sub_mode: hashed_user_id
@@ -50,31 +44,24 @@ spec:
                 signing_key: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (RSA)"]]
             - model: authentik_core.application
               state: present
-              id: vault_application
+              id: oauth2_proxy_application
               identifiers:
-                slug: vault
+                slug: oauth2-proxy
               attrs:
-                name: Vault
-                protocol_provider: !KeyOf vault_provider
-                meta_launch_url: https://vault.derwitt.site
+                name: OAuth2 Proxy
+                protocol_provider: !KeyOf oauth2_proxy_provider
+                meta_launch_url: https://id.derwitt.dev
                 policy_engine_mode: any
             - model: authentik_policies.policybinding
               state: present
               identifiers:
-                target: !KeyOf vault_application
-                group: !Find [authentik_core.group, [name, "Vault Admins"]]
+                target: !KeyOf oauth2_proxy_application
+                group: !Find [authentik_core.group, [name, "SuperUsers"]]
               attrs:
                 order: 0
-            - model: authentik_policies.policybinding
-              state: present
-              identifiers:
-                target: !KeyOf vault_application
-                group: !Find [authentik_core.group, [name, "Vault Readers"]]
-              attrs:
-                order: 1
   data:
     - remoteRef:
         conversionStrategy: Default
-        key: authentik/oauth2-clients/vault
+        key: authentik/oauth2-clients/oauth2-proxy
         property: client-secret
       secretKey: clientSecret

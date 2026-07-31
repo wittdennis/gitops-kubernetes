@@ -491,21 +491,21 @@ spec:
           grafana.ini:
             server:
               root_url: "https://graphs.derwitt.dev"
-            auth.azuread:
-              name: "Azure AD"
-              enabled: true
-              allow_sign_up: true
-              auto_login: false
-              scopes: "openid email profile"
-              auth_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/authorize
-              token_url: https://login.microsoftonline.com/6ddad1f1-1d3f-43bf-ad7a-445edf40fd73/oauth2/v2.0/token
-              allowed_domains: ""
-              allowed_groups: ""
-              allowed_organizations: "6ddad1f1-1d3f-43bf-ad7a-445edf40fd73"
-              role_attribute_strict: false
+            auth:
+              oauth_auto_login: true
+              signout_redirect_url: https://auth.derwitt.site/application/o/grafana/end-session/
+            auth.generic_oauth:
+              name: Authentik
               allow_assign_grafana_admin: true
-              skip_org_role_sync: false
-              use_pkce: true
+              allow_sign_up: true
+              client_id: grafana
+              api_url: https://auth.derwitt.site/application/o/userinfo/
+              auth_url: https://auth.derwitt.site/application/o/authorize/
+              enabled: true
+              scopes: openid profile email
+              token_url: https://auth.derwitt.site/application/o/token/
+              use_refresh_token: true
+              role_attribute_path: "contains(groups[*], 'Grafana Admins') && 'Admin' || contains(groups[*], 'Grafana Editors') && 'Editor' || 'Viewer'"
           ingress:
             enabled: true
             ingressClassName: traefik
