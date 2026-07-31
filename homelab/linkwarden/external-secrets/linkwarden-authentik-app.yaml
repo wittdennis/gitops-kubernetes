@@ -15,6 +15,6 @@ spec:
   data:
     - remoteRef:
         conversionStrategy: Default
-        key: /linkwarden/config
-        property: authentik-app-client-secret
+        key: authentik/oauth2-clients/linkwarden
+        property: client-secret
       secretKey: client-secret

@@ -12,9 +12,34 @@ spec:
     name: paperless-ngx-sso-settings
     creationPolicy: Owner
     deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        providers-config: |
+          {
+            "openid_connect": {
+              "OAUTH_PKCE_ENABLED": true,
+              "SCOPE": ["openid", "profile", "email"],
+              "APPS": [
+                {
+                  "provider_id": "authentik",
+                  "name": "Authentik",
+                  "client_id": "paperless_ngx",
+                  "secret": "{{ .clientSecret }}",
+                  "settings": {
+                    "fetch_userinfo": true,
+                    "oauth_pkce_enabled": true,
+                    "server_url": "https://auth.derwitt.site/application/o/paperless_ngx",
+                    "uid_field": "sub"
+                  }
+                }
+              ]
+            }
+          }
   data:
     - remoteRef:
         conversionStrategy: Default
-        key: /paperless-ngx/sso
-        property: providers-config
-      secretKey: providers-config
+        key: authentik/oauth2-clients/paperless-ngx
+        property: client-secret
+      secretKey: clientSecret
