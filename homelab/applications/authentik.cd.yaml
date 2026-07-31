@@ -33,12 +33,12 @@ spec:
         blueprints:
           configMaps:
             - authentik-blueprint-base
+          secrets:
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf
             - authentik-blueprint-kubernetes
             - authentik-blueprint-forgejo
             - authentik-blueprint-argocd
-          secrets:
             - authentik-blueprint-argo-workflows
             - authentik-blueprint-grafana
             - authentik-blueprint-netbox
