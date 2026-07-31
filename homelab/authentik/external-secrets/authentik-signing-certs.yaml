@@ -1,0 +1,30 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-signing-certs
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-signing-certs
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ecdsa
+        property: certificate
+      secretKey: ecdsa.crt
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ed25519
+        property: certificate
+      secretKey: ed25519.crt
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/rsa
+        property: certificate
+      secretKey: rsa.crt
