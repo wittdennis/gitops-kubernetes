@@ -49,7 +49,7 @@ spec:
                 slug: netbox
               attrs:
                 name: Netbox
-                protocol_provider: !KeyOf netbox_provider
+                provider: !KeyOf netbox_provider
                 meta_launch_url: https://netbox.derwitt.site
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

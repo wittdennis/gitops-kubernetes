@@ -49,7 +49,7 @@ spec:
                 slug: linkwarden
               attrs:
                 name: Linkwarden
-                protocol_provider: !KeyOf linkwarden_provider
+                provider: !KeyOf linkwarden_provider
                 meta_launch_url: https://links.derwitt.site
                 policy_engine_mode: all
             - model: authentik_policies.policybinding

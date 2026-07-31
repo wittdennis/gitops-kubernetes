@@ -52,7 +52,7 @@ spec:
                 slug: grafana
               attrs:
                 name: Grafana
-                protocol_provider: !KeyOf grafana_provider
+                provider: !KeyOf grafana_provider
                 meta_launch_url: https://graphs.derwitt.site
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

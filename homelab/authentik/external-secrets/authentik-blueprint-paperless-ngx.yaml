@@ -49,7 +49,7 @@ spec:
                 slug: paperless_ngx
               attrs:
                 name: paperless_ngx
-                protocol_provider: !KeyOf paperless_ngx_provider
+                provider: !KeyOf paperless_ngx_provider
                 meta_launch_url: https://documents.derwitt.site
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

@@ -52,7 +52,7 @@ spec:
                 slug: kubernetes
               attrs:
                 name: Kubernetes
-                protocol_provider: !KeyOf kubernetes_provider
+                provider: !KeyOf kubernetes_provider
                 meta_launch_url: "https://k8s.home-assistant.derwitt.site:6443/api"
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

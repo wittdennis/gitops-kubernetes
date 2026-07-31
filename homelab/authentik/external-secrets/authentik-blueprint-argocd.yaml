@@ -58,7 +58,7 @@ spec:
                 slug: argocd
               attrs:
                 name: ArgoCD
-                protocol_provider: !KeyOf argocd_provider
+                provider: !KeyOf argocd_provider
                 meta_launch_url: https://cd.derwitt.site
                 policy_engine_mode: all
             - model: authentik_policies.policybinding

@@ -49,7 +49,7 @@ spec:
                 slug: oauth2-proxy
               attrs:
                 name: OAuth2 Proxy
-                protocol_provider: !KeyOf oauth2_proxy_provider
+                provider: !KeyOf oauth2_proxy_provider
                 meta_launch_url: https://id.derwitt.dev
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

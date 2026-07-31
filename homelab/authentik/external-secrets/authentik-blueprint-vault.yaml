@@ -55,7 +55,7 @@ spec:
                 slug: vault
               attrs:
                 name: Vault
-                protocol_provider: !KeyOf vault_provider
+                provider: !KeyOf vault_provider
                 meta_launch_url: https://vault.derwitt.site
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

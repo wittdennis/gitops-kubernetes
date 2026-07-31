@@ -59,7 +59,7 @@ spec:
                 slug: audiobookshelf
               attrs:
                 name: Audiobookshelf
-                protocol_provider: !KeyOf audiobookshelf_provider
+                provider: !KeyOf audiobookshelf_provider
                 meta_launch_url: https://audiobooks.derwitt.site/audiobookshelf
                 policy_engine_mode: any
             - model: authentik_policies.policybinding

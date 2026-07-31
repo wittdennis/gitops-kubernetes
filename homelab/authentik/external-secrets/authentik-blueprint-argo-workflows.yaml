@@ -55,7 +55,7 @@ spec:
                 slug: argo-workflows
               attrs:
                 name: Argo Workflows
-                protocol_provider: !KeyOf argo_workflows_provider
+                provider: !KeyOf argo_workflows_provider
                 policy_engine_mode: any
             - model: authentik_policies.policybinding
               state: present

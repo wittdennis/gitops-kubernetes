@@ -50,7 +50,7 @@ spec:
                 slug: forgejo
               attrs:
                 name: Forgejo
-                protocol_provider: !KeyOf forgejo_provider
+                provider: !KeyOf forgejo_provider
                 meta_launch_url: https://git.derwitt.site
                 policy_engine_mode: any
             - model: authentik_policies.policybinding
