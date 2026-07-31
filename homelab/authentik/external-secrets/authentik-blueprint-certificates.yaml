@@ -1,0 +1,75 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-blueprint-certificates
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-blueprint-certificates
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        certificates.yaml: |
+          version: 1
+          metadata:
+            name: derwitt-site-signing-certs
+          entries:
+            - model: authentik_crypto.certificatekeypair
+              state: present
+              identifiers:
+                name: Derwitt Signing Key (ECDSA)
+              attrs:
+                certificate_data: "{{ .ecdsaCertificate }}"
+                key_data: "{{ .ecdsaPrivateKey }}"
+            - model: authentik_crypto.certificatekeypair
+              state: present
+              identifiers:
+                name: Derwitt Signing Key (ED25519)
+              attrs:
+                certificate_data: "{{ .ed25519Certificate }}"
+                key_data: "{{ .ed25519PrivateKey }}"
+            - model: authentik_crypto.certificatekeypair
+              state: present
+              identifiers:
+                name: Derwitt Signing Key (RSA)
+              attrs:
+                certificate_data: "{{ .rsaCertificate }}"
+                key_data: "{{ .rsaPrivateKey }}"
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ecdsa
+        property: certificate
+      secretKey: ecdsaCertificate
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ecdsa
+        property: private-key
+      secretKey: ecdsaPrivateKey
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ed25519
+        property: certificate
+      secretKey: ed25519Certificate
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/ed25519
+        property: private-key
+      secretKey: ed25519PrivateKey
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/rsa
+        property: certificate
+      secretKey: rsaCertificate
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/signing-keys/rsa
+        property: private-key
+      secretKey: rsaPrivateKey

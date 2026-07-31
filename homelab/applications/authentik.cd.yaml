@@ -36,15 +36,16 @@ spec:
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf
             - authentik-blueprint-kubernetes
+            - authentik-blueprint-forgejo
+            - authentik-blueprint-argocd
+          secrets:
             - authentik-blueprint-argo-workflows
             - authentik-blueprint-grafana
             - authentik-blueprint-netbox
             - authentik-blueprint-linkwarden
             - authentik-blueprint-paperless-ngx
-            - authentik-blueprint-forgejo
-            - authentik-blueprint-argocd
             - authentik-blueprint-vault
-          secrets: []
+            - authentik-blueprint-certificates
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local

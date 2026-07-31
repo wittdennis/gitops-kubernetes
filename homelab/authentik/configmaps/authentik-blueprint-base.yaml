@@ -211,22 +211,3 @@ data:
                 forgejo_claims["forgejo_groups"] = roles
 
             return forgejo_claims
-  certificates.yaml: |
-    version: 1
-    metadata:
-      name: derwitt-site-signing-certs
-    entries:
-      # adopt-only: certificate/key material stays terraform-managed until the Vault-backed
-      # secret blueprint (authentik-blueprint-certificates) replaces this file
-      - model: authentik_crypto.certificatekeypair
-        state: present
-        identifiers:
-          name: Derwitt Signing Key (ECDSA)
-      - model: authentik_crypto.certificatekeypair
-        state: present
-        identifiers:
-          name: Derwitt Signing Key (ED25519)
-      - model: authentik_crypto.certificatekeypair
-        state: present
-        identifiers:
-          name: Derwitt Signing Key (RSA)
