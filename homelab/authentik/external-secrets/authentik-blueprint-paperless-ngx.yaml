@@ -30,7 +30,7 @@ spec:
                 name: Paperless-ngx
                 authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
                 invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-                allowed_redirect_uris:
+                redirect_uris:
                   - matching_mode: strict
                     url: https://documents.derwitt.site/accounts/oidc/authentik/login/callback/
                     redirect_uri_type: authorization

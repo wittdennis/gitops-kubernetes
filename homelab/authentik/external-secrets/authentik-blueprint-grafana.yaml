@@ -30,7 +30,7 @@ spec:
                 name: Grafana
                 authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
                 invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-                allowed_redirect_uris:
+                redirect_uris:
                   - matching_mode: strict
                     url: https://graphs.derwitt.site/login/generic_oauth
                     redirect_uri_type: authorization

@@ -30,7 +30,7 @@ spec:
                 name: Audiobookshelf
                 authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
                 invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-                allowed_redirect_uris:
+                redirect_uris:
                   - matching_mode: strict
                     url: https://audiobooks.derwitt.site/audiobookshelf/auth/openid/callback
                     redirect_uri_type: authorization
