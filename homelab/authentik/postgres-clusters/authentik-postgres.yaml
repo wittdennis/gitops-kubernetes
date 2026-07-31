@@ -4,9 +4,9 @@ kind: Cluster
 metadata:
   name: authentik-postgres
 spec:
-  instances: 2
+  instances: 3
   logLevel: warning
-  enablePDB: false
+  enablePDB: true
   primaryUpdateStrategy: unsupervised
   enableSuperuserAccess: false
   bootstrap:
@@ -27,6 +27,8 @@ spec:
   postgresql:
     shared_preload_libraries:
       - pg_partman_bgw
+    parameters:
+      max_connections: "200"
   monitoring:
     enablePodMonitor: true
   plugins:
@@ -36,12 +38,14 @@ spec:
         barmanObjectName: backup-store
   resources:
     requests:
-      cpu: 100m
+      cpu: 250m
       ephemeral-storage: 50Mi
-      memory: 128Mi
+      memory: 1Gi
+    limits:
+      memory: 2Gi
   storage:
     size: 10Gi
     storageClass: proxmox-data
   walStorage:
-    size: 10Gi
+    size: 20Gi
     storageClass: proxmox-data
