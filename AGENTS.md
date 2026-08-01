@@ -3,6 +3,15 @@
 GitOps configuration driving three Kubernetes clusters (`homelab`, `cloud`,
 `home-assistant`) via Argo CD. See `README.md` for topology.
 
+## Conventions
+
+### Pod Security
+
+New namespaces are `pod-security.kubernetes.io/enforce: restricted` — **always**.
+Do not hedge to `baseline`/`privileged` out of uncertainty. Only relax below
+`restricted` if, during testing, it is actually found that `restricted` cannot
+work — UNLESS it is 100% certain beforehand that greater privileges are needed.
+
 ## Agent skills
 
 ### Issue tracker

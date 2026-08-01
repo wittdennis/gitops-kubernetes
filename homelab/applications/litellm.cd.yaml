@@ -1,0 +1,76 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-litellm
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: ai-platform
+  source:
+    repoURL: oci://ghcr.io/berriai/litellm-helm
+    path: "."
+    targetRevision: 1.1.1
+    helm:
+      releaseName: litellm
+      valuesObject:
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+        db:
+          useExisting: true
+          deployStandalone: false
+          endpoint: litellm-postgres-rw.ai-platform.svc.cluster.local
+          database: litellm
+          secret:
+            name: litellm-postgres-app
+            usernameKey: username
+            passwordKey: password
+
+        masterkeySecretName: litellm-masterkey
+        masterkeySecretKey: masterkey
+
+        environmentSecrets:
+          - litellm-provider-keys
+
+        serviceMonitor:
+          enabled: true
+
+        proxy_config:
+          model_list:
+            # Cloud-first: local Ollama aliases (chat/coding/embeddings) are added
+            # once the GPU node is up (see issue #884).
+            - model_name: coding-large
+              litellm_params:
+                model: anthropic/claude-opus-4-8
+                api_key: os.environ/ANTHROPIC_API_KEY
+            - model_name: chat-cloud
+              litellm_params:
+                model: anthropic/claude-sonnet-5
+                api_key: os.environ/ANTHROPIC_API_KEY
+            - model_name: fast-cloud
+              litellm_params:
+                model: anthropic/claude-haiku-4-5
+                api_key: os.environ/ANTHROPIC_API_KEY
+          litellm_settings:
+            # Emit Prometheus metrics (scraped by the VMServiceScrape). Some
+            # metrics are gated behind a LiteLLM enterprise license.
+            callbacks: ["prometheus"]
+          general_settings:
+            master_key: os.environ/PROXY_MASTER_KEY

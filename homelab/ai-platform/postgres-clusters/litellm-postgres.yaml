@@ -1,0 +1,41 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: litellm-postgres
+spec:
+  instances: 2
+  logLevel: warning
+  enablePDB: false
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: litellm
+      owner: litellm
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgres
+    major: 18
+  managed:
+    roles:
+      - name: litellm
+        superuser: false
+        createdb: false
+        login: true
+  monitoring:
+    enablePodMonitor: true
+  # LiteLLM state (virtual keys, spend logs) is recreatable; provider/master keys
+  # live in Vault, so no barman objectstore backup is configured here.
+  resources:
+    requests:
+      cpu: 100m
+      ephemeral-storage: 50Mi
+      memory: 128Mi
+  storage:
+    size: 10Gi
+    storageClass: proxmox-data
+  walStorage:
+    size: 5Gi
+    storageClass: proxmox-data

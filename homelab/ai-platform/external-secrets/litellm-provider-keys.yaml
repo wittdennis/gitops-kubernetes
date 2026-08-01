@@ -1,0 +1,22 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: litellm-provider-keys
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: litellm-provider-keys
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  # Env var names must match the os.environ/<NAME> references in the LiteLLM
+  # proxy_config model_list (see litellm.cd.yaml).
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /ai-platform/litellm/provider-keys
+        property: anthropic-api-key
+      secretKey: ANTHROPIC_API_KEY
