@@ -76,8 +76,7 @@ spec:
                 model: anthropic/claude-haiku-4-5
                 api_key: os.environ/ANTHROPIC_API_KEY
           litellm_settings:
-            # Emit Prometheus metrics (scraped by the VMServiceScrape). Some
-            # metrics are gated behind a LiteLLM enterprise license.
             callbacks: ["prometheus"]
+            require_auth_for_metrics_endpoint: false
           general_settings:
             master_key: os.environ/PROXY_MASTER_KEY
