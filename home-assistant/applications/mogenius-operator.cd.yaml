@@ -1,0 +1,71 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-mogenius-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: home-assistant
+    namespace: mogenius-operator
+  source:
+    repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator
+    path: "."
+    targetRevision: 2.26.0
+    helm:
+      releaseName: netbox
+      valuesObject:
+        features:
+          autoUpgrade:
+            enabled: false
+
+        externalKeyValueStore:
+          enabled: true
+          host: mogenius-operator-valkey.mogenius-operator.svc.cluster.local
+          username: default
+          existingSecret:
+            name: mogenius-operator-valkey-credentials
+            key: default-password
+
+        global:
+          cluster_name: "Home Assistant"
+          apiKeySecret:
+            secretName: mogenius-operator-api-secret
+            secretKey: api-key
+        envVars:
+          MO_API_SERVER: "wss://k8s-ws.mogenius.com/ws"
+          MO_EVENT_SERVER: "wss://k8s-dispatcher.mogenius.com/ws"
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        valkey:
+          enabled: false
+        persistence:
+          storageClass: proxmox-data
+        podSecurityContext:
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
