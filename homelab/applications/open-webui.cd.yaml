@@ -44,6 +44,12 @@ spec:
         ingress:
           enabled: false
 
+        # The default copy-app-data init seeds the PVC from the image's baked
+        # model cache, which is root-owned and unreadable as UID 1000. No-op it;
+        # whisper/embedding models download fresh into the writable PVC instead.
+        copyAppData:
+          command: ["sh", "-c", "true"]
+
         podSecurityContext:
           runAsNonRoot: true
           runAsUser: 1000
@@ -61,6 +67,11 @@ spec:
               - ALL
 
         extraEnvVars:
+          - name: WEBUI_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                name: open-webui-secrets
+                key: WEBUI_SECRET_KEY
           - name: WEBUI_URL
             value: https://chat.derwitt.site
           - name: ENABLE_OAUTH_SIGNUP
