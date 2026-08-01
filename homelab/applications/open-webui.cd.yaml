@@ -1,0 +1,82 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-open-webui
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: ai-platform
+  source:
+    repoURL: https://helm.openwebui.com
+    chart: open-webui
+    targetRevision: 16.0.0
+    helm:
+      releaseName: open-webui
+      valuesObject:
+        ollama:
+          enabled: false
+        pipelines:
+          enabled: false
+
+        # Single replica: in-memory websocket manager, no bundled Redis.
+        websocket:
+          manager: ""
+          redis:
+            enabled: false
+
+        openaiBaseApiUrl: "http://litellm.ai-platform.svc.cluster.local:4000/v1"
+        openaiApiKeyExistingSecret: open-webui-secrets
+        openaiApiKeyExistingSecretKey: OPENAI_API_KEY
+
+        persistence:
+          enabled: true
+          storageClass: proxmox-data
+          size: 5Gi
+
+        ingress:
+          enabled: false
+
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+              - ALL
+
+        extraEnvVars:
+          - name: WEBUI_URL
+            value: https://chat.derwitt.site
+          - name: ENABLE_OAUTH_SIGNUP
+            value: "true"
+          - name: OAUTH_MERGE_ACCOUNTS_BY_EMAIL
+            value: "true"
+          - name: OAUTH_PROVIDER_NAME
+            value: Authentik
+          - name: OPENID_PROVIDER_URL
+            value: https://auth.derwitt.site/application/o/open-webui/.well-known/openid-configuration
+          - name: OAUTH_SCOPES
+            value: "openid email profile"
+          - name: OAUTH_CLIENT_ID
+            value: open-webui
+          - name: OAUTH_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: open-webui-secrets
+                key: OAUTH_CLIENT_SECRET

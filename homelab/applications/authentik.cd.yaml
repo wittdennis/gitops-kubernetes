@@ -56,6 +56,7 @@ spec:
             - authentik-blueprint-vault
             - authentik-blueprint-oauth2-proxy
             - authentik-blueprint-certificates
+            - authentik-blueprint-open-webui
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local

@@ -1,0 +1,24 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: ai-platform-open-webui
+spec:
+  hostnames:
+    - chat.derwitt.site
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: derwitt-site-gateway
+      namespace: traefik
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: open-webui
+          port: 80
+          weight: 100
+      matches:
+        - path:
+            type: PathPrefix
+            value: /

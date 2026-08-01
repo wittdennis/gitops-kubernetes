@@ -5,6 +5,13 @@ GitOps configuration driving three Kubernetes clusters (`homelab`, `cloud`,
 
 ## Conventions
 
+### Manifest layout
+
+**One YAML resource per file.** Do not put multiple Kubernetes resources in a
+single manifest (no multi-document `---` files). Give each file the name of the
+resource it holds (e.g. `gateway-api/litellm.yaml`, not a combined
+`httproute.yaml` with several routes).
+
 ### Pod Security
 
 New namespaces are `pod-security.kubernetes.io/enforce: restricted` — **always**.
