@@ -30,6 +30,9 @@ spec:
                 name: Kubernetes
                 authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
                 invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
+                grant_types:
+                  - authorization_code
+                  - refresh_token
                 redirect_uris:
                   - matching_mode: strict
                     url: http://localhost:8000
