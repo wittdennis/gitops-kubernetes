@@ -59,13 +59,15 @@ spec:
         serviceMonitor:
           enabled: true
 
+        # Entrypoint runs `prisma generate` (Node), which spikes to ~1.5Gi —
+        # needs a 2Gi limit or it OOMKills at its own cgroup limit.
         migrationJob:
           resources:
             requests:
               cpu: 100m
-              memory: 512Mi
-            limits:
               memory: 1Gi
+            limits:
+              memory: 2Gi
 
         # Off BestEffort so the node's kernel OOM-killer doesn't target the proxy.
         resources:
