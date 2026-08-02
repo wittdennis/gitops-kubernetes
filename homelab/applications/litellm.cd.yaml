@@ -59,6 +59,14 @@ spec:
         serviceMonitor:
           enabled: true
 
+        migrationJob:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+
         proxy_config:
           model_list:
             # Name aliases after the real model so the picker shows what it is
