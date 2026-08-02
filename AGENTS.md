@@ -19,6 +19,20 @@ Do not hedge to `baseline`/`privileged` out of uncertainty. Only relax below
 `restricted` if, during testing, it is actually found that `restricted` cannot
 work — UNLESS it is 100% certain beforehand that greater privileges are needed.
 
+### AI platform workloads (`ai-platform`)
+
+The AI/ML workloads deliberately deviate from the standards elsewhere in this
+repo and are run in a **true homelab fashion**: availability and redundancy
+are intentionally lax — single-replica databases, single-node pinning (the
+GPU/AI node), no cross-node HA/failover — because this is a personal platform,
+not production. Prefer the simple, resource-frugal option over the resilient one
+here.
+
+**Security is the exception and is NEVER relaxed.** `restricted` pod-security,
+non-root, dropped capabilities, secrets sourced from Vault via external-secrets,
+and SSO in front of human UIs all remain non-negotiable for these workloads,
+exactly as everywhere else.
+
 ## Agent skills
 
 ### Issue tracker

@@ -4,11 +4,15 @@ kind: Cluster
 metadata:
   name: litellm-postgres
 spec:
-  instances: 2
+  instances: 1
   logLevel: warning
   enablePDB: false
   primaryUpdateStrategy: unsupervised
   enableSuperuserAccess: false
+  # Co-locate with the rest of the AI platform on the AI/GPU node.
+  affinity:
+    nodeSelector:
+      derwitt.site/ai: "true"
   bootstrap:
     initdb:
       database: litellm
