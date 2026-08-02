@@ -1,0 +1,29 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-intel-device-plugins-gpu
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: intel-device-plugins
+  source:
+    repoURL: https://intel.github.io/helm-charts
+    chart: intel-device-plugins-gpu
+    targetRevision: 0.36.0
+    helm:
+      releaseName: intel-device-plugins-gpu
+      valuesObject:
+        name: intel-gpu
+        # One physical B580; Ollama is the sole GPU consumer (model-swapping),
+        # so no fractional sharing. Raise if other GPU pods are added later.
+        sharedDevNum: 1

@@ -75,17 +75,8 @@ spec:
           limits:
             memory: 2Gi
 
-        # Pin to the AI/GPU node. Uses affinity (not nodeSelector) because the
-        # migration Job honors only affinity/tolerations, not nodeSelector.
-        affinity:
-          nodeAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              nodeSelectorTerms:
-                - matchExpressions:
-                    - key: derwitt.site/ai
-                      operator: In
-                      values:
-                        - "true"
+        nodeSelector:
+          derwitt.site/ai: "true"
 
         proxy_config:
           model_list:

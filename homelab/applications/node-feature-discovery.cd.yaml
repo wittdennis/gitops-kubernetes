@@ -1,0 +1,28 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-node-feature-discovery
+  namespace: argocd
+  annotations:
+    # NFD CRDs (NodeFeatureRule) must exist before the Intel GPU chart's rule,
+    # which is applied in sync-wave 2.
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: kube-system
+  source:
+    repoURL: https://kubernetes-sigs.github.io/node-feature-discovery/charts
+    chart: node-feature-discovery
+    targetRevision: 0.19.0
+    helm:
+      releaseName: node-feature-discovery

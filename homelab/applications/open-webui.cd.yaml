@@ -24,7 +24,6 @@ spec:
         image:
           useSlim: true
 
-        # Pin to the AI/GPU node (co-locate with LiteLLM / future Ollama).
         nodeSelector:
           derwitt.site/ai: "true"
 
