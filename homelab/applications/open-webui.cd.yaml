@@ -41,6 +41,15 @@ spec:
           storageClass: proxmox-data
           size: 5Gi
 
+        # Off BestEffort — loading the local embedding model spikes memory; a
+        # request/limit keeps the node's kernel OOM-killer from evicting it.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 1Gi
+          limits:
+            memory: 2Gi
+
         ingress:
           enabled: false
 

@@ -67,6 +67,14 @@ spec:
             limits:
               memory: 1Gi
 
+        # Off BestEffort so the node's kernel OOM-killer doesn't target the proxy.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1Gi
+
         proxy_config:
           model_list:
             # Name aliases after the real model so the picker shows what it is
