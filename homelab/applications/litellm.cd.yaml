@@ -59,23 +59,21 @@ spec:
         serviceMonitor:
           enabled: true
 
-        # Entrypoint runs `prisma generate` (Node), which spikes to ~1.5Gi —
-        # needs a 2Gi limit or it OOMKills at its own cgroup limit.
+        # The standalone migration Job never exits (its entrypoint starts the
+        # proxy's background loops after migrating) and blocks the ArgoCD PreSync
+        # hook forever. Single replica, so let the proxy apply the schema on
+        # startup instead (this also un-sets the chart's DISABLE_SCHEMA_UPDATE).
         migrationJob:
-          resources:
-            requests:
-              cpu: 100m
-              memory: 1Gi
-            limits:
-              memory: 2Gi
+          enabled: false
 
-        # Off BestEffort so the node's kernel OOM-killer doesn't target the proxy.
+        # Off BestEffort; 2Gi ceiling covers the transient startup schema step
+        # (steady-state ~0.5Gi).
         resources:
           requests:
             cpu: 100m
             memory: 512Mi
           limits:
-            memory: 1Gi
+            memory: 2Gi
 
         # Pin to the AI/GPU node. Uses affinity (not nodeSelector) because the
         # migration Job honors only affinity/tolerations, not nodeSelector.
