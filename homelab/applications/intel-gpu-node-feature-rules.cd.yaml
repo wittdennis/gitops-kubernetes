@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-intel-gpu-node-feature-rules
+  namespace: argocd
+  annotations:
+    # NodeFeatureRule CRD is installed by the NFD app (sync-wave 1).
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: kube-system
+  # Intel NodeFeatureRule(s): NFD stamps intel.feature.node.kubernetes.io/gpu
+  # (and other device labels) based on detected hardware.
+  source:
+    repoURL: https://github.com/intel/intel-device-plugins-for-kubernetes
+    targetRevision: v0.36.0
+    path: deployments/nfd/overlays/node-feature-rules

@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-intel-gpu-plugin
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: intel-device-plugins
+  # Plain DaemonSet (no operator/CRDs/webhooks). Intel-maintained kustomize;
+  # the nfd_labeled_nodes overlay pins nodeSelector to
+  # intel.feature.node.kubernetes.io/gpu and bakes the correct
+  # securityContext/hostPath mounts. Advertises gpu.intel.com/xe on Battlemage.
+  source:
+    repoURL: https://github.com/intel/intel-device-plugins-for-kubernetes
+    targetRevision: v0.36.0
+    path: deployments/gpu_plugin/overlays/nfd_labeled_nodes
