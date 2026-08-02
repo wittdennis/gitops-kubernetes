@@ -21,6 +21,9 @@ spec:
     helm:
       releaseName: open-webui
       valuesObject:
+        image:
+          useSlim: true
+
         ollama:
           enabled: false
         pipelines:
@@ -40,22 +43,18 @@ spec:
           enabled: true
           storageClass: proxmox-data
           size: 5Gi
-
-        # Off BestEffort — loading the local embedding model spikes memory; a
-        # request/limit keeps the node's kernel OOM-killer from evicting it.
         resources:
           requests:
             cpu: 100m
-            memory: 1Gi
+            memory: 256Mi
           limits:
-            memory: 2Gi
+            memory: 768Mi
 
         ingress:
           enabled: false
 
-        # The default copy-app-data init seeds the PVC from the image's baked
-        # model cache, which is root-owned and unreadable as UID 1000. No-op it;
-        # whisper/embedding models download fresh into the writable PVC instead.
+        # No-op the seed init: it copies root-owned baked content that fails to
+        # read as UID 1000. App data initializes fresh in the writable PVC.
         copyAppData:
           command: ["sh", "-c", "true"]
 
