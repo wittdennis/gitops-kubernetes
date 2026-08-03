@@ -1,0 +1,81 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-ollama
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: ai-platform
+  source:
+    repoURL: https://otwld.github.io/ollama-helm
+    chart: ollama
+    targetRevision: 1.71.0
+    helm:
+      releaseName: ollama
+      valuesObject:
+        ollama:
+          # Off /root/.ollama so the container can run non-root under the
+          # namespace's restricted pod-security policy (HOME points here too).
+          mountPath: /data
+          # The chart's gpu helper is nvidia/amd only; the Intel B580 comes in
+          # through the gpu.intel.com/xe resource request below instead.
+          gpu:
+            enabled: false
+          models:
+            # Pulled to the PVC on first start (one-time, slow). Only ~one fits
+            # 12 GB VRAM at once; ollama_chat auto-swaps them on demand.
+            pull:
+              - llama3.1:8b
+              - qwen2.5-coder:7b
+              - nomic-embed-text
+
+        extraEnv:
+          # Battlemage inference via the Vulkan backend (Mesa ships in the image).
+          - name: OLLAMA_VULKAN
+            value: "1"
+          - name: OLLAMA_FLASH_ATTENTION
+            value: "1"
+          - name: HOME
+            value: /data
+
+        nodeSelector:
+          intel.feature.node.kubernetes.io/gpu: "true"
+
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            memory: 12Gi
+            gpu.intel.com/xe: "1"
+
+        persistentVolume:
+          enabled: true
+          size: 200Gi
+          storageClass: proxmox-data
+          accessModes:
+            - ReadWriteOnce
+
+        updateStrategy:
+          type: Recreate
