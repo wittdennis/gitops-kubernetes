@@ -65,7 +65,9 @@ spec:
             cpu: 500m
             memory: 2Gi
           limits:
-            memory: 12Gi
+            # Above VRAM (12 GB): host RAM mirrors model buffers + KV cache, and
+            # a tighter limit makes ollama disable mmap under memory pressure.
+            memory: 16Gi
             gpu.intel.com/xe: "1"
 
         persistentVolume:
