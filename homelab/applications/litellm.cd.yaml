@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/berriai/litellm-helm
     path: "."
-    targetRevision: 1.94.1
+    targetRevision: 1.95.0
     helm:
       releaseName: litellm
       valuesObject:
