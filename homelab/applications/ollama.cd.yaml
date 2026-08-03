@@ -22,8 +22,6 @@ spec:
       releaseName: ollama
       valuesObject:
         ollama:
-          # Off /root/.ollama so the container can run non-root under the
-          # namespace's restricted pod-security policy (HOME points here too).
           mountPath: /data
           # The chart's gpu helper is nvidia/amd only; the Intel B580 comes in
           # through the gpu.intel.com/xe resource request below instead.
