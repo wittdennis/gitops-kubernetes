@@ -105,6 +105,10 @@ spec:
               litellm_params:
                 model: ollama_chat/qwen2.5-coder:7b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
+            - model_name: qwen3.5:9b
+              litellm_params:
+                model: ollama_chat/qwen3.5:9b
+                api_base: http://ollama.ai-platform.svc.cluster.local:11434
             - model_name: nomic-embed-text
               litellm_params:
                 model: ollama/nomic-embed-text
