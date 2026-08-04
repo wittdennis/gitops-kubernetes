@@ -73,7 +73,7 @@ spec:
             cpu: 100m
             memory: 512Mi
           limits:
-            memory: 2Gi
+            memory: 4Gi
 
         nodeSelector:
           derwitt.site/ai: "true"
