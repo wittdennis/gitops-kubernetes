@@ -38,9 +38,6 @@ spec:
           apiKeySecret:
             secretName: mogenius-operator-api-secret
             secretKey: api-key
-        cluster:
-          readonly:
-            enabled: true
         envVars:
           MO_API_SERVER: "wss://k8s-ws.mogenius.com/ws"
           MO_EVENT_SERVER: "wss://k8s-dispatcher.mogenius.com/ws"
