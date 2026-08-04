@@ -21,6 +21,10 @@ spec:
     helm:
       releaseName: open-webui
       valuesObject:
+        # Slim skips only the pre-baked model weights (embedding, whisper): that
+        # cache is root-owned and unreadable as UID 1000, and loading it needs
+        # ~2Gi. Python deps are identical, so local models still work — at the
+        # cost of runtime downloads into the PVC and that memory floor.
         image:
           useSlim: true
 
