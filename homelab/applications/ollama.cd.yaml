@@ -32,6 +32,7 @@ spec:
             # 12 GB VRAM at once; ollama_chat auto-swaps them on demand.
             pull:
               - llama3.1:8b
+              - qwen3.5:9b
               - qwen2.5-coder:7b
               - nomic-embed-text
 
