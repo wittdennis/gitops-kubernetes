@@ -55,7 +55,7 @@ spec:
             cpu: 100m
             memory: 256Mi
           limits:
-            memory: 768Mi
+            memory: 1Gi
 
         ingress:
           enabled: false
@@ -106,3 +106,25 @@ spec:
               secretKeyRef:
                 name: open-webui-secrets
                 key: OAUTH_CLIENT_SECRET
+
+          # RAG. Embeddings come from LiteLLM (nomic-embed-text on the GPU) —
+          # RAG_OPENAI_API_BASE_URL/KEY default to the OpenAI values above, so the
+          # endpoint is not repeated here. Changing the embedding model
+          # invalidates every stored vector; re-ingest if it ever changes.
+          - name: RAG_EMBEDDING_ENGINE
+            value: openai
+          - name: RAG_EMBEDDING_MODEL
+            value: nomic-embed-text
+          - name: ENABLE_RAG_HYBRID_SEARCH
+            value: "true"
+          - name: RAG_HYBRID_BM25_WEIGHT
+            value: "0.6"
+          # No reranker configured: without one the retrieved chunks are ordered
+          # by cosine similarity against the same embeddings, which needs no
+          # local model (the slim image has no baked weights).
+          - name: RAG_TOP_K
+            value: "5"
+          - name: CHUNK_SIZE
+            value: "1500"
+          - name: CHUNK_OVERLAP
+            value: "200"
