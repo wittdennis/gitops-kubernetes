@@ -9,6 +9,22 @@ data:
     metadata:
       name: derwitt-site-mfa
     entries:
+      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+        id: webauthn-setup
+        state: present
+        identifiers:
+          name: default-authenticator-webauthn-setup
+        attrs:
+          # keys without a PIN/biometric do not count as a factor
+          user_verification: required
+          friendly_name: Set up a passkey, security key or fingerprint (recommended)
+      - model: authentik_stages_authenticator_totp.authenticatortotpstage
+        id: totp-setup
+        state: present
+        identifiers:
+          name: default-authenticator-totp-setup
+        attrs:
+          friendly_name: Set up an authenticator app that generates 6-digit codes
       - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
         state: present
         identifiers:
@@ -19,14 +35,111 @@ data:
             - webauthn
             - totp
             - static
+          # order is the button order in the enrollment picker, strongest factor first.
+          # keep both: a single entry makes authentik auto-select it and skip the picker
           configuration_stages:
-            - !Find [authentik_stages_authenticator_webauthn.authenticatorwebauthnstage, [name, default-authenticator-webauthn-setup]]
-            - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
-          # keys without a PIN/biometric do not count as a factor
+            - !KeyOf webauthn-setup
+            - !KeyOf totp-setup
           webauthn_user_verification: required
-      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+
+      # titles of the flows the picker hands off to, shown as the header while enrolling
+      - model: authentik_flows.flow
         state: present
         identifiers:
-          name: default-authenticator-webauthn-setup
+          slug: default-authenticator-webauthn-setup
         attrs:
-          user_verification: required
+          title: Register a passkey, security key or fingerprint
+      - model: authentik_flows.flow
+        state: present
+        identifiers:
+          slug: default-authenticator-totp-setup
+        attrs:
+          title: Register an authenticator app
+      - model: authentik_flows.flow
+        id: authentication-flow
+        state: present
+        identifiers:
+          slug: default-authentication-flow
+        attrs:
+          title: Sign in to derwitt.site
+
+      # the picker is rendered inside the validation stage and has no room for prose, so the
+      # explanation goes on its own screen immediately before it. bound at 25, between the
+      # password stage (20) and the validation stage (30)
+      - model: authentik_stages_prompt.prompt
+        id: mfa-enrollment-notice-text
+        state: present
+        identifiers:
+          name: derwitt-site-mfa-enrollment-notice-text
+        attrs:
+          field_key: mfa_enrollment_notice
+          # alert_* prompts render label as the alert heading and initial_value as its body
+          # (as raw HTML), and are excluded from user input
+          type: alert_warning
+          required: false
+          order: 0
+          label: You still need to set up two-factor authentication
+          initial_value: |
+            <p>Your account has no second factor registered, so signing in cannot be
+            completed yet. The next screen asks which kind to register. One is enough.</p>
+            <ul>
+              <li><strong>Passkey, security key or fingerprint.</strong> Uses this
+              device's screen lock (Touch ID, Windows Hello) or a hardware key such as a
+              YubiKey. Nothing to type and it cannot be phished, so prefer this one.</li>
+              <li><strong>Authenticator app.</strong> Scan a QR code with an app such as
+              Aegis, 2FAS or 1Password, then type the 6-digit code it shows. Pick this if
+              you want a factor that is not tied to one device.</li>
+            </ul>
+            <p>The other kind can be added afterwards from your user settings.</p>
+      - model: authentik_stages_prompt.promptstage
+        id: mfa-enrollment-notice-stage
+        state: present
+        identifiers:
+          name: derwitt-site-mfa-enrollment-notice
+        attrs:
+          fields:
+            - !KeyOf mfa-enrollment-notice-text
+      - model: authentik_policies_expression.expressionpolicy
+        id: mfa-enrollment-notice-required
+        state: present
+        identifiers:
+          name: derwitt-site-mfa-enrollment-notice-required
+        attrs:
+          expression: |
+            # returning true whenever the answer is not yet knowable keeps the stage in the
+            # plan so re_evaluate_policies can decide once pending_user is set. an extra
+            # notice screen is a far cheaper failure than a suppressed one
+            flow_plan = request.context.get("flow_plan")
+            if not flow_plan:
+                return True
+            user = flow_plan.context.get("pending_user")
+            # pretend_user_exists on the identification stage yields an unsaved user
+            if not user or not user.pk:
+                return True
+
+            # keep in sync with device_classes on default-authentication-mfa-validation above:
+            # the notice has to appear exactly when that stage falls through to the picker
+            return not any(
+                ak_user_has_authenticator(user, device_class)
+                for device_class in ("webauthn", "totp", "static")
+            )
+      - model: authentik_flows.flowstagebinding
+        id: mfa-enrollment-notice-binding
+        state: present
+        identifiers:
+          target: !KeyOf authentication-flow
+          stage: !KeyOf mfa-enrollment-notice-stage
+          order: 25
+        attrs:
+          # pending_user only exists once the identification stage has run, so the real
+          # decision has to happen when the stage is reached rather than at plan time
+          re_evaluate_policies: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf mfa-enrollment-notice-binding
+          policy: !KeyOf mfa-enrollment-notice-required
+          order: 0
+        attrs:
+          # a policy error shows the notice rather than swallowing it
+          failure_result: true
