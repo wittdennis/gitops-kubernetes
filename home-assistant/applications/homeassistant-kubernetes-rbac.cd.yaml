@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-homeassistant-kubernetes-rbac
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: home-assistant
+    namespace: home-assistant
+  source:
+    # Repository: https://github.com/tibuntu/homeassistant-kubernetes
+    # Values: https://github.com/tibuntu/homeassistant-kubernetes/blob/main/chart/values.yaml
+    repoURL: oci://ghcr.io/tibuntu/charts/homeassistant-kubernetes-rbac
+    path: "."
+    targetRevision: 1.7.0
+    helm:
+      releaseName: homeassistant-kubernetes-rbac
+      valuesObject:
+        mode: full
+        # the integration authenticates with the long-lived token from this
+        # Secret, pasted into the config flow, not with a projected SA token
+        tokenSecret:
+          create: true
