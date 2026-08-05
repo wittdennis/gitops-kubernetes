@@ -9,6 +9,11 @@ data:
     metadata:
       name: derwitt-site-mfa
     entries:
+      # the enrollment picker renders friendly_name as the button heading and the stage
+      # model's verbose name ("WebAuthn Authenticator" / "TOTP Authenticator") as subtext.
+      # keep the headings under ~30 characters: the button is a grid whose label column is
+      # capped at max-content, so a heading never wraps, it just overflows the card on a
+      # phone. detail that does not fit belongs in the notice stage further down
       - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
         id: webauthn-setup
         state: present
@@ -17,14 +22,14 @@ data:
         attrs:
           # keys without a PIN/biometric do not count as a factor
           user_verification: required
-          friendly_name: Set up a passkey, security key or fingerprint (recommended)
+          friendly_name: "Recommended: passkey"
       - model: authentik_stages_authenticator_totp.authenticatortotpstage
         id: totp-setup
         state: present
         identifiers:
           name: default-authenticator-totp-setup
         attrs:
-          friendly_name: Set up an authenticator app that generates 6-digit codes
+          friendly_name: "Alternative: authenticator app"
       - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
         state: present
         identifiers:
@@ -35,8 +40,8 @@ data:
             - webauthn
             - totp
             - static
-          # order is the button order in the enrollment picker, strongest factor first.
-          # keep both: a single entry makes authentik auto-select it and skip the picker
+          # this order does not reach the picker
+          # keep both entries: a single one makes authentik auto-select it and skip the picker
           configuration_stages:
             - !KeyOf webauthn-setup
             - !KeyOf totp-setup
@@ -48,7 +53,7 @@ data:
         identifiers:
           slug: default-authenticator-webauthn-setup
         attrs:
-          title: Register a passkey, security key or fingerprint
+          title: Register a passkey
       - model: authentik_flows.flow
         state: present
         identifiers:
@@ -78,19 +83,17 @@ data:
           type: alert_warning
           required: false
           order: 0
-          label: You still need to set up two-factor authentication
+          label: Two-factor authentication required
+          # bold text matches the button headings on the next screen verbatim
           initial_value: |
-            <p>Your account has no second factor registered, so signing in cannot be
-            completed yet. The next screen asks which kind to register. One is enough.</p>
+            <p>Your account has no second factor yet. Pick one option on the next screen.</p>
             <ul>
-              <li><strong>Passkey, security key or fingerprint.</strong> Uses this
-              device's screen lock (Touch ID, Windows Hello) or a hardware key such as a
-              YubiKey. Nothing to type and it cannot be phished, so prefer this one.</li>
-              <li><strong>Authenticator app.</strong> Scan a QR code with an app such as
-              Aegis, 2FAS or 1Password, then type the 6-digit code it shows. Pick this if
-              you want a factor that is not tied to one device.</li>
+              <li><strong>Recommended: passkey.</strong> Face ID, Touch ID, or a hardware
+              key such as a YubiKey. Nothing to type and it cannot be phished.</li>
+              <li><strong>Alternative: authenticator app.</strong> Scan a QR code, then
+              type the 6-digit code it shows.</li>
             </ul>
-            <p>The other kind can be added afterwards from your user settings.</p>
+            <p>You can add the other one later in your settings.</p>
       - model: authentik_stages_prompt.promptstage
         id: mfa-enrollment-notice-stage
         state: present
