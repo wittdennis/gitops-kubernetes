@@ -1,0 +1,73 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-blueprint-mfa-check
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-blueprint-mfa-check
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        mfa-check.yaml: |
+          version: 1
+          metadata:
+            name: derwitt-site-mfa-check
+          entries:
+            - model: authentik_rbac.role
+              state: present
+              id: mfa_check_role
+              identifiers:
+                name: MFA Enforcement Check
+              attrs:
+                permissions:
+                  - authentik_brands.view_brand
+                  - authentik_flows.view_flow
+                  - authentik_flows.view_flowstagebinding
+                  - authentik_flows.view_stage
+                  - authentik_policies.view_policy
+                  - authentik_policies.view_policybinding
+                  - authentik_stages_authenticator_validate.view_authenticatorvalidatestage
+                  - authentik_stages_authenticator_webauthn.view_authenticatorwebauthnstage
+            - model: authentik_core.user
+              state: present
+              id: mfa_check_user
+              identifiers:
+                username: svc-mfa-enforcement-check
+              attrs:
+                name: MFA Enforcement Check
+                type: service_account
+                is_active: true
+            - model: authentik_core.group
+              state: present
+              identifiers:
+                name: MFA Enforcement Check
+              attrs:
+                is_superuser: false
+                roles:
+                  - !KeyOf mfa_check_role
+                users:
+                  - !KeyOf mfa_check_user
+            - model: authentik_core.token
+              state: present
+              identifiers:
+                identifier: mfa-enforcement-check
+              attrs:
+                user: !KeyOf mfa_check_user
+                intent: api
+                expiring: false
+                description: Read-only token for the 2FA enforcement CronWorkflow
+                key: "{{ .apiToken }}"
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/api-tokens/mfa-enforcement-check
+        property: token
+      secretKey: apiToken

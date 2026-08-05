@@ -1,0 +1,20 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-mfa-check-token
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-mfa-check-token
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/api-tokens/mfa-enforcement-check
+        property: token
+      secretKey: token

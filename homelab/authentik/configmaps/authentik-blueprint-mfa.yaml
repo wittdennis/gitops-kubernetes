@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-mfa
+data:
+  mfa.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-mfa
+    entries:
+      - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        state: present
+        identifiers:
+          name: default-authentication-mfa-validation
+        attrs:
+          not_configured_action: configure
+          device_classes:
+            - webauthn
+            - totp
+            - static
+          configuration_stages:
+            - !Find [authentik_stages_authenticator_webauthn.authenticatorwebauthnstage, [name, default-authenticator-webauthn-setup]]
+            - !Find [authentik_stages_authenticator_totp.authenticatortotpstage, [name, default-authenticator-totp-setup]]
+          # keys without a PIN/biometric do not count as a factor
+          webauthn_user_verification: required
+      - model: authentik_stages_authenticator_webauthn.authenticatorwebauthnstage
+        state: present
+        identifiers:
+          name: default-authenticator-webauthn-setup
+        attrs:
+          user_verification: required
