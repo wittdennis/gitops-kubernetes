@@ -60,8 +60,10 @@ spec:
               rules:
                 RecordingRulesNoData:
                   spec:
-                    # count:up0 legitimately yields no samples while every scrape target is up
-                    expr: sum(vmalert_recording_rules_last_evaluation_samples{recording!="count:up0"}) without(id) < 1
+                    # these legitimately yield no samples: count:up0 while every scrape
+                    # target is up, and the scheduler quantiles while nothing is being
+                    # scheduled (histogram_quantile over all-zero rates is NaN, which is dropped)
+                    expr: sum(vmalert_recording_rules_last_evaluation_samples{recording!~"count:up0|cluster_quantile:scheduler_.*"}) without(id) < 1
 
         victoria-metrics-operator:
           enabled: false
