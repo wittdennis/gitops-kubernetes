@@ -25,6 +25,26 @@ spec:
             containers:
               - name: dex-server
                 command:
-                  - "/bin/sh"
-                  - "-c"
-                  - "(LAST=\"\"; while true; do M=$(stat -c %Y /tmp/dex.yaml 2>/dev/null); if [ \"$M\" != \"$LAST\" ]; then LAST=$M; grep -q \"argocd://auth/callback\" /tmp/dex.yaml 2>/dev/null || sed -i \"s|  - http://localhost:8085/auth/callback|  - http://localhost:8085/auth/callback\\n  - argocd://auth/callback|\" /tmp/dex.yaml; fi; sleep 0.2; done) & exec /shared/argocd-dex rundex"
+                  - /bin/sh
+                  - -c
+                  # dex parses its config once at startup and `argocd-dex rundex`
+                  # spawns it immediately after writing /tmp/dex.yaml, so patching
+                  # the file from a background loop loses the race. Shadow the dex
+                  # binary on PATH instead: rundex resolves it via PATH, which makes
+                  # the wrapper the last hook before the config is read. exec keeps
+                  # the PID so rundex can still signal dex on settings changes, and
+                  # the patch is re-applied on every regenerate/restart cycle.
+                  - |
+                    set -eu
+                    mkdir -p /tmp/bin
+                    cat >/tmp/bin/dex <<'EOF'
+                    #!/bin/sh
+                    for cfg; do :; done
+                    grep -q 'argocd://auth/callback' "$cfg" ||
+                      sed -i 's|  - http://localhost:8085/auth/callback|  - http://localhost:8085/auth/callback\n  - argocd://auth/callback|' "$cfg"
+                    exec /usr/local/bin/dex "$@"
+                    EOF
+                    chmod +x /tmp/bin/dex
+                    PATH=/tmp/bin:$PATH
+                    export PATH
+                    exec /shared/argocd-dex rundex
