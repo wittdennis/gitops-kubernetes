@@ -47,6 +47,13 @@ spec:
               create: false
             etcdMemberCommunicationSlow:
               create: false
+          groups:
+            vmalert:
+              rules:
+                RecordingRulesNoData:
+                  spec:
+                    # count:up0 legitimately yields no samples while every scrape target is up
+                    expr: sum(vmalert_recording_rules_last_evaluation_samples{recording!="count:up0"}) without(id) < 1
 
         victoria-metrics-operator:
           enabled: false
