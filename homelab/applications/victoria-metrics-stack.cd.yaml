@@ -86,6 +86,22 @@ spec:
               drop:
                 - ALL
 
+        kubelet:
+          vmScrape:
+            spec:
+              relabelConfigs:
+                - action: labelmap
+                  regex: __meta_kubernetes_node_label_(.+)
+                # node-feature-discovery and Talos extension labels add ~90 labels per
+                # worker, pushing every kubelet/cadvisor series past the 40-label ingestion
+                # cap; they carry no meaning on these metrics
+                - action: labeldrop
+                  regex: (feature_node_kubernetes_io_.*|extensions_talos_dev_.*)
+                - sourceLabels: [__metrics_path__]
+                  targetLabel: metrics_path
+                - targetLabel: job
+                  replacement: kubelet
+
         kubeScheduler:
           vmScrape:
             spec:
