@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator
     path: "."
-    targetRevision: 2.27.0
+    targetRevision: 2.27.1
     helm:
       releaseName: netbox
       valuesObject:
