@@ -28,6 +28,7 @@ spec:
                 name: MFA Enforcement Check
               attrs:
                 permissions:
+                  - authentik_blueprints.view_blueprintinstance
                   - authentik_brands.view_brand
                   - authentik_flows.view_flow
                   - authentik_flows.view_flowstagebinding
@@ -36,6 +37,7 @@ spec:
                   - authentik_policies.view_policybinding
                   - authentik_stages_authenticator_validate.view_authenticatorvalidatestage
                   - authentik_stages_authenticator_webauthn.view_authenticatorwebauthnstage
+                  - authentik_stages_identification.view_identificationstage
             - model: authentik_core.user
               state: present
               id: mfa_check_user

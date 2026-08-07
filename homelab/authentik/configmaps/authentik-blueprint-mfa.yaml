@@ -62,6 +62,12 @@ data:
         identifiers:
           name: default-authentication-identification
         attrs:
+          # the stage's own serializer validation reads user_fields out of the incoming data and
+          # rejects the whole entry when it is empty, so a partial update has to restate them.
+          # verbatim from upstream's default authentication flow blueprint
+          user_fields:
+            - email
+            - username
           webauthn_stage: !KeyOf mfa-validation
 
       # titles of the flows the picker hands off to, shown as the header while enrolling

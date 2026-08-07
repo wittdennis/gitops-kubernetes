@@ -56,6 +56,8 @@ spec:
               with open("/api-token/token") as handle:
                   TOKEN = handle.read().strip()
 
+              BLUEPRINT = "derwitt-site-mfa"
+
               failures = []
 
 
@@ -74,6 +76,18 @@ spec:
                   if not ok:
                       failures.append(message)
 
+
+              # a blueprint that fails to validate applies none of its entries and leaves the
+              # previous config in place, so every assertion below can pass while the committed
+              # one was never live
+              instances = get(f"managed/blueprints/?name={BLUEPRINT}")["results"]
+              check(len(instances) == 1, f"blueprint {BLUEPRINT} is known (found {len(instances)})")
+              for instance in instances:
+                  check(instance["enabled"], f"blueprint {BLUEPRINT} is enabled")
+                  check(
+                      instance["status"] == "successful",
+                      f"blueprint {BLUEPRINT} applied cleanly (status={instance['status']})",
+                  )
 
               brands = get("core/brands/?default=true")["results"]
               check(len(brands) == 1, f"exactly one default brand exists (found {len(brands)})")
