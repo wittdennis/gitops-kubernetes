@@ -22,6 +22,9 @@ data:
         attrs:
           # keys without a PIN/biometric do not count as a factor
           user_verification: required
+          # a credential that is not discoverable can never act as a first factor, and the
+          # upstream default (preferred) lets an authenticator enroll one anyway
+          resident_key_requirement: required
           friendly_name: "Recommended: passkey"
       - model: authentik_stages_authenticator_totp.authenticatortotpstage
         id: totp-setup
@@ -31,6 +34,7 @@ data:
         attrs:
           friendly_name: "Alternative: authenticator app"
       - model: authentik_stages_authenticator_validate.authenticatorvalidatestage
+        id: mfa-validation
         state: present
         identifiers:
           name: default-authentication-mfa-validation
@@ -46,6 +50,19 @@ data:
             - !KeyOf webauthn-setup
             - !KeyOf totp-setup
           webauthn_user_verification: required
+
+      # offers the passkey straight from the browser's autofill UI, no username typed. a passkey
+      # with user verification is already two factors, so authentik marks the login as
+      # auth_webauthn_pwl and its own policies then skip both the password stage and the
+      # validation stage above. pointing at that same stage is deliberate: the challenge takes
+      # its user-verification requirement from whichever validate stage backs it, so reusing it
+      # keeps a single place where that can be relaxed - and a single place the drift check reads
+      - model: authentik_stages_identification.identificationstage
+        state: present
+        identifiers:
+          name: default-authentication-identification
+        attrs:
+          webauthn_stage: !KeyOf mfa-validation
 
       # titles of the flows the picker hands off to, shown as the header while enrolling
       - model: authentik_flows.flow

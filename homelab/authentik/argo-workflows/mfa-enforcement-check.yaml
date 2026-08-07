@@ -43,6 +43,7 @@ spec:
 
               API = "http://authentik-server.authentik.svc.cluster.local/api/v3"
               VALIDATE_MODEL = "authentik_stages_authenticator_validate.authenticatorvalidatestage"
+              IDENTIFICATION_MODEL = "authentik_stages_identification.identificationstage"
               ALLOWED_DEVICE_CLASSES = {"webauthn", "totp", "static"}
               ALLOWED_CONFIGURATION_STAGES = {
                   "authentik_stages_authenticator_webauthn.authenticatorwebauthnstage",
@@ -84,11 +85,15 @@ spec:
               # flows are retrieved by slug, so the brand's uuid has to go through the filter
               flows = get(f"flows/instances/?flow_uuid={flow_pk}")["results"]
               flow_slug = flows[0]["slug"] if flows else flow_pk
-              bindings = [
+              flow_bindings = [
                   binding
                   for binding in get(f"flows/bindings/?target={flow_pk}")["results"]
                   if binding["target"] == flow_pk
-                  and binding["stage_obj"]["meta_model_name"] == VALIDATE_MODEL
+              ]
+              bindings = [
+                  binding
+                  for binding in flow_bindings
+                  if binding["stage_obj"]["meta_model_name"] == VALIDATE_MODEL
               ]
               check(bool(bindings), f"flow {flow_slug} has an MFA validation stage bound")
 
@@ -131,6 +136,36 @@ spec:
                               f"{name}: configuration stage {configuration_stage['name']} enrolls a strong factor",
                           )
 
+              # a passkey login (auth_webauthn_pwl) satisfies both factors and authentik's own
+              # policy then skips the validation stage, so the identification stage decides how
+              # strict the only remaining check is
+              audited = {binding["stage"] for binding in bindings}
+              identification = [
+                  binding
+                  for binding in flow_bindings
+                  if binding["stage_obj"]["meta_model_name"] == IDENTIFICATION_MODEL
+              ]
+              check(bool(identification), f"flow {flow_slug} has an identification stage bound")
+
+              for binding in identification:
+                  stage = get(f"stages/identification/{binding['stage']}/")
+                  name = stage["name"]
+                  passkey_stage = stage["webauthn_stage"]
+                  # the challenge takes its user-verification requirement from this stage, so it
+                  # has to be one of the stages asserted strict above - any other stage could
+                  # accept a passkey without a PIN or biometric as a single factor
+                  check(
+                      not passkey_stage or passkey_stage in audited,
+                      f"{name}: passkey login validates against an audited stage "
+                      f"(webauthn_stage={passkey_stage})",
+                  )
+                  # a linked passwordless flow brings its own validation stage, which sits outside
+                  # every binding this script walks
+                  check(
+                      not stage["passwordless_flow"],
+                      f"{name}: no unaudited passwordless flow linked",
+                  )
+
               managed = get("stages/authenticator/validate/?name=default-authentication-mfa-validation")
               count = managed["pagination"]["count"]
               check(count == 1, f"exactly one default-authentication-mfa-validation stage exists (found {count})")
@@ -141,6 +176,13 @@ spec:
                   check(
                       stage["user_verification"] == "required",
                       f"{stage['name']}: enrollment enforces user verification",
+                  )
+                  # only a discoverable credential can be a first factor, so relaxing this
+                  # silently leaves new keys unable to log in passwordless
+                  check(
+                      stage["resident_key_requirement"] == "required",
+                      f"{stage['name']}: enrollment creates discoverable credentials "
+                      f"(resident_key_requirement={stage['resident_key_requirement']})",
                   )
 
               if failures:
