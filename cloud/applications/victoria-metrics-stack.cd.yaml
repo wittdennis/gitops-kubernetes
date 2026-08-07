@@ -33,7 +33,7 @@ spec:
     namespace: victoria-metrics-stack
   source:
     repoURL: https://victoriametrics.github.io/helm-charts
-    targetRevision: 0.90.0
+    targetRevision: 0.90.1
     chart: victoria-metrics-k8s-stack
     helm:
       releaseName: vm-stack
