@@ -63,6 +63,20 @@ spec:
         documentConsumption:
           dateOrder: DMY
 
+        ai:
+          enabled: true
+          backend: openai-like
+          endpoint: http://litellm.ai-platform.svc.cluster.local:4000/v1
+          model: llama3.1:8b
+          apiKeySecret:
+            name: paperless-ngx-litellm-key
+            key: api-token
+          contextSize: 8192
+          embedding:
+            backend: openai-like
+            model: nomic-embed-text
+
+
         email:
           sending:
             host: smtp.protonmail.ch
