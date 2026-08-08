@@ -72,6 +72,7 @@ spec:
             name: paperless-ngx-litellm-key
             key: api-token
           contextSize: 8192
+          outputLanguage: de-de
           embedding:
             backend: openai-like
             model: nomic-embed-text
