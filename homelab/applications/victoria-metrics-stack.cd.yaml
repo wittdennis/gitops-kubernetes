@@ -63,6 +63,38 @@ spec:
             limits:
               memory: 100Mi
               cpu: 50m
+          rbac:
+            extraRules:
+              - apiGroups: ["argoproj.io"]
+                resources: ["workflows"]
+                verbs: ["list", "watch"]
+          # Argo's own metrics carry either the namespace or the liveness of a
+          # workflow, never both: argo_workflows_total_count is a per-controller-pod
+          # counter, argo_workflows_gauge has no namespace label. Deriving phase
+          # straight from the Workflow object gives an alert that stays firing until
+          # the failed workflow is actually cleaned up.
+          customResourceState:
+            enabled: true
+            config:
+              kind: CustomResourceStateMetrics
+              spec:
+                resources:
+                  - groupVersionKind:
+                      group: argoproj.io
+                      version: v1alpha1
+                      kind: Workflow
+                    labelsFromPath:
+                      namespace: [metadata, namespace]
+                      name: [metadata, name]
+                    metrics:
+                      - name: workflow_status_phase
+                        help: "Current phase of the Argo Workflow"
+                        each:
+                          type: StateSet
+                          stateSet:
+                            labelName: phase
+                            path: [status, phase]
+                            list: [Pending, Running, Succeeded, Failed, Error]
 
         prometheus-node-exporter:
           resources:
