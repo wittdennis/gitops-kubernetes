@@ -97,11 +97,12 @@ spec:
             # Local Ollama on the Arc B580 (#884). Models must be pulled into the
             # ollama PVC (`ollama pull <name>`) before a route resolves. One 7B-ish
             # model fits 12 GB at a time; ollama_chat/ auto-swaps them on demand.
-            # ollama_chat 400s the whole request on OpenAI params that have no
-            # ollama request field, even where the behaviour is native anyway:
-            # parallel_tool_calls (sent by any llama-index tool call) is only a
-            # toggle for something ollama always allows, so dropping it changes
-            # nothing. Not set on the cloud entries, where those params are real.
+            # Both ollama providers 400 the whole request on OpenAI params that
+            # have no ollama equivalent, including ones the caller never chose:
+            # parallel_tool_calls only toggles what ollama does anyway, and the
+            # openai sdk injects encoding_format=base64 on its own, then leaves
+            # a plain float response alone. Dropping either changes no output.
+            # Not set on the cloud entries, where those params do something.
             - model_name: llama3.1:8b
               litellm_params:
                 model: ollama_chat/llama3.1:8b
@@ -122,6 +123,7 @@ spec:
               litellm_params:
                 model: ollama/nomic-embed-text
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
+                drop_params: true
           litellm_settings:
             callbacks: ["prometheus"]
             require_auth_for_metrics_endpoint: false
