@@ -51,12 +51,45 @@ data:
             - !KeyOf totp-setup
           webauthn_user_verification: required
 
-      # offers the passkey straight from the browser's autofill UI, no username typed. a passkey
-      # with user verification is already two factors, so authentik marks the login as
-      # auth_webauthn_pwl and its own policies then skip both the password stage and the
-      # validation stage above. pointing at that same stage is deliberate: the challenge takes
-      # its user-verification requirement from whichever validate stage backs it, so reusing it
-      # keeps a single place where that can be relaxed - and a single place the drift check reads
+      # the target of the "Use a security key" button on the login screen. the label is hardcoded
+      # in the frontend, the title below only shows as the header once the flow is entered.
+      # deliberately just two stages: the same validation stage as above, which is what keeps
+      # user verification required here too, and the login stage that ends the default flow.
+      # require_unauthenticated because an already signed-in user would otherwise land in a
+      # reauth prompt against their existing session instead of a passwordless login
+      - model: authentik_flows.flow
+        id: passwordless-flow
+        state: present
+        identifiers:
+          slug: derwitt-site-passwordless
+        attrs:
+          name: derwitt-site-passwordless
+          designation: authentication
+          title: Sign in with a passkey
+          authentication: require_unauthenticated
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf passwordless-flow
+          stage: !KeyOf mfa-validation
+          order: 10
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf passwordless-flow
+          stage: !Find [
+              authentik_stages_user_login.userloginstage,
+              [name, default-authentication-login],
+            ]
+          order: 100
+
+      # two ways into the same passkey. webauthn_stage is the browser's autofill offer, which stays
+      # invisible until the username field is focused, so passwordless_flow adds the visible button
+      # underneath the form. a passkey with user verification is already two factors, so authentik
+      # marks either login as auth_webauthn_pwl and its own policies then skip both the password
+      # stage and the validation stage. pointing at the validation stage above is deliberate: the
+      # challenge takes its user-verification requirement from whichever validate stage backs it,
+      # so reusing it keeps a single place where that can be relaxed - and a single place to audit
       - model: authentik_stages_identification.identificationstage
         state: present
         identifiers:
@@ -69,6 +102,7 @@ data:
             - email
             - username
           webauthn_stage: !KeyOf mfa-validation
+          passwordless_flow: !KeyOf passwordless-flow
 
       # titles of the flows the picker hands off to, shown as the header while enrolling
       - model: authentik_flows.flow

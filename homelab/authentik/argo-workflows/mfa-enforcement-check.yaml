@@ -49,6 +49,8 @@ spec:
                   "authentik_stages_authenticator_webauthn.authenticatorwebauthnstage",
                   "authentik_stages_authenticator_totp.authenticatortotpstage",
               }
+              # everything else the passwordless flow may bind next to the validation stage
+              PASSWORDLESS_ALLOWED_MODELS = {"authentik_stages_user_login.userloginstage"}
               # authentik ships exactly one policy on this binding, skipping validation when
               # the user already authenticated passwordless via WebAuthn
               EXPECTED_STAGE_POLICIES = {"default-authentication-flow-authenticator-validate-stage"}
@@ -173,12 +175,48 @@ spec:
                       f"{name}: passkey login validates against an audited stage "
                       f"(webauthn_stage={passkey_stage})",
                   )
-                  # a linked passwordless flow brings its own validation stage, which sits outside
-                  # every binding this script walks
+                  # the linked passwordless flow is a second front door, so it gets walked too:
+                  # nothing but the audited validation stage and the login stage that ends it, and
+                  # no policy able to skip either. a flow that lost its validation stage would log
+                  # anyone in with no factor at all
+                  passwordless_flow = stage["passwordless_flow"]
+                  if not passwordless_flow:
+                      continue
+                  passwordless_bindings = [
+                      passwordless_binding
+                      for passwordless_binding in get(f"flows/bindings/?target={passwordless_flow}")["results"]
+                      if passwordless_binding["target"] == passwordless_flow
+                  ]
                   check(
-                      not stage["passwordless_flow"],
-                      f"{name}: no unaudited passwordless flow linked",
+                      any(
+                          passwordless_binding["stage"] in audited
+                          for passwordless_binding in passwordless_bindings
+                      ),
+                      f"{name}: passwordless flow validates against an audited stage",
                   )
+                  for passwordless_binding in passwordless_bindings:
+                      stage_obj = passwordless_binding["stage_obj"]
+                      check(
+                          passwordless_binding["stage"] in audited
+                          or stage_obj["meta_model_name"] in PASSWORDLESS_ALLOWED_MODELS,
+                          f"{name}: passwordless flow only binds audited stages "
+                          f"(unexpected: {stage_obj['name']})",
+                      )
+                      bound = get(
+                          f"policies/bindings/?target={passwordless_binding['policybindingmodel_ptr_id']}"
+                      )
+                      skippable = sorted(
+                          policy["policy_obj"]["name"]
+                          if policy["policy_obj"]
+                          else f"group/user binding {policy['pk']}"
+                          for policy in bound["results"]
+                          if policy["enabled"]
+                      )
+                      check(
+                          not skippable,
+                          f"{name}: no policy can skip {stage_obj['name']} in the passwordless "
+                          f"flow (extra: {skippable})",
+                      )
 
               managed = get("stages/authenticator/validate/?name=default-authentication-mfa-validation")
               count = managed["pagination"]["count"]
