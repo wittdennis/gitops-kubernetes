@@ -6,6 +6,11 @@
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "matchPackageNames": ["ghcr.io/renovatebot/renovate"]
+    },
+    {
+      "description": "Release notes are matched against `<depName>-<version>`, and netbox-chart tags its releases `netbox-x.y.z`. Without this the full OCI ref never matches and PRs come out without a changelog",
+      "matchPackageNames": ["ghcr.io/netbox-community/netbox-chart/netbox"],
+      "overrideDepName": "netbox"
     }
   ]
 }
