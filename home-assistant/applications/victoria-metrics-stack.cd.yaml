@@ -71,11 +71,11 @@ spec:
         kube-state-metrics:
           resources:
             requests:
-              cpu: 10m
-              memory: 100Mi
+              cpu: 100m
+              memory: 768Mi
             limits:
-              memory: 100Mi
-              cpu: 50m
+              memory: 768Mi
+              cpu: 500m
           rbac:
             extraRules:
               - apiGroups: ["argoproj.io"]
