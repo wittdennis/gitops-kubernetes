@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: https://charts.derwitt.dev
     chart: radicale
-    targetRevision: 2.0.3
+    targetRevision: 2.1.0
     helm:
       valuesObject:
         config:
