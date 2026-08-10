@@ -1,0 +1,57 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-traefik
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: home-assistant
+    namespace: traefik
+  source:
+    repoURL: https://traefik.github.io/charts
+    targetRevision: 41.2.0
+    chart: traefik
+    helm:
+      releaseName: traefik
+      valuesObject:
+        deployment:
+          kind: DaemonSet
+        api:
+          dashboard: true
+          insecure: true
+        gateway:
+          enabled: false
+        gatewayClass:
+          enabled: true
+        metrics:
+          serviceMonitor:
+            enabled: true
+          prometheusRule:
+            enabled: true
+        ocsp:
+          enabled: true
+        ports:
+          web:
+            port: 80
+          websecure:
+            port: 443
+            http3:
+              enabled: false
+        priorityClassName: system-cluster-critical
+        providers:
+          kubernetesGateway:
+            enabled: true
+            experimentalChannel: true
+          kubernetesIngress:
+            publishedService:
+              enabled: true
+        service:
+          spec:
+            ipFamilyPolicy: PreferDualStack
