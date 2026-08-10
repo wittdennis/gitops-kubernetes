@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: mogenius-operator-dev
+  labels:
+    # The node-metrics DaemonSet needs NET_ADMIN/SYS_ADMIN/BPF/SYS_PTRACE.
+    pod-security.kubernetes.io/enforce: privileged

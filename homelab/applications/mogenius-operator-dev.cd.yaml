@@ -1,0 +1,95 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-mogenius-operator-dev
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: mogenius-operator-dev
+  # The chart renders three statically named aggregated ClusterRoles
+  # (mogenius-admin/editor/viewer) that the prod release also owns. Ignoring the
+  # tracking annotation leaves them to prod instead of both releases reclaiming
+  # them on every sync; the contents are identical either way.
+  ignoreDifferences:
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: mogenius-admin
+      jqPathExpressions:
+        - '.metadata.annotations."argocd.argoproj.io/tracking-id"'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: mogenius-editor
+      jqPathExpressions:
+        - '.metadata.annotations."argocd.argoproj.io/tracking-id"'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: mogenius-viewer
+      jqPathExpressions:
+        - '.metadata.annotations."argocd.argoproj.io/tracking-id"'
+  source:
+    repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator-dev
+    path: "."
+    targetRevision: 2.28.0-develop.514
+    helm:
+      releaseName: mogenius-operator-dev
+      valuesObject:
+        # Every cluster-scoped resource except the three aggregated ClusterRoles
+        # is named from this, so it has to differ from the prod release.
+        fullnameOverride: mogenius-operator-dev
+
+        features:
+          autoUpgrade:
+            enabled: false
+
+        externalKeyValueStore:
+          enabled: true
+          host: valkey-mogenius-operator-dev.mogenius-operator-dev.svc.cluster.local
+          username: default
+          existingSecret:
+            name: mogenius-operator-dev-valkey-credentials
+            key: default-password
+
+        global:
+          cluster_name: "Homelab Dev"
+          apiKeySecret:
+            secretName: mogenius-operator-dev-api-secret
+            secretKey: api-key
+        envVars:
+          MO_API_SERVER: "wss://k8s-ws.dev.mogenius.com/ws"
+          MO_EVENT_SERVER: "wss://k8s-dispatcher.dev.mogenius.com/ws"
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+        valkey:
+          enabled: false
+        persistence:
+          storageClass: proxmox-data
+        podSecurityContext:
+          fsGroup: 1000
+          fsGroupChangePolicy: OnRootMismatch
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+          seccompProfile:
+            type: RuntimeDefault

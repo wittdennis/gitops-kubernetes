@@ -1,0 +1,41 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mogenius-operator-dev-valkey-rules
+spec:
+  groups:
+    - name: mogenius-operator-dev-valkey.rules
+      rules:
+        - alert: MogeniusOperatorDevValkeyDown
+          annotations:
+            summary: Valkey node {{ $labels.pod }} down
+            description: Valkey node {{ $labels.pod }} is down.
+          expr: redis_up{namespace="mogenius-operator-dev"} == 0
+          for: 10m
+          labels:
+            severity: warning
+        - alert: MogeniusOperatorDevValkeyClusterDegraded
+          annotations:
+            summary: Valkey cluster is missing hash slots
+            description: |
+              Valkey node {{ $labels.pod }} sees only {{ $value }} of 16384 hash slots as OK.
+          # The dev cluster runs without replicas, so any node restart takes its
+          # slots with it until the pod is back.
+          expr: redis_cluster_slots_ok{namespace="mogenius-operator-dev"} < 16384
+          for: 10m
+          labels:
+            severity: warning
+        - alert: MogeniusOperatorDevValkeyMemoryHigh
+          annotations:
+            summary: Valkey node {{ $labels.pod }} is using too much memory
+            description: |
+              Valkey node {{ $labels.pod }} is using {{ $value }}% of its available memory.
+          expr: |
+            redis_memory_used_bytes{namespace="mogenius-operator-dev"} * 100
+            /
+            redis_memory_max_bytes{namespace="mogenius-operator-dev"}
+            > 90 <= 100
+          for: 10m
+          labels:
+            severity: warning
