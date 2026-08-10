@@ -1,0 +1,48 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mogenius-operator-valkey-rules
+spec:
+  groups:
+    - name: mogenius-operator-valkey.rules
+      rules:
+        - alert: MogeniusOperatorValkeyDown
+          annotations:
+            summary: Valkey node {{ $labels.pod }} down
+            description: Valkey node {{ $labels.pod }} is down.
+          expr: redis_up{namespace="mogenius-operator"} == 0
+          for: 2m
+          labels:
+            severity: warning
+        - alert: MogeniusOperatorValkeyClusterDegraded
+          annotations:
+            summary: Valkey cluster is missing hash slots
+            description: |
+              Valkey node {{ $labels.pod }} sees only {{ $value }} of 16384 hash slots as OK.
+          expr: redis_cluster_slots_ok{namespace="mogenius-operator"} < 16384
+          for: 5m
+          labels:
+            severity: critical
+        - alert: MogeniusOperatorValkeyMemoryHigh
+          annotations:
+            summary: Valkey node {{ $labels.pod }} is using too much memory
+            description: |
+              Valkey node {{ $labels.pod }} is using {{ $value }}% of its available memory.
+          expr: |
+            redis_memory_used_bytes{namespace="mogenius-operator"} * 100
+            /
+            redis_memory_max_bytes{namespace="mogenius-operator"}
+            > 90 <= 100
+          for: 2m
+          labels:
+            severity: warning
+        - alert: MogeniusOperatorValkeyKeyEviction
+          annotations:
+            summary: Valkey node {{ $labels.pod }} has evicted keys
+            description: |
+              Valkey node {{ $labels.pod }} has evicted {{ $value }} keys in the last 5 minutes.
+          expr: increase(redis_evicted_keys_total{namespace="mogenius-operator"}[5m]) > 0
+          for: 1s
+          labels:
+            severity: warning

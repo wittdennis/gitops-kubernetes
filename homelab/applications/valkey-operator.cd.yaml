@@ -1,0 +1,34 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-valkey-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: valkey-operator
+  source:
+    repoURL: oci://ghcr.io/valkey-io/valkey-helm/valkey-operator
+    path: "."
+    targetRevision: 0.4.1
+    helm:
+      releaseName: valkey-operator
+      valuesObject:
+        metrics:
+          serviceMonitor:
+            enabled: true
+        resources:
+          limits:
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi

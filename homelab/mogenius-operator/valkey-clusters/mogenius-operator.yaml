@@ -1,0 +1,75 @@
+---
+apiVersion: valkey.io/v1alpha1
+kind: ValkeyCluster
+metadata:
+  name: mogenius-operator
+spec:
+  shards: 3
+  replicas: 1
+  image: docker.io/valkey/valkey:9.1.1 # renovate: datasource=docker depName=valkey/valkey versioning=docker
+  persistence:
+    size: 5Gi
+    storageClassName: proxmox-data
+    reclaimPolicy: Delete
+  users:
+    # The operator manages the _operator/_exporter/_replication system users
+    # itself; only the application user needs declaring.
+    - name: default
+      passwordSecret:
+        name: mogenius-operator-valkey-credentials
+        keys:
+          - default-password
+      keys:
+        readWrite:
+          - "*"
+      channels:
+        patterns:
+          - "*"
+      commands:
+        allow:
+          - "@all"
+  scheduling:
+    topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            valkey.io/cluster: mogenius-operator
+  podSecurityContext:
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: server
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        privileged: false
+        readOnlyRootFilesystem: true
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+  exporter:
+    enabled: true
+    image: docker.io/oliver006/redis_exporter:v1.80.0 # renovate: datasource=docker depName=oliver006/redis_exporter versioning=docker
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      privileged: false
+      readOnlyRootFilesystem: true
+      runAsGroup: 1000
+      runAsNonRoot: true
+      runAsUser: 1000
+      seccompProfile:
+        type: RuntimeDefault
