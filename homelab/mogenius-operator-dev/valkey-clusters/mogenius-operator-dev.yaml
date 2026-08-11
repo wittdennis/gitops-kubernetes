@@ -5,7 +5,9 @@ metadata:
   name: mogenius-operator-dev
 spec:
   shards: 3
-  replicas: 0
+  # A shard without a replica has no node left alive across a simultaneous roll, so
+  # every peer's nodes.conf keeps pointing at dead pod IPs and the cluster never re-forms.
+  replicas: 1
   image: docker.io/valkey/valkey:9.1.1 # renovate: datasource=docker depName=valkey/valkey versioning=docker
   persistence:
     size: 5Gi
