@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: calibre-web
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: calibre-web
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/calibre-web
+    path: "."
     targetRevision: 1.1.0
     helm:
       valuesObject:

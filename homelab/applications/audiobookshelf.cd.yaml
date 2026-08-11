@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: audiobookshelf
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: audiobookshelf
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/audiobookshelf
+    path: "."
     targetRevision: 1.1.0
     helm:
       valuesObject:

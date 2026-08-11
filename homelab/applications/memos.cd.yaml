@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: memos
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: memos
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/memos
+    path: "."
     targetRevision: 1.4.0
     helm:
       valuesObject:

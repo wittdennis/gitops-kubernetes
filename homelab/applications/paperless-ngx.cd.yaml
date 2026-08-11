@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: paperless-ngx
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: paperless-ngx
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/paperless-ngx
+    path: "."
     targetRevision: 2.1.0
     helm:
       valuesObject:

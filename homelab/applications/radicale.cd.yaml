@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: radicale
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: radicale
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/radicale
+    path: "."
     targetRevision: 2.1.0
     helm:
       valuesObject:

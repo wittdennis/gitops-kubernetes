@@ -15,8 +15,8 @@ spec:
     name: homelab
     namespace: storage
   source:
-    repoURL: https://charts.derwitt.dev
-    chart: garage
+    repoURL: oci://ghcr.io/wittdennis/helm-charts/garage
+    path: "."
     targetRevision: 2.4.0
     helm:
       valuesObject:
