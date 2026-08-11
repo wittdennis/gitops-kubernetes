@@ -1,5 +1,5 @@
 {
-  "cSpell.words": ["bootstraper"],
+  "cSpell.words": ["bootstraper", "mogenius"],
   "yaml.schemas": {
     "kubernetes://schema/argoproj.io/v1alpha1@cronworkflow": "file:///Users/dennis/workspaces/private/wittdennis/k8s-platform/homelab/paperless-ngx/workflows/backup-paperless-ngx.yaml"
   },

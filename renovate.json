@@ -11,6 +11,15 @@
       "description": "Release notes are matched against `<depName>-<version>`, and netbox-chart tags its releases `netbox-x.y.z`. Without this the full OCI ref never matches and PRs come out without a changelog",
       "matchPackageNames": ["ghcr.io/netbox-community/netbox-chart/netbox"],
       "overrideDepName": "netbox"
+    },
+    {
+      "description": "The dev release tracks mogenius' `develop` prerelease train, which is unstable by definition. `allowedVersions` keeps it on that train so a stable `x.y.z` (which sorts above any of its prereleases) never gets proposed here",
+      "matchPackageNames": [
+        "ghcr.io/mogenius/helm-charts/mogenius-operator-dev"
+      ],
+      "versioning": "semver",
+      "ignoreUnstable": false,
+      "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-develop\\.\\d+$/"
     }
   ]
 }
