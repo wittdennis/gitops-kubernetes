@@ -4,10 +4,11 @@
     "kubernetes://schema/argoproj.io/v1alpha1@cronworkflow": "file:///Users/dennis/workspaces/private/wittdennis/k8s-platform/homelab/paperless-ngx/workflows/backup-paperless-ngx.yaml"
   },
   "files.insertFinalNewline": true,
-    "files.trimFinalNewlines": true,
-    "editor.renderWhitespace": "all",
-    "workbench.editor.customLabels.enabled": true,
-    "workbench.editor.customLabels.patterns": {
-        "**/*.yaml": "[${dirname(1)}] ${filename}.${extname}"
-    }
+  "files.trimFinalNewlines": true,
+  "editor.renderWhitespace": "all",
+  "workbench.editor.customLabels.enabled": true,
+  "workbench.editor.customLabels.patterns": {
+    "*/*/**/*.yaml": "[${dirname(-2)}] ${filename}.${extname}",
+    "*/*.yaml": "${filename}.${extname}"
+  }
 }
