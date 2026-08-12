@@ -19,6 +19,13 @@
 > boundary tightens accordingly: full compromise of the box yields one Vault path and
 > nothing else. Consequence: nothing secret may ever be committed to `jotunheim`.
 
+> **Amendment 2026-08-12.** `mogenius-operator` is deployed on `otter` as an
+> infrastructure component, so the box is visible on the mogenius platform like the
+> estate's other three clusters. This is a **deliberate, named hole in the trust
+> boundary above**: it adds a second credential (its API key) and maintains outbound
+> websockets to `mogenius.com` over which the platform can drive the cluster. The
+> boundary is otherwise unchanged, and this is not precedent for further exceptions.
+
 ## Context
 
 ADR-0001 accepted a hard ceiling: a single **Arc B580** with 12 GB VRAM holds
@@ -59,7 +66,8 @@ Inference is the scavenger.
 | GPU exposure | **AMD device plugin** → `amd.com/gpu`, mirroring the Intel plugin on `homelab` | Keeps workload pods `restricted`; only the plugin DaemonSet is privileged, same shape as `intel-device-plugins`. |
 | Endpoint auth | **Bearer-token reverse proxy in-cluster** in front of the Ollama Service; Ollama never listens on the LAN itself | Ollama has no auth of its own, and AGENTS.md does not permit relaxing security for `ai-platform`. Being in-cluster, the proxy is GitOps-managed like everything else rather than hand-rolled host config. |
 | Secrets | **ESO on `otter`** against Vault, with a **read-only Vault token scoped to just this cluster's credentials**; the token Secret itself is Ansible-bootstrapped | Keeps the repo's Vault convention intact on the new cluster. Vault is already reachable at `vault.derwitt.site` through the hub gateway, so `otter`'s `ClusterSecretStore` needs no `caProvider` (unlike the hub's in-cluster store, which mounts the Vault CA). |
-| Trust boundary | Outbound-only from `otter`, and exactly **one credential**: a **read-only path-scoped Vault token**. `homelab/jotunheim` is public, so Flux clones it anonymously over HTTPS — **no git credential on the box at all**. No credential for this repo, nothing inbound to the hub's control planes; no kubeconfig, no service account, no write credential | The box runs games and mods, so it is the least trusted machine in the estate. Its full compromise yields one Vault path — not cluster access, not `yggdrasil`, and not even a repo credential. A deploy key would have protected read access that is already anonymous, while adding a stealable secret to the least-trusted machine. The price is that `jotunheim` can never hold secret material, which was already true of it. |
+| Trust boundary | Outbound-only from `otter`, and exactly **one credential**: a **read-only path-scoped Vault token**. `homelab/jotunheim` is public, so Flux clones it anonymously over HTTPS — **no git credential on the box at all**. No credential for this repo, nothing inbound to the hub's control planes; no kubeconfig, no service account, no write credential. **One named exception:** `mogenius-operator` (see below) | The box runs games and mods, so it is the least trusted machine in the estate. Its full compromise yields one Vault path — not cluster access, not `yggdrasil`, and not even a repo credential. A deploy key would have protected read access that is already anonymous, while adding a stealable secret to the least-trusted machine. The price is that `jotunheim` can never hold secret material, which was already true of it. |
+| Platform visibility | **`mogenius-operator` runs on `otter`**, with a single-instance valkey and its API key from Vault. Accepted as the **only** hole in the trust boundary above | The estate's other three clusters all run it, and a tier that is invisible is a tier nobody notices has been down for a week. The cost is real and stated rather than hidden: a second credential on the least-trusted box, and outbound websockets to `mogenius.com` over which the platform can drive this cluster. It is tolerable *here* specifically because `otter` holds nothing — no hub credential, no repo credential, no data — so the blast radius of that control is one disposable cluster. Nothing about it extends to the hub, and it is not precedent for a second exception. |
 | Network exposure | The proxied endpoint reachable on the LAN only, `nftables` allow-list of the cluster's egress addresses | Least reachable surface that still works; no WAN exposure, no external-dns record. |
 | Gaming preemption | The `gamemode` hook **stops k3s wholesale** — it must not scale the workload down | `kustomize-controller` reverts a `replicas: 0` on its next pass, while `helm-controller`'s drift detection is opt-in — so scale-to-zero is either fought or tolerated depending on how the object happens to be managed. Neither is a mechanism to build on. Stopping k3s also removes containerd and the Flux controllers while gaming, and yields connection-refused, which LiteLLM already handles via cooldown. |
 | VRAM release | Short `OLLAMA_KEEP_ALIVE` in addition to the hook | Covers idle-but-not-gaming: weights leave VRAM without stopping the cluster. |
@@ -111,8 +119,9 @@ spoke and *not* described here) · this ADR. Nothing else.
 
 **In `homelab/jotunheim`** (new repo) — everything else, both halves:
 
-- *Manifests:* namespaces, ESO + `ClusterSecretStore`, AMD device plugin, Ollama
-  (ROCm, model PVC), bearer-token proxy + LAN exposure.
+- *Manifests:* namespaces, ESO + `ClusterSecretStore`, `mogenius-operator`
+  (+ single-instance valkey), AMD device plugin, Ollama (ROCm, model PVC),
+  bearer-token proxy + LAN exposure.
 - *`ansible/`:* k3s install and upgrades · `flux install` + the
   `GitRepository`/root `Kustomization` · Vault token Secret ·
   `nftables` allow-list · `gamemode` preempt hook · WoL + idle auto-suspend ·
@@ -123,7 +132,12 @@ spoke and *not* described here) · this ADR. Nothing else.
 **Out (`ansible-playbooks`):** nothing. `otter` is deliberately absent from the
 estate's shared playbook repo.
 
-**Out (Vault):** the path-scoped read-only policy and token for `otter`.
+**Out (Vault):** the path-scoped read-only policy and token for `otter`, plus the
+secrets it reads — `mogenius-operator/api-key` and
+`mogenius-operator/valkey/credentials`.
+
+**Out (mogenius platform):** `otter` registered as a cluster, and the API key it
+issues.
 
 ## Open risks (verify at build time)
 
