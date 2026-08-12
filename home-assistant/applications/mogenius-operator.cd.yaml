@@ -19,7 +19,7 @@ spec:
     path: "."
     targetRevision: 2.27.1
     helm:
-      releaseName: netbox
+      releaseName: mogenius-operator
       valuesObject:
         features:
           autoUpgrade:
