@@ -17,7 +17,7 @@ using an app-of-apps / hub-and-spoke topology.
 ## Topology
 
 Argo CD runs on the **`homelab`** cluster (the hub) and manages all three
-clusters as spokes:
+Argo-managed clusters as spokes:
 
 | Cluster          | Role                                             |
 | ---------------- | ------------------------------------------------ |
