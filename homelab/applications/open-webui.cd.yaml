@@ -107,14 +107,14 @@ spec:
                 name: open-webui-secrets
                 key: OAUTH_CLIENT_SECRET
 
-          # RAG. Embeddings come from LiteLLM (nomic-embed-text on the GPU) —
+          # RAG. Embeddings come from LiteLLM (b580:nomic-embed-text) —
           # RAG_OPENAI_API_BASE_URL/KEY default to the OpenAI values above, so the
           # endpoint is not repeated here. Changing the embedding model
           # invalidates every stored vector; re-ingest if it ever changes.
           - name: RAG_EMBEDDING_ENGINE
             value: openai
           - name: RAG_EMBEDDING_MODEL
-            value: nomic-embed-text
+            value: b580:nomic-embed-text
           - name: ENABLE_RAG_HYBRID_SEARCH
             value: "true"
           - name: RAG_HYBRID_BM25_WEIGHT

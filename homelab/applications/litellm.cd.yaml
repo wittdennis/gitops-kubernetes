@@ -55,6 +55,7 @@ spec:
 
         environmentSecrets:
           - litellm-provider-keys
+          - litellm-otter-token
 
         serviceMonitor:
           enabled: true
@@ -82,50 +83,87 @@ spec:
           model_list:
             # Name aliases after the real model so the picker shows what it is
             # (and its cost tier).
-            - model_name: claude-opus-4-8
+            - model_name: anthropic:claude-opus-4-8
               litellm_params:
                 model: anthropic/claude-opus-4-8
                 api_key: os.environ/ANTHROPIC_API_KEY
-            - model_name: claude-sonnet-5
+            - model_name: anthropic:claude-sonnet-5
               litellm_params:
                 model: anthropic/claude-sonnet-5
                 api_key: os.environ/ANTHROPIC_API_KEY
-            - model_name: claude-haiku-4-5
+            - model_name: anthropic:claude-haiku-4-5
               litellm_params:
                 model: anthropic/claude-haiku-4-5
                 api_key: os.environ/ANTHROPIC_API_KEY
-            # Local Ollama on the Arc B580 (#884). Models must be pulled into the
-            # ollama PVC (`ollama pull <name>`) before a route resolves. One 7B-ish
+            # Local Ollama on the Arc B580 Models. One 7B-ish
             # model fits 12 GB at a time; ollama_chat/ auto-swaps them on demand.
-            # Both ollama providers 400 the whole request on OpenAI params that
-            # have no ollama equivalent, including ones the caller never chose:
-            # parallel_tool_calls only toggles what ollama does anyway, and the
-            # openai sdk injects encoding_format=base64 on its own, then leaves
-            # a plain float response alone. Dropping either changes no output.
-            # Not set on the cloud entries, where those params do something.
-            - model_name: llama3.1:8b
+            - model_name: b580:llama3.1:8b
               litellm_params:
                 model: ollama_chat/llama3.1:8b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
                 num_ctx: 8192
-            - model_name: qwen2.5-coder:7b
+            - model_name: b580:qwen2.5-coder:7b
               litellm_params:
                 model: ollama_chat/qwen2.5-coder:7b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
-            - model_name: qwen3.5:9b
+            - model_name: b580:qwen3.5:9b
               litellm_params:
                 model: ollama_chat/qwen3.5:9b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
-            - model_name: nomic-embed-text
+            # 7900 XTX Models
+            - model_name: xtx:qwen3-coder:30b
+              litellm_params:
+                model: ollama_chat/qwen3-coder:30b
+                api_base: https://ollama.otter.derwitt.site:11434
+                api_key: os.environ/OTTER_OLLAMA_TOKEN
+                drop_params: true
+                num_ctx: 32768
+                # Detecting an absent box, not waiting for a slow one. Generation itself is
+                # covered by stream_timeout, which only has to cover time-to-first-token.
+                timeout: 2
+                stream_timeout: 30
+            - model_name: xtx:qwen3.6:27b
+              litellm_params:
+                model: ollama_chat/qwen3.6:27b
+                api_base: https://ollama.otter.derwitt.site:11434
+                api_key: os.environ/OTTER_OLLAMA_TOKEN
+                drop_params: true
+                num_ctx: 32768
+                timeout: 2
+                stream_timeout: 30
+            # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
+            # two different models do not share a space, so a fallback here would return
+            # unrelated chunks with no error raised: a wrong answer rather than an outage.
+            - model_name: b580:nomic-embed-text
               litellm_params:
                 model: ollama/nomic-embed-text
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
+          router_settings:
+            # Degrade along quality, not availability: the request completes on the
+            # always-on card rather than failing when the workstation is off.
+            #
+            # Local only, and never onto a cloud model. Those are metered, so reaching one
+            # has to be something the caller chose by picking it, not something that happens
+            # quietly because a machine at home was switched off.
+            fallbacks:
+              - "xtx:qwen3-coder:30b": ["b580:qwen2.5-coder:7b"]
+              - "xtx:qwen3.6:27b": ["b580:qwen3.5:9b"]
+            # Router-wide, since this release has no per-deployment cooldown. The default is
+            # 5s, which for a machine that is off for hours means re-probing it constantly
+            # and paying the timeout each time. At 300s a dead backend costs one slow request
+            # every five minutes and every other request falls back immediately.
+            # The cost is borne by the cloud entries too: three consecutive failures there
+            # now mean five minutes of hard failure instead of five seconds.
+            cooldown_time: 300
           litellm_settings:
             callbacks: ["prometheus"]
             require_auth_for_metrics_endpoint: false
           general_settings:
             master_key: os.environ/PROXY_MASTER_KEY
+            # A backend that is down most of the day would otherwise be probed forever, and
+            # the answer is already known from the fallback rate.
+            background_health_checks: false

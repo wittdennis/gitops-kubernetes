@@ -1,0 +1,22 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: litellm-otter-token
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-otter-read
+    kind: ClusterSecretStore
+  target:
+    name: litellm-otter-token
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  # Env var name must match the os.environ/<NAME> reference in the LiteLLM proxy_config
+  # model_list (see litellm.cd.yaml).
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /ollama-proxy/token
+        property: token
+      secretKey: OTTER_OLLAMA_TOKEN

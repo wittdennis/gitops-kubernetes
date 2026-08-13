@@ -33,7 +33,7 @@ a subject corpus is most specific.
 | Setting                        | Value              | Why                                                                                                                                  |
 | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | `RAG_EMBEDDING_ENGINE`         | `openai`           | Embeddings run outside the pod, via LiteLLM                                                                                          |
-| `RAG_EMBEDDING_MODEL`          | `nomic-embed-text` | Served by Ollama on the GPU node                                                                                                     |
+| `RAG_EMBEDDING_MODEL`          | `b580:nomic-embed-text` | Served by Ollama on the GPU node                                                                                                     |
 | `ENABLE_RAG_HYBRID_SEARCH`     | `true`             | BM25 + vector, merged                                                                                                                |
 | `RAG_HYBRID_BM25_WEIGHT`       | `0.6`              | Tilted toward exact-term matching                                                                                                    |
 | `RAG_TOP_K`                    | `5`                | Chunks injected into the prompt                                                                                                      |
