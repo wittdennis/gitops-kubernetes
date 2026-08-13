@@ -55,7 +55,7 @@ Inference is the scavenger.
 
 | Area | Decision | Rationale |
 |---|---|---|
-| Role | **Second tier behind LiteLLM**; the B580 stays tier-1 and always-on | Cold start is 60–120 s (wake + boot + model load). HA Assist, Paperless and embeddings cannot absorb that, so they must never depend on tier-2. |
+| Role | **Second tier behind LiteLLM**; the B580 stays tier-1 and always-on | Cold start is 60–120 s (power on + boot + model load). HA Assist, Paperless and embeddings cannot absorb that, so they must never depend on tier-2. |
 | Cluster membership | **Its own isolated single-node k3s cluster**, reconciled by an **in-cluster Flux** from its **own repo** (`homelab/jotunheim`). Not a node of `homelab`, not a hub-managed spoke, not a tree in this repo | Keeps a GitOps workflow for the workloads while containing the blast radius. Joining `homelab` would put a flapping node and hub credentials on a machine that runs games and mods; a hub-managed spoke would leave hub Argo CD staring at an unreachable cluster ~20 h/day. An in-cluster reconciler is asleep exactly when the box is, so nobody is watching and nothing alerts. |
 | GitOps engine | **Flux** on `otter`, not the estate's Argo CD | A single-node, single-tenant cluster uses none of what Argo CD is good at — cluster generators, RBAC'd UI, SSO — and each of those is another component to secure, or to run headless, on the least-trusted machine in the estate. Flux is a handful of pull-only controllers with no API server, no UI and no dex, and the whole install is `flux install` plus two objects Ansible can apply. Cost: a second GitOps tool in the estate (risk 6). |
 | Cluster name | **`otter`** — the machine's own name, not a role name like `gaming` | Single-node cluster: cluster and machine are the same thing, so naming it after the host is precise rather than leaky. Diverges from the role-named `homelab`/`cloud`/`home-assistant` deliberately. |
@@ -75,8 +75,8 @@ Inference is the scavenger.
 | Fallback chain | `coding-local` → XTX 30B-class → B580 `qwen2.5-coder:7b` → cloud alias | Degrades along quality, not availability: the request always completes, at a stated cost/quality tier. |
 | Embeddings | **Tier-1 only.** Never served by the XTX tier, never given a fallback | Vectors from different models are not comparable, so a fallback would silently return *meaningless* retrieval rather than degraded retrieval — the failure has no error and looks like a bad answer. Embeddings are also needed at query time, not just ingestion, so a tier-2 embedding route would break RAG whenever the box sleeps. `nomic-embed-text` is ~275 MB and costs the B580 almost nothing. |
 | Health checking | Hub-side background health checks off or on a long interval | A backend down ~20 h/day would otherwise generate constant probe traffic and log noise. |
-| Wake | **Manual to start**: Wake-on-LAN from an always-on host (surfaced as a Home Assistant switch) + idle auto-suspend on the box | Request-triggered wake needs a hold-and-forward proxy. Deferred — though k3s makes Sablier a real option for it, where a bare systemd unit did not. |
-| Config ownership | **Day-0 in Ansible** (k3s install, `flux install`, the `GitRepository` + root `Kustomization`, Vault token Secret, `nftables`, WoL, gamemode hook, suspend); **day-2 in Flux**. Both halves live in `jotunheim` — the Ansible does **not** go in `ansible-playbooks` | The tool split is the estate's usual one (Ansible owns the host, the GitOps controller owns workloads); the repo split is not. Putting one machine's host config in the estate's shared playbook repo would scatter `otter` across three repos to gain nothing — it shares no hardware, no OS and no lifecycle with the Talos nodes there. Keeping it in `jotunheim` means the box is rebuildable from one clone, and nothing about `otter` lands in `yggdrasil` except the LiteLLM entry. Cost: no shared roles, so genuinely common bits (`ethtool` WoL, `node_exporter`) get copied rather than reused. |
+| Wake | **Powered on by hand, and fully off in between.** No Wake-on-LAN, no idle auto-suspend, no request-triggered wake | The machine is WiFi-only, so there is no wired NIC to wake. Its card advertises WoWLAN magic-packet support and it does not work in practice; and it would not help anyway, because the machine is powered off rather than suspended, leaving the card unpowered. Availability therefore becomes a deliberate act: the tier is up when it has been switched on. Nothing downstream changes, since LiteLLM already fast-fails and falls back, which is what "spot capacity" meant. Revisit only if the machine gains wired Ethernet. |
+| Config ownership | **Day-0 in Ansible** (k3s install, `flux install`, the `GitRepository` + root `Kustomization`, Vault token Secret, firewall rules, gamemode hook); **day-2 in Flux**. Both halves live in `jotunheim` — the Ansible does **not** go in `ansible-playbooks` | The tool split is the estate's usual one (Ansible owns the host, the GitOps controller owns workloads); the repo split is not. Putting one machine's host config in the estate's shared playbook repo would scatter `otter` across three repos to gain nothing — it shares no hardware, no OS and no lifecycle with the Talos nodes there. Keeping it in `jotunheim` means the box is rebuildable from one clone, and nothing about `otter` lands in `yggdrasil` except the LiteLLM entry. Cost: no shared roles, so genuinely common bits (`node_exporter`) get copied rather than reused. |
 | Observability | `node_exporter` + `amd_smi` locally; tier availability read from the already-scraped LiteLLM fallback-rate metrics on the hub | "Was it there when I needed it" is a question about the *seam*, which LiteLLM answers. Scraping or remote-writing from a box that is off ~20 h/day would produce mostly-gap series for little gain. |
 | Model set | Distinct model names for the 24 GB tier — not aliases shadowing tier-1 names | Which tier answered stays visible in the picker and in metrics; no silent quality swings. |
 
@@ -124,7 +124,7 @@ spoke and *not* described here) · this ADR. Nothing else.
   bearer-token proxy + LAN exposure.
 - *`ansible/`:* k3s install and upgrades · `flux install` + the
   `GitRepository`/root `Kustomization` · Vault token Secret ·
-  `nftables` allow-list · `gamemode` preempt hook · WoL + idle auto-suspend ·
+  firewall allow-list · `gamemode` preempt hook ·
   `node_exporter`.
 - *Scaffolding:* its own Renovate config (charts, images **and** Galaxy content),
   lint gate including `ansible-lint`, and agent conventions.
@@ -176,9 +176,10 @@ issues.
    hub gateway or Vault is down, ESO cannot populate the endpoint token and the
    tier stays down. Acceptable — tier-2 is best-effort by construction — but it
    means `otter` is not truly standalone.
-5. **Power economics invert if the box ends up always-on.** The premise is that
-   it is otherwise idle *and* asleep. If it drifts to 24/7, buying VRAM for the
-   server is the better trade and this ADR should be revisited.
+5. **Power economics invert if the box ends up always-on** — *resolved.* It is
+   powered off between sessions rather than suspended, which is the best case for
+   this concern rather than the feared one. The trade only needs revisiting if the
+   machine starts being left on.
 6. **A second GitOps tool and a third repo.** Flux plus `jotunheim` means
    duplicated scaffolding (Renovate for charts/images *and* Galaxy content, lint
    including `ansible-lint`, agent conventions) and two mental models to keep
