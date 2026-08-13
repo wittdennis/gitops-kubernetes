@@ -1,0 +1,28 @@
+---
+apiVersion: external-secrets.io/v1alpha1
+kind: PushSecret
+metadata:
+  name: ollama-otter-tls
+spec:
+  refreshInterval: 1h
+  secretStoreRefs:
+    - name: vault-backend-otter-push
+      kind: ClusterSecretStore
+  selector:
+    secret:
+      name: ollama-otter-tls
+  updatePolicy: Replace
+  # The consuming cluster reads this to serve its endpoint, so removing the PushSecret here
+  # must not take its certificate away. The token has no delete capability either.
+  deletionPolicy: None
+  data:
+    - match:
+        secretKey: tls.crt
+        remoteRef:
+          remoteKey: ollama-proxy/tls
+          property: tls.crt
+    - match:
+        secretKey: tls.key
+        remoteRef:
+          remoteKey: ollama-proxy/tls
+          property: tls.key
