@@ -1,7 +1,7 @@
 # ADR-0003: Opportunistic 7900 XTX inference tier
 
 - **Status:** Accepted
-- **Date:** 2026-08-04 · **Revised:** 2026-08-12
+- **Date:** 2026-08-04 · **Revised:** 2026-08-13
 - **Cluster:** `otter` — a new, deliberately **isolated** single-node cluster
 - **GitOps:** Flux, from its own repo `homelab/jotunheim` — not this one
 - **Extends:** ADR-0001 (LiteLLM as the pluggable seam) · epic #916
@@ -141,10 +141,33 @@ issues.
 
 ## Open risks (verify at build time)
 
-1. **VRAM release under gaming** — confirm the hook plus `OLLAMA_KEEP_ALIVE`
-   return all VRAM, and that a game launched *during* generation does not stall.
-2. **24 GB model choice unproven** — 30B-class MoE vs 32B dense Q4 on tok/s,
-   coding quality and usable context.
+1. **VRAM release under gaming** — *partly resolved (#914).* An explicit unload
+   returns everything: VRAM went back to 838 MiB against an 896 MiB desktop
+   baseline. The `OLLAMA_KEEP_ALIVE` timer path, the `gamemode` hook and a game
+   launched *during* generation remain untested, and move to #912 where the hook
+   exists to exercise.
+2. **24 GB model choice** — *resolved (#914).* Pinned `qwen3-coder:30b`:
+   134 tok/s, fully on the GPU at 21.7 GB. `devstral:24b` (24B dense) reached
+   46 tok/s and is the recorded fallback, with 4.2 GB free rather than 2.4 GB, if
+   context turns out to bind before throughput does. **`qwen2.5-coder:32b` does
+   not fit**: it saturated VRAM at 24453 MiB of 24576, left 16% of its layers on
+   the CPU and fell to 13 tok/s, below the B580 running a 7B. It degrades
+   silently rather than failing.
+
+   The ~2x expectation was beaten roughly fourfold, but the reasoning in the table
+   above was wrong about why. Bandwidth is not the mechanism: an A3B MoE activates
+   about 3B parameters per token, so it moves far less memory per token than its
+   30B size implies. The 24B *dense* model, the honest test of the bandwidth
+   argument, managed 1.3x.
+
+   Usable context measured after: **32k fits entirely on the GPU at full speed**
+   (21.7 GB, 134 tok/s), and throughput is flat all the way down, so a smaller
+   context buys nothing. 64k costs a 4% spill and 15% of throughput, 128k costs
+   64%. `OLLAMA_CONTEXT_LENGTH` is now pinned to 32768: left unset it is chosen
+   from free VRAM at load time, so the context would have shrunk silently on a day
+   the desktop held more. Note the MoE beats a 27B dense model at *every* context
+   length including where it spills (114 vs 36 tok/s at 64k), so a dense model
+   earns its place on capability, not on context headroom.
 3. **k3s on a rolling-release desktop.** CachyOS kernel/containerd churn will
    occasionally break the cluster, and k3s's iptables/nft chains interact with
    the host firewall lockdown. If this becomes routine maintenance, fall back to
