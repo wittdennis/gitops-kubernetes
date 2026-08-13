@@ -70,9 +70,9 @@ Inference is the scavenger.
 | Platform visibility | **`mogenius-operator` runs on `otter`**, with a single-instance valkey and its API key from Vault. Accepted as the **only** hole in the trust boundary above | The estate's other three clusters all run it, and a tier that is invisible is a tier nobody notices has been down for a week. The cost is real and stated rather than hidden: a second credential on the least-trusted box, and outbound websockets to `mogenius.com` over which the platform can drive this cluster. It is tolerable *here* specifically because `otter` holds nothing — no hub credential, no repo credential, no data — so the blast radius of that control is one disposable cluster. Nothing about it extends to the hub, and it is not precedent for a second exception. |
 | Network exposure | The proxied endpoint reachable on the LAN only, `nftables` allow-list of the cluster's egress addresses | Least reachable surface that still works; no WAN exposure, no external-dns record. |
 | Gaming preemption | The `gamemode` hook **stops k3s wholesale** — it must not scale the workload down | `kustomize-controller` reverts a `replicas: 0` on its next pass, while `helm-controller`'s drift detection is opt-in — so scale-to-zero is either fought or tolerated depending on how the object happens to be managed. Neither is a mechanism to build on. Stopping k3s also removes containerd and the Flux controllers while gaming, and yields connection-refused, which LiteLLM already handles via cooldown. |
-| VRAM release | Short `OLLAMA_KEEP_ALIVE` in addition to the hook | Covers idle-but-not-gaming: weights leave VRAM without stopping the cluster. |
+| VRAM release | `OLLAMA_KEEP_ALIVE` of **1h** in addition to the hook | Covers idle-but-not-gaming: weights leave VRAM without stopping the cluster. Originally short, on the assumption the timer was part of getting out of a game's way. It is not: the hook stops the cluster outright, and once that was proven the timer's only remaining job is a genuinely idle stretch. An hour keeps a model resident across a working day instead of charging an 18 GB reload for every pause longer than the timeout. |
 | Unavailability | LiteLLM **fast-fail per deployment** (short timeout, `allowed_fails`, `cooldown_time`) plus an explicit **fallback chain** | An offline backend must fall back within a second, not hang the caller. This is where ADR-0001's LiteLLM seam pays off. |
-| Fallback chain | XTX 30B-class → B580 `qwen2.5-coder:7b`, and **stops there**. No fallback reaches a cloud model | Degrades along quality, not availability: the request completes on the always-on card when the workstation is off. Originally this chain ended at a cloud alias. Removed: those are metered, and a machine being switched off at home is not a reason to start spending money. Reaching a paid model stays something the caller does by selecting it. |
+| Fallback chain | XTX 30B-class → B580 `qwen2.5-coder:7b`, and **stops there**. No fallback reaches a cloud model | Degrades along quality, not availability: the request completes on the always-on card when the workstation is off. Originally this chain ended at a cloud alias. Removed: those are metered, and a machine being switched off at home is not a reason to start spending money. Reaching a paid model stays something the caller does by selecting it. The chain is a convenience rather than a dependency: nothing unattended routes to tier-2 at all. Automated consumers name a tier-1 model explicitly, and a tier-2 model is selected by a person who knows whether the machine is switched on. So a failed fallback inconveniences that person; it does not break a scheduled job. |
 | Embeddings | **Tier-1 only.** Never served by the XTX tier, never given a fallback | Vectors from different models are not comparable, so a fallback would silently return *meaningless* retrieval rather than degraded retrieval — the failure has no error and looks like a bad answer. Embeddings are also needed at query time, not just ingestion, so a tier-2 embedding route would break RAG whenever the box sleeps. `nomic-embed-text` is ~275 MB and costs the B580 almost nothing. |
 | Health checking | Hub-side background health checks off or on a long interval | A backend down ~20 h/day would otherwise generate constant probe traffic and log noise. |
 | Wake | **Powered on by hand, and fully off in between.** No Wake-on-LAN, no idle auto-suspend, no request-triggered wake | The machine is WiFi-only, so there is no wired NIC to wake. Its card advertises WoWLAN magic-packet support and it does not work in practice; and it would not help anyway, because the machine is powered off rather than suspended, leaving the card unpowered. Availability therefore becomes a deliberate act: the tier is up when it has been switched on. Nothing downstream changes, since LiteLLM already fast-fails and falls back, which is what "spot capacity" meant. Revisit only if the machine gains wired Ethernet. |
@@ -141,11 +141,20 @@ issues.
 
 ## Open risks (verify at build time)
 
-1. **VRAM release under gaming** — *partly resolved (#914).* An explicit unload
-   returns everything: VRAM went back to 838 MiB against an 896 MiB desktop
-   baseline. The `OLLAMA_KEEP_ALIVE` timer path, the `gamemode` hook and a game
-   launched *during* generation remain untested, and move to #912 where the hook
-   exists to exercise.
+1. **VRAM release under gaming** — *resolved, with one case accepted rather than
+   tested.* Both unload paths work: an explicit unload returned VRAM to 838 MiB
+   against an 896 MiB desktop baseline
+   (#914), and `OLLAMA_KEEP_ALIVE` expiring on its own has since been confirmed to
+   unload as well, which is the path that matters for the idle-but-not-gaming case.
+   The `gamemode` hook has since been confirmed to stop the cluster and free the
+   card when a game starts, so the preemption mechanism itself holds.
+
+   A game launched *during* generation is **not** tested, and deliberately will not
+   be: with one person as both the only consumer of the platform and the only user
+   of the machine, the two never happen at once without that person knowing. The
+   scenario the risk describes does not arise here. Should the tier ever gain a
+   second consumer, or the machine a second user, this stops being true and the
+   question returns.
 2. **24 GB model choice** — *resolved (#914).* Pinned `qwen3-coder:30b`:
    134 tok/s, fully on the GPU at 21.7 GB. `devstral:24b` (24B dense) reached
    46 tok/s and is the recorded fallback, with 4.2 GB free rather than 2.4 GB, if
