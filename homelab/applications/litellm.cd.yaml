@@ -125,6 +125,13 @@ spec:
                 # covered by stream_timeout, which only has to cover time-to-first-token.
                 timeout: 2
                 stream_timeout: 30
+              # num_ctx is the whole window, prompt and completion together, and a client
+              # that does not know the server's value infers the model's architectural
+              # maximum instead and overfills it. Advertising the real budget, with room
+              # reserved for the reply, is what stops that guess being wrong.
+              model_info:
+                max_input_tokens: 24576
+                max_output_tokens: 8192
             - model_name: xtx:qwen3.6:27b
               litellm_params:
                 model: ollama_chat/qwen3.6:27b
@@ -138,6 +145,9 @@ spec:
                 num_ctx: 65536
                 timeout: 2
                 stream_timeout: 30
+              model_info:
+                max_input_tokens: 57344
+                max_output_tokens: 8192
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
             # two different models do not share a space, so a fallback here would return
             # unrelated chunks with no error raised: a wrong answer rather than an outage.
