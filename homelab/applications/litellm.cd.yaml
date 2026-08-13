@@ -131,7 +131,11 @@ spec:
                 api_base: https://ollama.otter.derwitt.site:11434
                 api_key: os.environ/OTTER_OLLAMA_TOKEN
                 drop_params: true
-                num_ctx: 32768
+                # Twice the server default, and free on this model: measured 100% on the GPU
+                # at 20.4 GB and the same 36 tok/s as half the window. Agent loops accumulate
+                # tool output quickly, and running out of window truncates a reply rather
+                # than reporting anything useful.
+                num_ctx: 65536
                 timeout: 2
                 stream_timeout: 30
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
