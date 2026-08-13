@@ -146,8 +146,10 @@ issues.
    against an 896 MiB desktop baseline
    (#914), and `OLLAMA_KEEP_ALIVE` expiring on its own has since been confirmed to
    unload as well, which is the path that matters for the idle-but-not-gaming case.
-   The `gamemode` hook has since been confirmed to stop the cluster and free the
-   card when a game starts, so the preemption mechanism itself holds.
+   The `gamemode` hook has since been confirmed in both directions: it stops the
+   cluster and frees the card when a game starts, and starts it again when the game
+   exits, with Flux reconciling the workloads back on its own. The preemption
+   mechanism holds end to end.
 
    A game launched *during* generation is **not** tested, and deliberately will not
    be: with one person as both the only consumer of the platform and the only user
