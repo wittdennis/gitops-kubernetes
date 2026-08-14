@@ -146,6 +146,10 @@ spec:
                 timeout: 2
                 stream_timeout: 30
               model_info:
+                # Some clients (e.g. Hermes Agent) read max_tokens as the total context
+                # window rather than deriving it from max_input + max_output, and reject
+                # anything under their own minimum if that field is absent or too small.
+                max_tokens: 65536
                 max_input_tokens: 57344
                 max_output_tokens: 8192
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
