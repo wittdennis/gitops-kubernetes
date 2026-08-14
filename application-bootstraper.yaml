@@ -20,6 +20,8 @@ spec:
       syncPolicy:
         automated:
           prune: true
+        syncOptions:
+          - Replace=true
       source:
         repoURL: https://git.derwitt.site/homelab/yggdrasil
         targetRevision: HEAD
