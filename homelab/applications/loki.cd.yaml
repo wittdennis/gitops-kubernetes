@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/grafana-community/helm-charts/loki
     path: .
-    targetRevision: 18.8.0
+    targetRevision: 18.8.1
     helm:
       releaseName: loki
       values: |
