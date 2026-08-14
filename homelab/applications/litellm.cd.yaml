@@ -148,7 +148,7 @@ spec:
               model_info:
                 # num_ctx - max_output_tokens
                 max_input_tokens: 57344
-                # number of tokens one ones to dedicate to output
+                # number of tokens one wants to dedicate to output
                 max_output_tokens: 8192
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
             # two different models do not share a space, so a fallback here would return
