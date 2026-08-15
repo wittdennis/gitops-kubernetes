@@ -50,12 +50,15 @@ spec:
           enabled: true
           storageClass: proxmox-data
           size: 5Gi
+        # 1Gi ran the pod to its limit during a large knowledge-base ingest:
+        # the BM25 hybrid-search index rebuilds over the whole collection in
+        # process, spiking both CPU and memory well past this floor.
         resources:
           requests:
             cpu: 100m
             memory: 256Mi
           limits:
-            memory: 1Gi
+            memory: 2Gi
 
         ingress:
           enabled: false
@@ -128,3 +131,14 @@ spec:
             value: "1500"
           - name: CHUNK_OVERLAP
             value: "200"
+
+          # Vectors in CNPG (open-webui-postgres) instead of the PVC-embedded
+          # Chroma default, so they ride the same backup story as the rest of
+          # the estate's Postgres-backed state.
+          - name: VECTOR_DB
+            value: pgvector
+          - name: PGVECTOR_DB_URL
+            valueFrom:
+              secretKeyRef:
+                name: open-webui-postgres-app
+                key: uri

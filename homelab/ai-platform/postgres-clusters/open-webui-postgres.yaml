@@ -1,0 +1,49 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: open-webui-postgres
+spec:
+  instances: 1
+  logLevel: warning
+  enablePDB: false
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  affinity:
+    nodeSelector:
+      derwitt.site/ai: "true"
+  bootstrap:
+    initdb:
+      database: open_webui
+      owner: open_webui
+      # Runs once during bootstrap, before enableSuperuserAccess locks out
+      # remote superuser access — the documented way to install an extension
+      # on a cluster that otherwise never exposes a superuser secret.
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgres
+    major: 18
+  managed:
+    roles:
+      - name: open_webui
+        superuser: false
+        createdb: false
+        login: true
+  monitoring:
+    enablePodMonitor: true
+  # Vectors are recreatable from the source corpus, same reasoning as
+  # litellm-postgres — no barman objectstore backup configured here.
+  resources:
+    requests:
+      cpu: 100m
+      ephemeral-storage: 50Mi
+      memory: 128Mi
+  storage:
+    size: 10Gi
+    storageClass: proxmox-data
+  walStorage:
+    size: 5Gi
+    storageClass: proxmox-data
