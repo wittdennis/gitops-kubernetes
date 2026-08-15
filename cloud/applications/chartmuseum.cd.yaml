@@ -24,7 +24,7 @@ spec:
 
         replicaCount: 2
         image:
-          tag: v0.16.5 # renovate: datasource=docker depName=ghcr.io/helm/chartmuseum versioning=docker
+          tag: v0.16.6 # renovate: datasource=docker depName=ghcr.io/helm/chartmuseum versioning=docker
         env:
           open:
             STORAGE: microsoft
