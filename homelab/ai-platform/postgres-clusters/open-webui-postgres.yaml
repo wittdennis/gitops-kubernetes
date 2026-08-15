@@ -9,9 +9,9 @@ spec:
   enablePDB: false
   primaryUpdateStrategy: unsupervised
   enableSuperuserAccess: false
-  affinity:
-    nodeSelector:
-      derwitt.site/ai: "true"
+  # No nodeSelector: unlike litellm-postgres, this has no GPU affinity, and
+  # the ai-labeled node (vm-k8s-worker-h6si) is already at the Proxmox CSI
+  # driver's 24-volume-per-node cap.
   bootstrap:
     initdb:
       database: open_webui
