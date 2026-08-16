@@ -30,6 +30,8 @@ spec:
         default: atlantis
       - name: type
         default: statefulset
+      - name: timeout
+        default: 120s
   templates:
     - name: scale-workload
       serviceAccountName: atlantis-workflows
@@ -39,6 +41,8 @@ spec:
           - name: replicaCount
           - name: name
           - name: type
+          - name: timeout
+            default: 120s
       container:
         image: git.derwitt.site/containers/devops-tools:1.3.1 # renovate
         securityContext:
@@ -60,6 +64,12 @@ spec:
             set -eu
 
             kubectl scale --replicas={{inputs.parameters.replicaCount}} {{inputs.parameters.type}}/{{inputs.parameters.name}}
+
+            if [ "{{inputs.parameters.replicaCount}}" = "0" ]; then
+              kubectl wait --for=delete pod -l app.kubernetes.io/instance={{inputs.parameters.name}} --timeout={{inputs.parameters.timeout}}
+            else
+              kubectl rollout status {{inputs.parameters.type}}/{{inputs.parameters.name}} --timeout={{inputs.parameters.timeout}}
+            fi
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
