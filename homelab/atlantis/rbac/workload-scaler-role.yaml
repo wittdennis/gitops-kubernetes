@@ -6,6 +6,7 @@ metadata:
 rules:
   - verbs:
       - get
+      - watch
     resources:
       - deployments
       - statefulsets
@@ -19,3 +20,11 @@ rules:
       - statefulsets/scale
     apiGroups:
       - apps
+  - verbs:
+      - get
+      - list
+      - watch
+    resources:
+      - pods
+    apiGroups:
+      - ""
