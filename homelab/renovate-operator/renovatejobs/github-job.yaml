@@ -11,6 +11,7 @@ spec:
     name: github
   webhook:
     enabled: true
+    baseUrl: https://api.renovate.derwitt.dev
     authentication:
       enabled: true
       secretRef:
