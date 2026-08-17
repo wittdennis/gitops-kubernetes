@@ -3,6 +3,8 @@ apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: renovate-env
+  labels:
+    renovate-operator.mogenius.com/allow-ref: "true"
 spec:
   refreshInterval: 1h
   secretStoreRef:

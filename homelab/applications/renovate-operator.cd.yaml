@@ -28,6 +28,13 @@ spec:
           logStorage:
             mode: valkey
 
+        policy:
+          enabled: true
+          allowedHosts:
+            - api.github.com
+            - github.com
+            - git.derwitt.site
+
         externalKeyValueStore:
           host: renovate-operator-valkey.renovate-operator.svc.cluster.local
           username: default
