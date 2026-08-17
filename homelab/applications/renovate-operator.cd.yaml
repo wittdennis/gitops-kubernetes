@@ -34,6 +34,7 @@ spec:
             - api.github.com
             - github.com
             - git.derwitt.site
+            - api.renovate.derwitt.dev
 
         externalKeyValueStore:
           host: renovate-operator-valkey.renovate-operator.svc.cluster.local
