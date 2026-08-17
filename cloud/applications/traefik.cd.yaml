@@ -45,6 +45,8 @@ spec:
             http3:
               enabled: false
         providers:
+          kubernetesIngress:
+            allowExternalNameServices: true
           kubernetesGateway:
             enabled: true
             experimentalChannel: true
