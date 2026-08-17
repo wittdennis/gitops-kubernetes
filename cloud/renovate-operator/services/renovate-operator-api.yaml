@@ -8,3 +8,7 @@ metadata:
 spec:
   type: ExternalName
   externalName: api.renovate.derwitt.site
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
