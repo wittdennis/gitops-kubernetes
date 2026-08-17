@@ -358,7 +358,7 @@ spec:
           enabled: true
           spec:
             image:
-              tag: v0.33.1 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
+              tag: v0.34.0 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
             containers:
               - name: alertmanager
                 resources:
