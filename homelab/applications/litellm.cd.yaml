@@ -142,12 +142,12 @@ spec:
                 # at 20.4 GB and the same 36 tok/s as half the window. Agent loops accumulate
                 # tool output quickly, and running out of window truncates a reply rather
                 # than reporting anything useful.
-                num_ctx: 65536
+                num_ctx: 73728
                 timeout: 2
                 stream_timeout: 30
               model_info:
                 # num_ctx - max_output_tokens
-                max_input_tokens: 57344
+                max_input_tokens: 65536
                 # number of tokens one wants to dedicate to output
                 max_output_tokens: 8192
             - model_name: xtx:qwen3.8:27b
@@ -160,12 +160,12 @@ spec:
                 # at 20.4 GB and the same 36 tok/s as half the window. Agent loops accumulate
                 # tool output quickly, and running out of window truncates a reply rather
                 # than reporting anything useful.
-                num_ctx: 65536
+                num_ctx: 73728
                 timeout: 2
                 stream_timeout: 30
               model_info:
                 # num_ctx - max_output_tokens
-                max_input_tokens: 57344
+                max_input_tokens: 65536
                 # number of tokens one wants to dedicate to output
                 max_output_tokens: 8192
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from

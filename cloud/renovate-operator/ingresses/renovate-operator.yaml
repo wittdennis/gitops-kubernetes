@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: renovate-operator
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-forward-auth@kubernetescrd,traefik-redirect-to-https@kubernetescrd"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - renovate.derwitt.dev
+      secretName: renovate-operator-ingress-tls
+  rules:
+    - host: renovate.derwitt.dev
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: renovate-operator-homelab
+                port:
+                  number: 443
