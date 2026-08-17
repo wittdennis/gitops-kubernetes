@@ -5,6 +5,7 @@ metadata:
   name: renovate-operator-api-homelab
   annotations:
     traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.passhostheader: "false"
 spec:
   type: ExternalName
   externalName: api.renovate.derwitt.site
