@@ -121,6 +121,7 @@ spec:
                 api_key: os.environ/OTTER_OLLAMA_TOKEN
                 drop_params: true
                 num_ctx: 32768
+                max_tokens: 8192
                 # Detecting an absent box, not waiting for a slow one. Generation itself is
                 # covered by stream_timeout, which only has to cover time-to-first-token.
                 timeout: 2
@@ -143,6 +144,7 @@ spec:
                 # tool output quickly, and running out of window truncates a reply rather
                 # than reporting anything useful.
                 num_ctx: 73728
+                max_tokens: 8192
                 timeout: 2
                 stream_timeout: 30
               model_info:
@@ -157,6 +159,7 @@ spec:
                 api_key: os.environ/OTTER_OLLAMA_TOKEN
                 drop_params: true
                 num_ctx: 85000
+                max_tokens: 16384
                 timeout: 2
                 stream_timeout: 30
               model_info:
