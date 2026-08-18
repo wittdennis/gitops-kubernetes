@@ -156,18 +156,14 @@ spec:
                 api_base: https://ollama.otter.derwitt.site:11434
                 api_key: os.environ/OTTER_OLLAMA_TOKEN
                 drop_params: true
-                # Twice the server default, and free on this model: measured 100% on the GPU
-                # at 20.4 GB and the same 36 tok/s as half the window. Agent loops accumulate
-                # tool output quickly, and running out of window truncates a reply rather
-                # than reporting anything useful.
-                num_ctx: 73728
+                num_ctx: 85000
                 timeout: 2
                 stream_timeout: 30
               model_info:
                 # num_ctx - max_output_tokens
-                max_input_tokens: 65536
+                max_input_tokens: 68616
                 # number of tokens one wants to dedicate to output
-                max_output_tokens: 8192
+                max_output_tokens: 16384
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
             # two different models do not share a space, so a fallback here would return
             # unrelated chunks with no error raised: a wrong answer rather than an outage.
