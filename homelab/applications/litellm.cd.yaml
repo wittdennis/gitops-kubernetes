@@ -108,6 +108,14 @@ spec:
                 model: ollama_chat/qwen2.5-coder:7b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
+                # Benchmarked flat at 28 tok/s, 100% on GPU, from 4k up to the model's
+                # native 32k ceiling (hack/bench-context.sh)
+                num_ctx: 32768
+                max_tokens: 8192
+              model_info:
+                # num_ctx - max_output_tokens
+                max_input_tokens: 24576
+                max_output_tokens: 8192
             - model_name: b580:qwen3.5:9b
               litellm_params:
                 model: ollama_chat/qwen3.5:9b
