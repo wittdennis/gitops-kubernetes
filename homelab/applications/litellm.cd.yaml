@@ -135,9 +135,11 @@ spec:
                 drop_params: true
                 num_ctx: 32768
                 max_tokens: 8192
-                # Detecting an absent box, not waiting for a slow one. Generation itself is
-                # covered by stream_timeout, which only has to cover time-to-first-token.
-                timeout: 2
+                # Timeout bounds the pre-token wait (cold VRAM load + large prefill),
+                # not token generation. 2s false-positives a slow-but-alive box and
+                # 500s a legitimate request. A dead box still fails fast via the otter
+                # upstream error, so this only costs a slow box its wait time.
+                timeout: 120
                 stream_timeout: 30
               # num_ctx is the whole window, prompt and completion together, and a client
               # that does not know the server's value infers the model's architectural
@@ -158,7 +160,7 @@ spec:
                 # than reporting anything useful.
                 num_ctx: 73728
                 max_tokens: 8192
-                timeout: 2
+                timeout: 120
                 stream_timeout: 30
               model_info:
                 # num_ctx - max_output_tokens
@@ -173,7 +175,7 @@ spec:
                 drop_params: true
                 num_ctx: 85000
                 max_tokens: 16384
-                timeout: 2
+                timeout: 120
                 stream_timeout: 30
               model_info:
                 # num_ctx - max_output_tokens
