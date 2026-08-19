@@ -43,6 +43,7 @@ spec:
           configMaps:
             - authentik-blueprint-base
             - authentik-blueprint-mfa
+            - authentik-blueprint-omni
           secrets:
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf

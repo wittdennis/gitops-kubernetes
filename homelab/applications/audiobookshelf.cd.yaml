@@ -11,6 +11,15 @@ spec:
   syncPolicy:
     automated:
       prune: true
+  # the backup workflow scales this to 0 for the duration of the backup; without this, a
+  # sync landing mid-backup reasserts replicas: 1 and races the backup pod's PVC attach
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: homelab-audiobookshelf
+      namespace: audiobookshelf
+      jsonPointers:
+        - /spec/replicas
   destination:
     name: homelab
     namespace: audiobookshelf

@@ -1,0 +1,17 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: paperless-ngx-uptime
+spec:
+  jobName: paperless-ngx-uptime
+  interval: 1m
+  module: http_2xx
+  prober:
+    url: prometheus-blackbox-exporter.prometheus-blackbox-exporter.svc.cluster.local:9115
+  targets:
+    staticConfig:
+      static:
+        - https://documents.derwitt.site
+      labels:
+        group: backup-targets
