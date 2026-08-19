@@ -102,9 +102,15 @@ spec:
             - name: postgres-creds
               secret:
                 secretName: authentik-postgres-app
+            - name: email-settings
+              secret:
+                secretName: authentik-email-settings
           volumeMounts:
             - name: postgres-creds
               mountPath: /postgres-creds
+              readOnly: true
+            - name: email-settings
+              mountPath: /email-settings
               readOnly: true
           route:
             main:
