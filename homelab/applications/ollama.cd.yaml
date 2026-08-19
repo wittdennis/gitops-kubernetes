@@ -33,7 +33,8 @@ spec:
             pull:
               - llama3.1:8b
               - qwen3.5:9b
-              - qwen2.5-coder:7b
+              - qwen2.5-coder:14b
+              - ornith:9b
               - nomic-embed-text
 
         extraEnv:

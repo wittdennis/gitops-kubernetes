@@ -95,7 +95,7 @@ spec:
               litellm_params:
                 model: anthropic/claude-haiku-4-5
                 api_key: os.environ/ANTHROPIC_API_KEY
-            # Local Ollama on the Arc B580 Models. One 7B-ish
+            # Local Ollama on the Arc B580 Models. One 7B-14B-ish
             # model fits 12 GB at a time; ollama_chat/ auto-swaps them on demand.
             - model_name: b580:llama3.1:8b
               litellm_params:
@@ -103,14 +103,19 @@ spec:
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
                 num_ctx: 8192
-            - model_name: b580:qwen2.5-coder:7b
+            - model_name: b580:qwen2.5-coder:14b
               litellm_params:
-                model: ollama_chat/qwen2.5-coder:7b
+                model: ollama_chat/qwen2.5-coder:14b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
             - model_name: b580:qwen3.5:9b
               litellm_params:
                 model: ollama_chat/qwen3.5:9b
+                api_base: http://ollama.ai-platform.svc.cluster.local:11434
+                drop_params: true
+            - model_name: b580:ornith:9b
+              litellm_params:
+                model: ollama_chat/ornith:9b
                 api_base: http://ollama.ai-platform.svc.cluster.local:11434
                 drop_params: true
             # 7900 XTX Models
@@ -183,7 +188,7 @@ spec:
             # has to be something the caller chose by picking it, not something that happens
             # quietly because a machine at home was switched off.
             fallbacks:
-              - "xtx:qwen3-coder:30b": ["b580:qwen2.5-coder:7b"]
+              - "xtx:qwen3-coder:30b": ["b580:qwen2.5-coder:14b"]
               - "xtx:qwen3.6:27b": ["b580:qwen3.5:9b"]
             # Router-wide, since this release has no per-deployment cooldown. The default is
             # 5s, which for a machine that is off for hours means re-probing it constantly
