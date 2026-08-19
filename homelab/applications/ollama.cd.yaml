@@ -33,7 +33,10 @@ spec:
             pull:
               - llama3.1:8b
               - qwen3.5:9b
-              - qwen2.5-coder:14b
+              # 14b benchmarked (hack/bench-context.sh): 5.8-11.6 tok/s across
+              # 4k-32k context, dropping to 63% on GPU by 32k. Worse than 7b at
+              # every context size tested, not just past a spill point.
+              - qwen2.5-coder:7b
               - ornith:9b
               - nomic-embed-text
 
