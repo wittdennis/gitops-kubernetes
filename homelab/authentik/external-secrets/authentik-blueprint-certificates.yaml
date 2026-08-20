@@ -26,22 +26,28 @@ spec:
               identifiers:
                 name: Derwitt Signing Key (ECDSA)
               attrs:
-                certificate_data: "{{ .ecdsaCertificate }}"
-                key_data: "{{ .ecdsaPrivateKey }}"
+                certificate_data: |
+          {{ .ecdsaCertificate | indent 8 }}
+                key_data: |
+          {{ .ecdsaPrivateKey | indent 8 }}
             - model: authentik_crypto.certificatekeypair
               state: present
               identifiers:
                 name: Derwitt Signing Key (ED25519)
               attrs:
-                certificate_data: "{{ .ed25519Certificate }}"
-                key_data: "{{ .ed25519PrivateKey }}"
+                certificate_data: |
+          {{ .ed25519Certificate | indent 8 }}
+                key_data: |
+          {{ .ed25519PrivateKey | indent 8 }}
             - model: authentik_crypto.certificatekeypair
               state: present
               identifiers:
                 name: Derwitt Signing Key (RSA)
               attrs:
-                certificate_data: "{{ .rsaCertificate }}"
-                key_data: "{{ .rsaPrivateKey }}"
+                certificate_data: |
+          {{ .rsaCertificate | indent 8 }}
+                key_data: |
+          {{ .rsaPrivateKey | indent 8 }}
   data:
     - remoteRef:
         conversionStrategy: Default

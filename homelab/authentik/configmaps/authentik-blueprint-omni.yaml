@@ -38,7 +38,7 @@ data:
           name_id_mapping: !KeyOf omni_email_mapping
           property_mappings:
             - !KeyOf omni_email_mapping
-          signing_kp: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (RSA)"]]
+          signing_kp: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (ECDSA)"]]
       - model: authentik_core.application
         state: present
         id: omni_application
