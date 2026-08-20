@@ -2,7 +2,7 @@
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
-  name: mogenius-operator-ai-settings
+  name: mogenius-operator-dev-ai-settings
 spec:
   refreshInterval: 1h
   secretStoreRef:
