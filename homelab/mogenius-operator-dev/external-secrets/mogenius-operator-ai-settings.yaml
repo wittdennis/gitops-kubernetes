@@ -9,7 +9,7 @@ spec:
     name: vault-backend-platform
     kind: ClusterSecretStore
   target:
-    name: mogenius-operator-ai-settings
+    name: mogenius-operator-dev-ai-settings
     creationPolicy: Owner
     deletionPolicy: Delete
   data:
