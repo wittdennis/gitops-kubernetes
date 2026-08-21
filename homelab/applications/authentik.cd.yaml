@@ -91,7 +91,7 @@ spec:
                   key: secret-key
           containerSecurityContext:
             runAsNonRoot: true
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault
@@ -142,7 +142,7 @@ spec:
                   key: secret-key
           containerSecurityContext:
             runAsNonRoot: true
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
             seccompProfile:
               type: RuntimeDefault
