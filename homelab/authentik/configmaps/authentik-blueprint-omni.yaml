@@ -31,6 +31,7 @@ data:
           invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
           acs_url: https://omni.derwitt.site/saml/acs
           audience: https://omni.derwitt.site/saml/metadata
+          sp_binding: post
           sls_url: https://omni.derwitt.site/saml/slo
           sls_binding: redirect
           sign_assertion: true
