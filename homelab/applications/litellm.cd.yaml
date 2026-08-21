@@ -182,6 +182,21 @@ spec:
                 max_input_tokens: 68616
                 # number of tokens one wants to dedicate to output
                 max_output_tokens: 16384
+            - model_name: xtx:mogenius-test
+              litellm_params:
+                model: ollama_chat/qwen3.8:27b
+                api_base: https://ollama.otter.derwitt.site:11434
+                api_key: os.environ/OTTER_OLLAMA_TOKEN
+                drop_params: true
+                num_ctx: 10000
+                max_tokens: 2048
+                timeout: 120
+                stream_timeout: 30
+              model_info:
+                # num_ctx - max_output_tokens
+                max_input_tokens: 7952
+                # number of tokens one wants to dedicate to output
+                max_output_tokens: 2048
             # Embeddings stay on the B580 alone and carry no fallback anywhere. Vectors from
             # two different models do not share a space, so a fallback here would return
             # unrelated chunks with no error raised: a wrong answer rather than an outage.
