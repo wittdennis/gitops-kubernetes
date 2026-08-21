@@ -14,6 +14,7 @@
       ],
       "versioning": "semver",
       "ignoreUnstable": false,
+      "automerge": true,
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-develop\\.\\d+$/"
     }
   ]
