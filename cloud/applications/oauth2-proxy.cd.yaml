@@ -60,6 +60,8 @@ spec:
           - --oidc-issuer-url=https://auth.derwitt.site/application/o/oauth2-proxy/
           - --whitelist-domain=*.derwitt.dev
           - --cookie-domain=.derwitt.dev
+          - --insecure-oidc-allow-unverified-email=true
+          - --trusted-proxy-ip=10.128.0.0/16
         resources:
           requests:
             cpu: 10m
