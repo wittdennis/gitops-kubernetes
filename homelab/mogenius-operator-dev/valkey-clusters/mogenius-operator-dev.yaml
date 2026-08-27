@@ -62,7 +62,7 @@ spec:
           type: RuntimeDefault
   exporter:
     enabled: true
-    image: docker.io/oliver006/redis_exporter:v1.89.0 # renovate: datasource=docker depName=oliver006/redis_exporter versioning=docker
+    image: docker.io/oliver006/redis_exporter:v1.90.0 # renovate: datasource=docker depName=oliver006/redis_exporter versioning=docker
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:
