@@ -341,7 +341,7 @@ spec:
               storageClassName: proxmox-data
               resources:
                 requests:
-                  storage: 20Gi
+                  storage: 50Gi
           route:
             enabled: true
             parentRefs:
