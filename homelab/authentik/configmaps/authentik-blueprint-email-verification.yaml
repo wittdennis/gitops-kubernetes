@@ -1,0 +1,270 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-email-verification
+data:
+  email-verification.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-email-verification
+    entries:
+      - model: authentik_providers_oauth2.scopemapping
+        id: email-verified-scope-mapping
+        state: present
+        identifiers:
+          name: scope-email
+        attrs:
+          scope_name: email
+          description: Same as the built-in email scope, but email_verified reflects attributes.email_verified
+          expression: |
+            return {
+                "email": request.user.email,
+                "email_verified": bool(request.user.attributes.get("email_verified", False)),
+            }
+
+      - model: authentik_flows.flow
+        id: email-verification-flow
+        state: present
+        identifiers:
+          slug: derwitt-site-email-verification
+        attrs:
+          name: derwitt-site-email-verification
+          title: Verify your email address
+          designation: stage_configuration
+          authentication: require_authenticated
+
+      - model: authentik_stages_email.emailstage
+        id: email-verification-email
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-email
+        attrs:
+          use_global_settings: true
+          template: email/account_confirmation.html
+          subject: Verify your email address
+          token_expiry: minutes=30
+
+      - model: authentik_stages_prompt.prompt
+        id: email-verification-notice-text
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-notice-text
+        attrs:
+          field_key: email_verification_notice
+          type: static
+          required: false
+          order: 0
+          label: Email confirmed
+          initial_value: Click continue to finish verifying your email address.
+
+      - model: authentik_stages_prompt.prompt
+        id: email-verification-flag-field
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-flag
+        attrs:
+          field_key: attributes.email_verified
+          label: Email verified
+          type: hidden
+          required: false
+          order: 1
+          placeholder: "true"
+          placeholder_expression: false
+
+      - model: authentik_stages_prompt.promptstage
+        id: email-verification-prompt-stage
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-confirm
+        attrs:
+          fields:
+            - !KeyOf email-verification-notice-text
+            - !KeyOf email-verification-flag-field
+
+      - model: authentik_stages_user_write.userwritestage
+        id: email-verification-user-write
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-write
+        attrs:
+          user_creation_mode: never_create
+
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf email-verification-flow
+          stage: !KeyOf email-verification-email
+          order: 10
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          policy_engine_mode: any
+          invalid_response_action: retry
+
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf email-verification-flow
+          stage: !KeyOf email-verification-prompt-stage
+          order: 20
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          policy_engine_mode: any
+          invalid_response_action: retry
+
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf email-verification-flow
+          stage: !KeyOf email-verification-user-write
+          order: 30
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: false
+          policy_engine_mode: any
+          invalid_response_action: retry
+
+      - model: authentik_policies_expression.expressionpolicy
+        id: email-verification-required
+        state: present
+        identifiers:
+          name: derwitt-site-email-verification-required
+        attrs:
+          expression: |
+            flow_plan = request.context.get("flow_plan")
+            if not flow_plan:
+                return True
+            user = flow_plan.context.get("pending_user")
+            if not user or not user.pk:
+                return True
+            return not bool(user.attributes.get("email_verified", False))
+
+      # order 40-42: after MFA validation (30) so a failed second factor never reveals
+      # verification state, before the login stage (100) that actually starts the session
+      - model: authentik_flows.flowstagebinding
+        id: auth-flow-email-verification-email-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          stage: !KeyOf email-verification-email
+          order: 40
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+      - model: authentik_flows.flowstagebinding
+        id: auth-flow-email-verification-prompt-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          stage: !KeyOf email-verification-prompt-stage
+          order: 41
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+      - model: authentik_flows.flowstagebinding
+        id: auth-flow-email-verification-write-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, default-authentication-flow]]
+          stage: !KeyOf email-verification-user-write
+          order: 42
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+
+      - model: authentik_flows.flowstagebinding
+        id: passwordless-flow-email-verification-email-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, derwitt-site-passwordless]]
+          stage: !KeyOf email-verification-email
+          order: 40
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+      - model: authentik_flows.flowstagebinding
+        id: passwordless-flow-email-verification-prompt-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, derwitt-site-passwordless]]
+          stage: !KeyOf email-verification-prompt-stage
+          order: 41
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+      - model: authentik_flows.flowstagebinding
+        id: passwordless-flow-email-verification-write-binding
+        state: present
+        identifiers:
+          target: !Find [authentik_flows.flow, [slug, derwitt-site-passwordless]]
+          stage: !KeyOf email-verification-user-write
+          order: 42
+        attrs:
+          evaluate_on_plan: true
+          re_evaluate_policies: true
+          policy_engine_mode: any
+          invalid_response_action: retry
+
+      # bound to all six login-flow bindings above; the standalone flow's own bindings
+      # stay ungated since visiting that URL is already an explicit opt-in
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf auth-flow-email-verification-email-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          # a policy error shows the stage rather than silently skipping verification
+          failure_result: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf auth-flow-email-verification-prompt-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          failure_result: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf auth-flow-email-verification-write-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          failure_result: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf passwordless-flow-email-verification-email-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          failure_result: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf passwordless-flow-email-verification-prompt-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          failure_result: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf passwordless-flow-email-verification-write-binding
+          policy: !KeyOf email-verification-required
+          order: 0
+        attrs:
+          failure_result: true

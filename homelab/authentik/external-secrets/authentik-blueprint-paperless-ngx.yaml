@@ -41,7 +41,7 @@ spec:
                 sub_mode: hashed_user_id
                 client_secret: "{{ .clientSecret }}"
                 property_mappings:
-                  - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-email"]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [name, "scope-email"]]
                   - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-openid"]]
                   - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-profile"]]
                 signing_key: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (ECDSA)"]]

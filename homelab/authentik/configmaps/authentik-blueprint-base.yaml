@@ -115,17 +115,12 @@ data:
     metadata:
       name: derwitt-site-property-mappings
     entries:
+      # superseded by scope-email (authentik-blueprint-email-verification), which reflects
+      # a real per-user attribute instead of hardcoding email_verified true for everyone
       - model: authentik_providers_oauth2.scopemapping
-        state: present
+        state: absent
         identifiers:
           name: email-unsecure-email-verified-true
-        attrs:
-          scope_name: email
-          expression: |
-            return {
-                "email": request.user.email,
-                "email_verified": True
-            }
       # replaces the default profile mapping, which emits a groups claim of its own containing the raw
       # authentik group names and would overwrite the dedicated groups scope below
       - model: authentik_providers_oauth2.scopemapping

@@ -46,7 +46,7 @@ spec:
                 client_secret: "{{ .clientSecret }}"
                 property_mappings:
                   # audiobookshelf only provisions users whose email the idp reports as verified
-                  - !Find [authentik_providers_oauth2.scopemapping, [name, email-unsecure-email-verified-true]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [name, scope-email]]
                   - !Find [authentik_providers_oauth2.scopemapping, [name, audiobookshelf-profile]]
                   - !Find [authentik_providers_oauth2.scopemapping, [name, audiobookshelf-groups]]
                   - !Find [authentik_providers_oauth2.scopemapping, [name, audiobookshelf-permissions]]
