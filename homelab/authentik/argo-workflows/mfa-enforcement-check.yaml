@@ -51,6 +51,14 @@ spec:
               }
               # everything else the passwordless flow may bind next to the validation stage
               PASSWORDLESS_ALLOWED_MODELS = {"authentik_stages_user_login.userloginstage"}
+              # authentik-blueprint-email-verification also binds these, gated by the one
+              # policy below - a deliberate, reviewed skip, unlike any other stage/policy here
+              EMAIL_VERIFICATION_MODELS = {
+                  "authentik_stages_email.emailstage",
+                  "authentik_stages_prompt.promptstage",
+                  "authentik_stages_user_write.userwritestage",
+              }
+              EMAIL_VERIFICATION_POLICY = "derwitt-site-email-verification-required"
               # authentik ships exactly one policy on this binding, skipping validation when
               # the user already authenticated passwordless via WebAuthn
               EXPECTED_STAGE_POLICIES = {"default-authentication-flow-authenticator-validate-stage"}
@@ -196,9 +204,11 @@ spec:
                   )
                   for passwordless_binding in passwordless_bindings:
                       stage_obj = passwordless_binding["stage_obj"]
+                      is_email_verification = stage_obj["meta_model_name"] in EMAIL_VERIFICATION_MODELS
                       check(
                           passwordless_binding["stage"] in audited
-                          or stage_obj["meta_model_name"] in PASSWORDLESS_ALLOWED_MODELS,
+                          or stage_obj["meta_model_name"] in PASSWORDLESS_ALLOWED_MODELS
+                          or is_email_verification,
                           f"{name}: passwordless flow only binds audited stages "
                           f"(unexpected: {stage_obj['name']})",
                       )
@@ -211,6 +221,11 @@ spec:
                           else f"group/user binding {policy['pk']}"
                           for policy in bound["results"]
                           if policy["enabled"]
+                          and not (
+                              is_email_verification
+                              and policy["policy_obj"]
+                              and policy["policy_obj"]["name"] == EMAIL_VERIFICATION_POLICY
+                          )
                       )
                       check(
                           not skippable,
