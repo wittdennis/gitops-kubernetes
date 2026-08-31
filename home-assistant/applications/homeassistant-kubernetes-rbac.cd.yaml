@@ -21,7 +21,7 @@ spec:
     # Values: https://github.com/tibuntu/homeassistant-kubernetes/blob/main/chart/values.yaml
     repoURL: oci://ghcr.io/tibuntu/charts/homeassistant-kubernetes-rbac
     path: "."
-    targetRevision: 1.9.0
+    targetRevision: 1.9.1
     helm:
       releaseName: homeassistant-kubernetes-rbac
       valuesObject:
