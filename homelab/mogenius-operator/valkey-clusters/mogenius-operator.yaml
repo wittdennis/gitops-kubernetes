@@ -6,7 +6,7 @@ metadata:
 spec:
   shards: 3
   replicas: 1
-  image: docker.io/valkey/valkey:9.1.1 # renovate: datasource=docker depName=valkey/valkey versioning=docker
+  image: docker.io/valkey/valkey:9.1.2 # renovate: datasource=docker depName=valkey/valkey versioning=docker
   persistence:
     size: 5Gi
     storageClassName: proxmox-data
