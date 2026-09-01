@@ -38,6 +38,13 @@ data:
         attrs:
           users:
             - !Find [authentik_core.user, [username, dennis]]
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Headscale Admins
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
       # groups terraform only seeded membership for once, then ignored via lifecycle.ignore_changes = [users]
       # membership is left untouched here on purpose - omitting `users` from attrs adopts the group without touching it
       - model: authentik_core.group
@@ -97,6 +104,10 @@ data:
         state: present
         identifiers:
           name: VCS Restricted Users
+      - model: authentik_core.group
+        state: present
+        identifiers:
+          name: Headplane Users
   users.yaml: |
     version: 1
     metadata:
