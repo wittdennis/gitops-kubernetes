@@ -61,6 +61,7 @@ spec:
             - authentik-blueprint-certificates
             - authentik-blueprint-open-webui
             - authentik-blueprint-mfa-check
+            - authentik-blueprint-headplane
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local
