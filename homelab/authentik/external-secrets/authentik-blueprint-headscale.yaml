@@ -37,6 +37,9 @@ spec:
                   - matching_mode: strict
                     url: https://headscale.derwitt.dev/admin/oidc/callback
                     redirect_uri_type: authorization
+                  - matching_mode: strict
+                    url: https://vpn.derwitt.net/oidc/callback
+                    redirect_uri_type: authorization
                 include_claims_in_id_token: true
                 sub_mode: hashed_user_id
                 client_secret: "{{ .clientSecret }}"
