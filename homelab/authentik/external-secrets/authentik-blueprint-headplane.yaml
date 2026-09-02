@@ -76,7 +76,7 @@ spec:
               state: present
               identifiers:
                 target: !KeyOf headplane_application
-                group: !Find [authentik_core.group, [name, "Headplane Users"]]
+                group: !Find [authentik_core.group, [name, "Headscale Users"]]
               attrs:
                 order: 2
   data:

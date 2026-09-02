@@ -107,7 +107,7 @@ data:
       - model: authentik_core.group
         state: present
         identifiers:
-          name: Headplane Users
+          name: Headscale Users
   users.yaml: |
     version: 1
     metadata:
