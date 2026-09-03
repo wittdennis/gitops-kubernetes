@@ -16,7 +16,7 @@ spec:
     namespace: kube-system
   source:
     repoURL: https://charts.hetzner.cloud
-    targetRevision: 2.22.2
+    targetRevision: 2.23.0
     chart: hcloud-csi
     helm:
       releaseName: hcloud-csi
