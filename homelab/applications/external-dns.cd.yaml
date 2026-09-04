@@ -27,6 +27,7 @@ spec:
           - gateway-grpcroute
           - gateway-tcproute
           - gateway-udproute
+          - gateway-tlsroute
           - crd
         serviceMonitor:
           enabled: true

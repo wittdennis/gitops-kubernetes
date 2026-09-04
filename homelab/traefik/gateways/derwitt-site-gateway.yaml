@@ -316,3 +316,13 @@ spec:
           - group: ""
             kind: Secret
             name: open-webui-derwitt-site-tls
+
+    - name: tls-vcluster-eval-routes
+      port: 443
+      protocol: TLS
+      hostname: "vcluster-eval.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Passthrough

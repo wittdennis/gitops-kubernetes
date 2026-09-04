@@ -1,0 +1,91 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-vcluster-eval
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: vcluster-eval
+  source:
+    repoURL: https://charts.loft.sh
+    chart: vcluster
+    targetRevision: 0.36.1
+    helm:
+      releaseName: vcluster-eval
+      valuesObject:
+        controlPlane:
+          distro:
+            k8s:
+              enabled: true
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 12345
+                runAsGroup: 12345
+                capabilities:
+                  drop: [ALL]
+                seccompProfile:
+                  type: RuntimeDefault
+          statefulSet:
+            image:
+              repository: loft-sh/vcluster-oss
+            security:
+              podSecurityContext:
+                runAsNonRoot: true
+                runAsUser: 12345
+                runAsGroup: 12345
+                fsGroup: 12345
+                seccompProfile:
+                  type: RuntimeDefault
+              containerSecurityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 12345
+                runAsGroup: 12345
+                capabilities:
+                  drop: [ALL]
+                seccompProfile:
+                  type: RuntimeDefault
+            persistence:
+              volumeClaim:
+                storageClass: proxmox-data
+          coredns:
+            security:
+              podSecurityContext:
+                runAsNonRoot: true
+                runAsUser: 12345
+                runAsGroup: 12345
+                seccompProfile:
+                  type: RuntimeDefault
+              containerSecurityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                runAsUser: 12345
+                runAsGroup: 12345
+                capabilities:
+                  drop: [ALL]
+                seccompProfile:
+                  type: RuntimeDefault
+          proxy:
+            extraSANs:
+              - vcluster-eval.derwitt.site
+          tlsRoute:
+            enabled: true
+            host: vcluster-eval.derwitt.site
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+        exportKubeConfig:
+          server: "https://vcluster-eval.derwitt.site"
+        telemetry:
+          enabled: false
