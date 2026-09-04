@@ -169,6 +169,7 @@ spec:
           spec:
             extraArgs:
               enableTCP6: "true"
+              promscrape.maxScrapeSize: "64MB"
             additionalScrapeConfigs:
               name: additional-scrape-configs
               key: additional.yaml
