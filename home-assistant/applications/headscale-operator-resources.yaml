@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-headscale-operator-resources
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: home-assistant
+    namespace: headscale-operator
+  source:
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
+    targetRevision: HEAD
+    path: "home-assistant/headscale-operator"
+    directory:
+      recurse: true

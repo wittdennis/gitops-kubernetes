@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: home-assistant-headscale-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: home-assistant
+    namespace: headscale-operator
+  source:
+    repoURL: oci://ghcr.io/mogenius/helm-charts/headscale-operator
+    targetRevision: 0.2.0
+    path: "."
+    helm:
+      releaseName: headscale-operator
+      valuesObject:
+        imagePullSecrets:
+          - name: headscale-operator-image-pull-secret
