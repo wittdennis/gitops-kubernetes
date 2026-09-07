@@ -35,6 +35,9 @@ spec:
                   - refresh_token
                 redirect_uris:
                   - matching_mode: strict
+                    url: https://vpn.derwitt.net/admin/oidc/callback
+                    redirect_uri_type: authorization
+                  - matching_mode: strict
                     url: https://vpn.derwitt.net/oidc/callback
                     redirect_uri_type: authorization
                 include_claims_in_id_token: true
