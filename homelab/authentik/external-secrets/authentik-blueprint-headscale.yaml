@@ -35,9 +35,6 @@ spec:
                   - refresh_token
                 redirect_uris:
                   - matching_mode: strict
-                    url: https://headscale.derwitt.dev/admin/oidc/callback
-                    redirect_uri_type: authorization
-                  - matching_mode: strict
                     url: https://vpn.derwitt.net/oidc/callback
                     redirect_uri_type: authorization
                 include_claims_in_id_token: true
@@ -56,7 +53,7 @@ spec:
               attrs:
                 name: Headscale
                 provider: !KeyOf headscale_provider
-                meta_launch_url: https://headscale.derwitt.dev/admin
+                meta_launch_url: https://vpn.derwitt.net/admin
                 policy_engine_mode: any
             # The Headplane UI has no groups/roles claim - it only recognises the first OIDC login as Owner
             # and leaves everyone else as Member until an existing admin promotes them in its Users UI.
