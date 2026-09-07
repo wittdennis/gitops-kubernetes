@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: homelab-vcluster-eval
+  name: homelab-vcluster-mogenius-playground
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -13,13 +13,13 @@ spec:
       prune: true
   destination:
     name: homelab
-    namespace: vcluster-eval
+    namespace: vcluster-mogenius-playground
   source:
     repoURL: https://charts.loft.sh
     chart: vcluster
     targetRevision: 0.36.1
     helm:
-      releaseName: vcluster-eval
+      releaseName: vcluster-mogenius-playground
       valuesObject:
         controlPlane:
           distro:
@@ -77,16 +77,16 @@ spec:
                   type: RuntimeDefault
           proxy:
             extraSANs:
-              - vcluster-eval.derwitt.site
+              - vcluster-mogenius-playground.derwitt.site
           tlsRoute:
             enabled: true
-            host: vcluster-eval.derwitt.site
+            host: vcluster-mogenius-playground.derwitt.site
             parentRefs:
               - group: gateway.networking.k8s.io
                 kind: Gateway
                 name: derwitt-site-gateway
                 namespace: traefik
         exportKubeConfig:
-          server: "https://vcluster-eval.derwitt.site"
+          server: "https://vcluster-mogenius-playground.derwitt.site"
         telemetry:
           enabled: false
