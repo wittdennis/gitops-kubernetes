@@ -1,0 +1,13 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: TailnetDevice
+metadata:
+  name: home-assistant-device
+spec:
+  headscaleInstanceRef: personal-vpn
+  user: infra
+  inCluster: true
+  ephemeral: false
+  keyExpiry: 24h
+  tags:
+    - tag:k8s-home-assistant
