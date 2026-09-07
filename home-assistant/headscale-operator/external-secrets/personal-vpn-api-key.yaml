@@ -1,0 +1,20 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: personal-vpn-api-key
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-home-assistant
+    kind: ClusterSecretStore
+  target:
+    name: personal-vpn-api-key
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /headscale-operator/personal-vpn
+        property: api-key
+      secretKey: api-key

@@ -1,0 +1,11 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: HeadscaleInstance
+metadata:
+  name: personal-vpn
+spec:
+  serverURL: https://vpn.derwitt.net
+  apiKeySecretRef:
+    name: personal-vpn-api-key
+    namespace: headscale-operator
+    key: api-key
