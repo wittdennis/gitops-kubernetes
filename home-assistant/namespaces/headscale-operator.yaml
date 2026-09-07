@@ -4,4 +4,4 @@ kind: Namespace
 metadata:
   name: headscale-operator
   labels:
-    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce: baseline
