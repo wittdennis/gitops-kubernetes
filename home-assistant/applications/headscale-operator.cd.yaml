@@ -15,9 +15,9 @@ spec:
     name: home-assistant
     namespace: headscale-operator
   source:
-    repoURL: oci://ghcr.io/mogenius/helm-charts/headscale-operator
+    repoURL: ghcr.io
     targetRevision: 0.2.0
-    path: "."
+    chart: mogenius/helm-charts/headscale-operator
     helm:
       releaseName: headscale-operator
       valuesObject:
