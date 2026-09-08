@@ -86,6 +86,13 @@ spec:
                 kind: Gateway
                 name: derwitt-site-gateway
                 namespace: traefik
+        rbac:
+          clusterRole:
+            enabled: true
+            extraRules:
+              - apiGroups: [""]
+                resources: ["nodes/proxy"]
+                verbs: ["get", "list", "watch"]
         exportKubeConfig:
           server: "https://vcluster-mogenius-playground.derwitt.site"
         sync:
