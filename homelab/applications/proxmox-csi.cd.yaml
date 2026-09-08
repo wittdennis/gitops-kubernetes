@@ -40,6 +40,8 @@ spec:
             storage: local-lvm
             reclaimPolicy: Delete
             fstype: xfs
+            annotations:
+              storageclass.kubernetes.io/is-default-class: "true"
             mountOptions:
               - discard
 
