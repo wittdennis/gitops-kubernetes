@@ -4,12 +4,12 @@ kind: Service
 metadata:
   name: renovate-operator-api-homelab
   annotations:
-    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serversscheme: http
     traefik.ingress.kubernetes.io/service.passhostheader: "false"
 spec:
   type: ExternalName
-  externalName: api.renovate.derwitt.site
+  externalName: api-renovate.tailnet.derwitt.net
   ports:
-    - name: https
-      port: 443
+    - name: http
+      port: 8082
       protocol: TCP
