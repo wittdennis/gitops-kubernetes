@@ -1,0 +1,19 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: TailnetService
+metadata:
+  name: renovate-operator-tailnet-service
+  namespace: default
+spec:
+  headscaleInstanceRef: personal-vpn
+  user: infra
+  serviceRef:
+    name: renovate-operator-renovate-operator
+    namespace: renovate-operator
+  port: 8082
+  hostname: api.renovate
+  ephemeral: false
+  keyExpiry: 24h
+  image: ghcr.io/tailscale/tailscale:v1.102.3 # renovate
+  tags:
+    - tag:k8s-homelab-service
