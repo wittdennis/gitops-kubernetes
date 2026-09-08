@@ -88,5 +88,9 @@ spec:
                 namespace: traefik
         exportKubeConfig:
           server: "https://vcluster-mogenius-playground.derwitt.site"
+        sync:
+          toHost:
+            ingresses:
+              enabled: true
         telemetry:
           enabled: false
