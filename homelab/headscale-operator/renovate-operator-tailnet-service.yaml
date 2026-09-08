@@ -3,7 +3,6 @@ apiVersion: headscale.mogenius.com/v1alpha1
 kind: TailnetService
 metadata:
   name: renovate-operator-tailnet-service
-  namespace: default
 spec:
   headscaleInstanceRef: personal-vpn
   user: infra
