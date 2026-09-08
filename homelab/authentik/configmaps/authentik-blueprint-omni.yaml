@@ -9,51 +9,22 @@ data:
     metadata:
       name: derwitt-site-omni
     entries:
-      # Omni's SAML client reads user email from this exact claim name by default (it's the
-      # well-known Microsoft SAML identity attribute) - no attributeRules override needed on
-      # the Omni side.
-      - model: authentik_providers_saml.samlpropertymapping
-        state: present
-        id: omni_email_mapping
+      # Omni decommissioned - entries marked absent to remove them from Authentik.
+      # Deletion order is reversed from creation (dependents before their dependencies).
+      - model: authentik_policies.policybinding
+        state: absent
         identifiers:
-          name: "Omni email"
-        attrs:
-          saml_name: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-          expression: |
-            return request.user.email
-      - model: authentik_providers_saml.samlprovider
-        state: present
-        id: omni_provider
-        identifiers:
-          name: Omni
-        attrs:
-          authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
-          invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
-          acs_url: https://omni.derwitt.site/saml/acs
-          audience: https://omni.derwitt.site/saml/metadata
-          sp_binding: post
-          sls_url: https://omni.derwitt.site/saml/slo
-          sls_binding: redirect
-          sign_assertion: true
-          sign_response: true
-          name_id_mapping: !KeyOf omni_email_mapping
-          property_mappings:
-            - !KeyOf omni_email_mapping
-          signing_kp: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (RSA)"]]
+          target: !Find [authentik_core.application, [slug, omni]]
+          group: !Find [authentik_core.group, [name, "SuperUsers"]]
       - model: authentik_core.application
-        state: present
-        id: omni_application
+        state: absent
         identifiers:
           slug: omni
-        attrs:
-          name: Omni
-          provider: !KeyOf omni_provider
-          meta_launch_url: https://omni.derwitt.site
-          policy_engine_mode: any
-      - model: authentik_policies.policybinding
-        state: present
+      - model: authentik_providers_saml.samlprovider
+        state: absent
         identifiers:
-          target: !KeyOf omni_application
-          group: !Find [authentik_core.group, [name, "SuperUsers"]]
-        attrs:
-          order: 0
+          name: Omni
+      - model: authentik_providers_saml.samlpropertymapping
+        state: absent
+        identifiers:
+          name: "Omni email"
