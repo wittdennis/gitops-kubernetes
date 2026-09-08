@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/garage
     path: "."
-    targetRevision: 2.4.0
+    targetRevision: 2.4.2
     helm:
       valuesObject:
         commonLabels:
