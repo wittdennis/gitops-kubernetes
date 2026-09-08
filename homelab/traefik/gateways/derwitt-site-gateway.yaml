@@ -317,10 +317,10 @@ spec:
             kind: Secret
             name: open-webui-derwitt-site-tls
 
-    - name: tls-vcluster-eval-routes
+    - name: tls-vcluster-mogenius-playground-routes
       port: 443
       protocol: TLS
-      hostname: "vcluster-eval.derwitt.site"
+      hostname: "vcluster-mogenius-playground.derwitt.site"
       allowedRoutes:
         namespaces:
           from: All
