@@ -35,3 +35,9 @@ data:
         cache 30
         forward . 100.100.100.100 fd7a:115c:a1e0::53
     }
+    auth.derwitt.site:53 {
+        errors
+        cache 30
+        rewrite name exact auth.derwitt.site traefik-homelab.tailnet.derwitt.net
+        forward . 100.100.100.100 fd7a:115c:a1e0::53
+    }

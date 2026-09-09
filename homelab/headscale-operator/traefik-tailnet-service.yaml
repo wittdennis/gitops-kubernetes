@@ -1,0 +1,18 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: TailnetService
+metadata:
+  name: traefik-tailnet-service
+spec:
+  headscaleInstanceRef: personal-vpn
+  user: infra
+  serviceRef:
+    name: traefik
+    namespace: traefik
+  port: 443
+  hostname: traefik-homelab
+  ephemeral: false
+  keyExpiry: 24h
+  image: ghcr.io/tailscale/tailscale:v1.102.3 # renovate
+  tags:
+    - tag:k8s-homelab-service
