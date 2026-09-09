@@ -128,7 +128,7 @@ spec:
             ingressClassName: traefik
             annotations:
               cert-manager.io/cluster-issuer: derwitt-site-cluster-issuer
-              external-dns.alpha.kubernetes.io/target: 172.30.0.21, 2a01:4f8:c012:f0b3:ac1e::15
+              external-dns.alpha.kubernetes.io/target: 100.64.0.14, fd7a:115c:a1e0::e
               traefik.ingress.kubernetes.io/router.middlewares: traefik-redirect-to-https@kubernetescrd
             hosts:
               - workflows.home-assistant.derwitt.site
