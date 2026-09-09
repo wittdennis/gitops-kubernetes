@@ -1,0 +1,18 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: TailnetService
+metadata:
+  name: vault-tailnet-service
+spec:
+  headscaleInstanceRef: personal-vpn
+  user: infra
+  serviceRef:
+    name: vault-active
+    namespace: hashicorp-vault
+  port: 8200
+  hostname: vault-homelab
+  ephemeral: false
+  keyExpiry: 24h
+  image: ghcr.io/tailscale/tailscale:v1.102.3 # renovate
+  tags:
+    - tag:k8s-homelab-service
