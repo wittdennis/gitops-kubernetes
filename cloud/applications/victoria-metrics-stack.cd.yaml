@@ -170,9 +170,6 @@ spec:
             extraArgs:
               enableTCP6: "true"
               promscrape.maxScrapeSize: "64MB"
-            additionalScrapeConfigs:
-              name: additional-scrape-configs
-              key: additional.yaml
             volumes:
               - name: etcd-client-cert
                 secret:
@@ -182,12 +179,6 @@ spec:
                       path: client.crt
                     - key: client.key
                       path: client.key
-              - name: netbox-api-token
-                secret:
-                  secretName: netbox-api-token
-                  items:
-                    - key: api-token
-                      path: api-token
             securityContext:
               runAsUser: 1000
               runAsGroup: 1000
@@ -213,8 +204,6 @@ spec:
                 volumeMounts:
                   - mountPath: /etcd-cert
                     name: etcd-client-cert
-                  - mountPath: /netbox
-                    name: netbox-api-token
                 resources:
                   requests:
                     cpu: 186m
