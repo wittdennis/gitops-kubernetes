@@ -1,0 +1,20 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: litellm-sso
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: litellm-sso
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/oauth2-clients/litellm
+        property: client-secret
+      secretKey: GENERIC_CLIENT_SECRET

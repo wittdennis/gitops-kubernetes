@@ -1,0 +1,95 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-blueprint-litellm
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-blueprint-litellm
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        litellm.yaml: |
+          version: 1
+          metadata:
+            name: derwitt-site-litellm
+          entries:
+            # LiteLLM reads this claim (GENERIC_USER_ROLE_ATTRIBUTE) and maps its
+            # value to a role. The value must be a literal LiteLLM role string, not
+            # a group name, so group membership is translated here.
+            - model: authentik_providers_oauth2.scopemapping
+              state: present
+              id: litellm_role_mapping
+              identifiers:
+                name: litellm-role
+              attrs:
+                scope_name: litellm_role
+                expression: |
+                    if request.user.groups.filter(name="SuperUsers").exists() or \
+                       request.user.groups.filter(name="AI Admins").exists():
+                        role = "proxy_admin"
+                    else:
+                        role = "internal_user"
+                    return {"litellm_role": role}
+            - model: authentik_providers_oauth2.oauth2provider
+              state: present
+              id: litellm_provider
+              identifiers:
+                client_id: litellm
+              attrs:
+                name: LiteLLM
+                authorization_flow: !Find [authentik_flows.flow, [slug, default-provider-authorization-implicit-consent]]
+                invalidation_flow: !Find [authentik_flows.flow, [slug, default-invalidation-flow]]
+                grant_types:
+                  - authorization_code
+                  - refresh_token
+                redirect_uris:
+                  - matching_mode: strict
+                    url: https://llm.derwitt.site/sso/callback
+                    redirect_uri_type: authorization
+                include_claims_in_id_token: true
+                sub_mode: hashed_user_id
+                client_secret: "{{ .clientSecret }}"
+                property_mappings:
+                  - !Find [authentik_providers_oauth2.scopemapping, [name, "scope-email"]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-openid"]]
+                  - !Find [authentik_providers_oauth2.scopemapping, [managed, "goauthentik.io/providers/oauth2/scope-profile"]]
+                  - !KeyOf litellm_role_mapping
+                signing_key: !Find [authentik_crypto.certificatekeypair, [name, "Derwitt Signing Key (ECDSA)"]]
+            - model: authentik_core.application
+              state: present
+              id: litellm_application
+              identifiers:
+                slug: litellm
+              attrs:
+                name: LiteLLM
+                provider: !KeyOf litellm_provider
+                meta_launch_url: https://llm.derwitt.site
+                policy_engine_mode: any
+            - model: authentik_policies.policybinding
+              state: present
+              identifiers:
+                target: !KeyOf litellm_application
+                group: !Find [authentik_core.group, [name, "SuperUsers"]]
+              attrs:
+                order: 0
+            - model: authentik_policies.policybinding
+              state: present
+              identifiers:
+                target: !KeyOf litellm_application
+                group: !Find [authentik_core.group, [name, "AI Admins"]]
+              attrs:
+                order: 1
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: authentik/oauth2-clients/litellm
+        property: client-secret
+      secretKey: clientSecret

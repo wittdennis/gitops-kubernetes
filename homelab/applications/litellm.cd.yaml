@@ -56,6 +56,16 @@ spec:
         environmentSecrets:
           - litellm-provider-keys
           - litellm-otter-token
+          - litellm-sso
+
+        envVars:
+          PROXY_BASE_URL: https://llm.derwitt.site
+          GENERIC_CLIENT_ID: litellm
+          GENERIC_AUTHORIZATION_ENDPOINT: https://auth.derwitt.site/application/o/authorize/
+          GENERIC_TOKEN_ENDPOINT: https://auth.derwitt.site/application/o/token/
+          GENERIC_USERINFO_ENDPOINT: https://auth.derwitt.site/application/o/userinfo/
+          GENERIC_SCOPE: openid email profile litellm_role
+          GENERIC_USER_ROLE_ATTRIBUTE: litellm_role
 
         serviceMonitor:
           enabled: true
