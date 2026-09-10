@@ -51,8 +51,6 @@ spec:
         kubeProxyReplacement: true
         k8sServiceHost: "127.0.0.1"
         k8sServicePort: "443"
-        # Match the NIC prefix, not exact names; excludes the tailscale0 overlay.
-        devices: "eth+"
         # ConfigMap changes must restart agents/operator; GitOps has no other trigger.
         rollOutCiliumPods: true
         resources:
