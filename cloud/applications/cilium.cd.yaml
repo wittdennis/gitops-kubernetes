@@ -53,9 +53,6 @@ spec:
         k8sServicePort: "443"
         # Match the NIC prefix, not exact names; excludes the tailscale0 overlay.
         devices: "eth+"
-        # tailscale0 had clamped detection to 1280; without it, VXLAN + WireGuard
-        # overhead over eth1 (1450) blackholes large packets. Pin the working value.
-        MTU: 1280
         # ConfigMap changes must restart agents/operator; GitOps has no other trigger.
         rollOutCiliumPods: true
         resources:
