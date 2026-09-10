@@ -130,7 +130,6 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: letsencrypt
               traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
-              external-dns.alpha.kubernetes.io/target: 100.64.0.2, fd7a:115c:a1e0::2
             hosts:
               - workflows.derwitt.dev
             tls:
