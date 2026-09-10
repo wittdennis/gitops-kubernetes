@@ -62,6 +62,7 @@ spec:
             - authentik-blueprint-open-webui
             - authentik-blueprint-mfa-check
             - authentik-blueprint-headscale
+            - authentik-blueprint-litellm
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local
