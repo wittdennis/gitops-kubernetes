@@ -48,18 +48,40 @@ spec:
           enabled: true
           type: wireguard
           nodeEncryption: true
-        # routingMode: native
-        # ipv4NativeRoutingCIDR: "10.0.0.0/8"
         kubeProxyReplacement: true
         k8sServiceHost: "127.0.0.1"
         k8sServicePort: "443"
+        # ConfigMap changes must restart agents/operator; GitOps has no other trigger.
+        rollOutCiliumPods: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 1Gi
+        bandwidthManager:
+          enabled: true
+          bbr: true
+        loadBalancer:
+          algorithm: maglev
+        bpf:
+          masquerade: true
+          datapathMode: netkit
         operator:
           hostNetwork: true
+          rollOutPods: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
         hubble:
           enabled: true
           relay:
             enabled: true
           metrics:
+            enableOpenMetrics: true
             enabled:
               - dns:query;ignoreAAAA
               - drop
@@ -74,18 +96,10 @@ spec:
               namespace: victoria-metrics-stack
           ui:
             enabled: true
-        # loadBalancer:
-        #   mode: dsr
-        #   dsrDispatch: opt
         prometheus:
           enabled: true
           serviceMonitor:
             enabled: true
-        # ipam:
-        #   mode: "cluster-pool"
-        #   operator:
-        #     clusterPoolIPv4PodCIDRList: ["10.128.0.0/16"]
-        #     clusterPoolIPv4MaskSize: 24
         dashboards:
           enabled: true
           namespace: victoria-metrics-stack
