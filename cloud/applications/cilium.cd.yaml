@@ -51,8 +51,10 @@ spec:
         # routingMode: native
         # ipv4NativeRoutingCIDR: "10.0.0.0/8"
         kubeProxyReplacement: true
-        k8sServiceHost: "k8s.derwitt.dev"
+        k8sServiceHost: "127.0.0.1"
         k8sServicePort: "443"
+        operator:
+          hostNetwork: true
         hubble:
           enabled: true
           relay:
