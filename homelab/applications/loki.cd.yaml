@@ -94,6 +94,11 @@ spec:
         chunksCache:
           allocatedMemory: 1024
 
+        # chart 18.13.0 ships a test.canaryServiceAddress referencing an
+        # undefined loki-canary.fullname template, breaking helm template
+        test:
+          enabled: false
+
         deploymentMode: SimpleScalable
         backend:
           replicas: 3
