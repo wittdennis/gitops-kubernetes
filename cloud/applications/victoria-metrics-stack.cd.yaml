@@ -518,7 +518,6 @@ spec:
             - name: grafana-oidc-credentials
           plugins:
             - grafana-clock-panel
-            - loki
           grafana.ini:
             server:
               root_url: "https://graphs.derwitt.dev"
