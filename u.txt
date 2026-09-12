@@ -1,0 +1,3 @@
+Error: template: loki/templates/tests/test-canary.yaml:28:21: executing "loki/templates/tests/test-canary.yaml" at <tpl .canaryServiceAddress $>: error calling tpl: error during tpl function execution for "http://{{ include \"loki-canary.fullname\" $ }}.{{ include \"loki.namespace\" $ }}.svc.{{ .Values.global.clusterDomain }}:3500/metrics": template: gotpl:1:10: executing "gotpl" at <include "loki-canary.fullname" $>: error calling include: template: no template "loki-canary.fullname" associated with template "gotpl"
+
+Use --debug flag to render out invalid YAML

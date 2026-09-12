@@ -1,0 +1,3 @@
+Error: execution error at (loki/templates/monolithic/workload.yaml:7:4): Please define loki.storage.bucketNames.chunks
+
+Use --debug flag to render out invalid YAML

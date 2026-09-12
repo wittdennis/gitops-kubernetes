@@ -152,3 +152,6 @@ spec:
           existingSecretKey: cache-password
         worker:
           enabled: true
+        # housekeeping command removed in netbox 4.7
+        housekeeping:
+          enabled: false
