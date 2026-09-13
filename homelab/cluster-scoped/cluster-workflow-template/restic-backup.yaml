@@ -1,0 +1,110 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-workflows/main/api/jsonschema/schema.json
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ClusterWorkflowTemplate
+metadata:
+  name: restic-backup
+spec:
+  entrypoint: restic-backup
+  securityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  arguments:
+    parameters:
+      - name: host
+      - name: repository
+      - name: secretName
+      # space-separated restic backup targets, word-split by the shell
+      - name: paths
+      # forget flags, e.g. "--keep-daily 7 --keep-weekly 4 --keep-monthly 6"
+      - name: retention
+      - name: excludes
+        default: ""
+      # ISO day-of-week (1-7) on which to repack; "always" prunes every run.
+      - name: pruneDay
+        default: "7"
+      # strategic-merge patch adding the caller's source volumes and their mounts
+      # on the "main" container; scoped to this pod so scaling pods are untouched
+      - name: podSpecPatch
+        default: "{}"
+  templates:
+    - name: restic-backup
+      inputs:
+        parameters:
+          - name: host
+          - name: repository
+          - name: secretName
+          - name: paths
+          - name: retention
+          - name: excludes
+            default: ""
+          - name: pruneDay
+            default: "7"
+          - name: podSpecPatch
+            default: "{}"
+        artifacts:
+          - name: stage
+            path: /tmp/stage
+            optional: true
+      podSpecPatch: "{{inputs.parameters.podSpecPatch}}"
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      container:
+        image: restic/restic:0.19.1 # renovate
+        command: [sh, -c]
+        args:
+          - |
+            set -eu
+
+            restic init --no-cache || true
+
+            restic backup --no-cache --host "{{inputs.parameters.host}}" \
+              {{inputs.parameters.excludes}} {{inputs.parameters.paths}}
+
+            PRUNE=""
+            if [ "{{inputs.parameters.pruneDay}}" = "always" ] || \
+               [ "$(date +%u)" = "{{inputs.parameters.pruneDay}}" ]; then
+              PRUNE="--prune"
+            fi
+            restic forget --no-cache --host "{{inputs.parameters.host}}" \
+              {{inputs.parameters.retention}} $PRUNE
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: "{{inputs.parameters.secretName}}"
+                key: access-key
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: "{{inputs.parameters.secretName}}"
+                key: secret-key
+          - name: RESTIC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: "{{inputs.parameters.secretName}}"
+                key: restic-password
+          - name: RESTIC_REPOSITORY
+            value: "{{inputs.parameters.repository}}"
+        volumeMounts:
+          - name: tmp
+            mountPath: /tmp
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          runAsGroup: 1000
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
