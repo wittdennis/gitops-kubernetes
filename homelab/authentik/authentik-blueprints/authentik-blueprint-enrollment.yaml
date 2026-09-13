@@ -1,0 +1,250 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authentik-blueprint-enrollment
+data:
+  enrollment.yaml: |
+    version: 1
+    metadata:
+      name: derwitt-site-enrollment
+    entries:
+      # invitation-only enrollment: an invited person redeems a single-use link, sets their own
+      # username/password and enrolls a second factor.
+
+      # continue_flow_without_invitation stays false: without it the flow URL would be open
+      # self-registration for anyone who finds it.
+      - model: authentik_stages_invitation.invitationstage
+        id: enrollment-invitation
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-invitation
+        attrs:
+          continue_flow_without_invitation: false
+
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-username
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-username
+        attrs:
+          field_key: username
+          label: Username
+          type: username
+          required: true
+          order: 10
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-name
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-name
+        attrs:
+          field_key: name
+          label: Display name
+          type: text
+          required: true
+          order: 20
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-email
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-email
+        attrs:
+          field_key: email
+          label: Email
+          type: email
+          required: true
+          order: 30
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-password
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-password
+        attrs:
+          field_key: password
+          label: Password
+          type: password
+          required: true
+          order: 40
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-password-repeat
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-password-repeat
+        attrs:
+          field_key: password_repeat
+          label: Repeat password
+          type: password
+          required: true
+          order: 50
+
+      # redeeming an invitation sent to an address proves control of it, so mark the account
+      # verified up front and spare invited users the first-login email-verification round-trip.
+      - model: authentik_stages_prompt.prompt
+        id: enrollment-field-email-verified
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-field-email-verified
+        attrs:
+          field_key: attributes.email_verified
+          label: Email verified
+          type: hidden
+          required: false
+          order: 60
+          placeholder: "true"
+          placeholder_expression: false
+
+      - model: authentik_policies_expression.expressionpolicy
+        id: enrollment-password-equality
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-password-equality
+        attrs:
+          expression: |
+            prompt = request.context.get("prompt_data", {})
+            if prompt.get("password") != prompt.get("password_repeat"):
+                ak_message("Passwords don't match.")
+                return False
+            return True
+
+      # group membership is chosen per-invite: set fixed_data on the invitation to
+      # {"enrollment_groups": ["Memos Users", "Linkwarden Users"]}. this policy (bound after
+      # user_write, see the mfa binding below) resolves the names and adds the freshly created
+      # user to them. unknown names are skipped silently.
+      #
+      # SECURITY: the group list is read from the Invitation object in context, NOT from
+      # prompt_data. the invitation stage merges fixed_data into prompt_data too, but prompt_data
+      # is also the sink for user-submitted form fields, so trusting it would risk a redeemer
+      # overriding enrollment_groups. the Invitation object's fixed_data is the immutable,
+      # admin-only record and no user input ever reaches it. requiring the invitation in context
+      # also means the flow cannot assign groups if it was somehow reached without a valid invite.
+      - model: authentik_policies_expression.expressionpolicy
+        id: enrollment-group-assignment
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-group-assignment
+        attrs:
+          expression: |
+            from authentik.core.models import Group
+
+            flow_plan = request.context.get("flow_plan")
+            if not flow_plan:
+                return True
+            user = flow_plan.context.get("pending_user")
+            invitation = flow_plan.context.get("invitation")
+            if not user or not user.pk or not invitation:
+                return True
+
+            names = invitation.fixed_data.get("enrollment_groups", [])
+            if not isinstance(names, list):
+                return True
+            for name in names:
+                group = Group.objects.filter(name=name).first()
+                if group:
+                    user.ak_groups.add(group)
+            return True
+
+      - model: authentik_stages_prompt.promptstage
+        id: enrollment-prompt-stage
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-prompt
+        attrs:
+          fields:
+            - !KeyOf enrollment-field-username
+            - !KeyOf enrollment-field-name
+            - !KeyOf enrollment-field-email
+            - !KeyOf enrollment-field-password
+            - !KeyOf enrollment-field-password-repeat
+            - !KeyOf enrollment-field-email-verified
+          validation_policies:
+            - !KeyOf enrollment-password-equality
+
+      # create_when_required creates the account because an invitation enrollment carries no
+      # pending_user in context.
+      - model: authentik_stages_user_write.userwritestage
+        id: enrollment-write
+        state: present
+        identifiers:
+          name: derwitt-site-enrollment-write
+        attrs:
+          user_creation_mode: create_when_required
+
+      - model: authentik_flows.flow
+        id: enrollment-flow
+        state: present
+        identifiers:
+          slug: derwitt-site-enrollment
+        attrs:
+          name: derwitt-site-enrollment
+          designation: enrollment
+          title: Create your derwitt.site account
+          authentication: require_unauthenticated
+
+      # 10 invitation  - consumes the token, injects any fixed_data into the flow context
+      # 20 prompt       - username, name, email, password (+ repeat), equality-validated
+      # 30 write        - creates the user and sets the password
+      # 35 mfa notice   - reused login-flow screen explaining the second-factor choice
+      # 40 mfa validate - reused login-flow stage (not_configured=configure) drives enrollment
+      # 100 login       - starts the session
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !KeyOf enrollment-invitation
+          order: 10
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !KeyOf enrollment-prompt-stage
+          order: 20
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !KeyOf enrollment-write
+          order: 30
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !Find [
+              authentik_stages_prompt.promptstage,
+              [name, derwitt-site-mfa-enrollment-notice],
+            ]
+          order: 35
+      # the group-assignment policy hangs off this binding. evaluate_on_plan false + re_evaluate
+      # true make it run when the stage is reached (order 40, after user_write at 30) rather than
+      # at plan build, which is what puts a saved pending_user in context for the policy to act on.
+      - model: authentik_flows.flowstagebinding
+        id: enrollment-mfa-validation-binding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !Find [
+              authentik_stages_authenticator_validate.authenticatorvalidatestage,
+              [name, default-authentication-mfa-validation],
+            ]
+          order: 40
+        attrs:
+          evaluate_on_plan: false
+          re_evaluate_policies: true
+      - model: authentik_policies.policybinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-mfa-validation-binding
+          policy: !KeyOf enrollment-group-assignment
+          order: 0
+        attrs:
+          # a failure in group assignment must not strand the user before MFA
+          failure_result: true
+      - model: authentik_flows.flowstagebinding
+        state: present
+        identifiers:
+          target: !KeyOf enrollment-flow
+          stage: !Find [
+              authentik_stages_user_login.userloginstage,
+              [name, default-authentication-login],
+            ]
+          order: 100

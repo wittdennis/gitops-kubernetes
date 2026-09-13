@@ -46,6 +46,7 @@ spec:
             - authentik-blueprint-omni
             - authentik-blueprint-email-verification
             - authentik-blueprint-force-password-change
+            - authentik-blueprint-enrollment
           secrets:
             - authentik-blueprint-memos
             - authentik-blueprint-audiobookshelf
