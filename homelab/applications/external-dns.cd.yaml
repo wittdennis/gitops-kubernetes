@@ -35,6 +35,7 @@ spec:
         logLevel: warning
         interval: 1m # interval for dns updates
         registry: txt
+        policy: upsert-only
         txtOwnerId: cluster@home
         provider:
           name: cloudflare
