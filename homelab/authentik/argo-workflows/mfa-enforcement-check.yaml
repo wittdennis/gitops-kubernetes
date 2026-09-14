@@ -51,14 +51,21 @@ spec:
               }
               # everything else the passwordless flow may bind next to the validation stage
               PASSWORDLESS_ALLOWED_MODELS = {"authentik_stages_user_login.userloginstage"}
-              # authentik-blueprint-email-verification also binds these, gated by the one
-              # policy below - a deliberate, reviewed skip, unlike any other stage/policy here
-              EMAIL_VERIFICATION_MODELS = {
+              # extra, reviewed stages that ride the login/passwordless flows alongside the
+              # validation stage: email verification (authentik-blueprint-email-verification) and
+              # forced first-login password change (authentik-blueprint-force-password-change).
+              # each is a prompt/email/user-write stage gated by exactly one of the reviewed
+              # policies below - a deliberate, reviewed skip. any other policy, or a group/user
+              # binding, on these stages is still treated as a bypass.
+              REVIEWED_EXTRA_MODELS = {
                   "authentik_stages_email.emailstage",
                   "authentik_stages_prompt.promptstage",
                   "authentik_stages_user_write.userwritestage",
               }
-              EMAIL_VERIFICATION_POLICY = "derwitt-site-email-verification-required"
+              REVIEWED_EXTRA_POLICIES = {
+                  "derwitt-site-email-verification-required",
+                  "derwitt-site-force-password-change-required",
+              }
               # authentik ships exactly one policy on this binding, skipping validation when
               # the user already authenticated passwordless via WebAuthn
               EXPECTED_STAGE_POLICIES = {"default-authentication-flow-authenticator-validate-stage"}
@@ -204,11 +211,11 @@ spec:
                   )
                   for passwordless_binding in passwordless_bindings:
                       stage_obj = passwordless_binding["stage_obj"]
-                      is_email_verification = stage_obj["meta_model_name"] in EMAIL_VERIFICATION_MODELS
+                      is_reviewed_extra = stage_obj["meta_model_name"] in REVIEWED_EXTRA_MODELS
                       check(
                           passwordless_binding["stage"] in audited
                           or stage_obj["meta_model_name"] in PASSWORDLESS_ALLOWED_MODELS
-                          or is_email_verification,
+                          or is_reviewed_extra,
                           f"{name}: passwordless flow only binds audited stages "
                           f"(unexpected: {stage_obj['name']})",
                       )
@@ -222,9 +229,9 @@ spec:
                           for policy in bound["results"]
                           if policy["enabled"]
                           and not (
-                              is_email_verification
+                              is_reviewed_extra
                               and policy["policy_obj"]
-                              and policy["policy_obj"]["name"] == EMAIL_VERIFICATION_POLICY
+                              and policy["policy_obj"]["name"] in REVIEWED_EXTRA_POLICIES
                           )
                       )
                       check(
