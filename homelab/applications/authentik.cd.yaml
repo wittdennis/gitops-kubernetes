@@ -94,6 +94,21 @@ spec:
                 secretKeyRef:
                   name: authentik-secret-key
                   key: secret-key
+            - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: password
+            - name: AUTHENTIK_BOOTSTRAP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: token
+            - name: AUTHENTIK_BOOTSTRAP_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: email
           containerSecurityContext:
             runAsNonRoot: true
             readOnlyRootFilesystem: true
@@ -145,6 +160,21 @@ spec:
                 secretKeyRef:
                   name: authentik-secret-key
                   key: secret-key
+            - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: password
+            - name: AUTHENTIK_BOOTSTRAP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: token
+            - name: AUTHENTIK_BOOTSTRAP_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: authentik-bootstrap
+                  key: email
           containerSecurityContext:
             runAsNonRoot: true
             readOnlyRootFilesystem: true

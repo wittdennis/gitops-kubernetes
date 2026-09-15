@@ -1,0 +1,30 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: authentik-bootstrap
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: authentik-bootstrap
+    creationPolicy: Owner
+    deletionPolicy: Delete
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /authentik/configuration
+        property: bootstrap-password
+      secretKey: password
+    - remoteRef:
+        conversionStrategy: Default
+        key: /authentik/configuration
+        property: bootstrap-token
+      secretKey: token
+    - remoteRef:
+        conversionStrategy: Default
+        key: /authentik/configuration
+        property: bootstrap-email
+      secretKey: email
