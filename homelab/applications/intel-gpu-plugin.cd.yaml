@@ -20,5 +20,5 @@ spec:
   # securityContext/hostPath mounts. Advertises gpu.intel.com/xe on Battlemage.
   source:
     repoURL: https://github.com/intel/intel-device-plugins-for-kubernetes
-    targetRevision: v0.36.0
+    targetRevision: v0.37.0
     path: deployments/gpu_plugin/overlays/nfd_labeled_nodes
