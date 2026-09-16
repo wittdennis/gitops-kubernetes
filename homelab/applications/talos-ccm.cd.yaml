@@ -16,7 +16,7 @@ spec:
     namespace: kube-system
   source:
     repoURL: oci://ghcr.io/siderolabs/charts/talos-cloud-controller-manager
-    targetRevision: 0.5.7
+    targetRevision: 0.5.8
     path: "."
     helm:
       releaseName: talos-ccm
