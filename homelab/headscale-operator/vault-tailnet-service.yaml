@@ -13,6 +13,6 @@ spec:
   hostname: vault-homelab
   ephemeral: false
   keyExpiry: 24h
-  image: ghcr.io/tailscale/tailscale:v1.102.3 # renovate
+  image: ghcr.io/tailscale/tailscale:v1.102.4 # renovate
   tags:
     - tag:k8s-homelab-service
