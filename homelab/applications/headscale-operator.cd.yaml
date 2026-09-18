@@ -16,7 +16,7 @@ spec:
     namespace: headscale-operator
   source:
     repoURL: oci://ghcr.io/mogenius/helm-charts/headscale-operator
-    targetRevision: 0.5.0
+    targetRevision: 0.6.0
     path: "."
     helm:
       releaseName: headscale-operator
