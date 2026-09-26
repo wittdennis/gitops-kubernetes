@@ -17,11 +17,11 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/memos
     path: "."
-    targetRevision: 1.4.1
+    targetRevision: 2.0.0
     helm:
       valuesObject:
         memos:
-          instanceUrl: notes.derwitt.site
+          instanceUrl: https://notes.derwitt.site
           databaseDriver: postgres
           existingDsnSecret:
             name: memos-postgres-app
