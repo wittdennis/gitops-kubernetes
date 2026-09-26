@@ -163,6 +163,8 @@ spec:
 
         kubeEtcd:
           service:
+            port: 2383
+            targetPort: 2383
             selector:
               component: kube-controller-manager
           vmScrape:
