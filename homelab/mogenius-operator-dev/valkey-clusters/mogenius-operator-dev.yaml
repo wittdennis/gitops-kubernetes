@@ -13,14 +13,17 @@ spec:
     size: 5Gi
     storageClassName: proxmox-data
     reclaimPolicy: Delete
+  networking:
+    tls:
+      certificates:
+        server:
+          secretName: mogenius-operator-dev-valkey-server-tls
+      clientAuth:
+        mode: Required
+        certificateUser: CN
   users:
-    # The operator manages the _operator/_exporter/_replication system users
-    # itself; only the application user needs declaring.
     - name: default
-      passwordSecret:
-        name: mogenius-operator-dev-valkey-credentials
-        keys:
-          - default-password
+      resetpass: true
       keys:
         readWrite:
           - "*"

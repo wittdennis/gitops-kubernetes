@@ -41,8 +41,6 @@ spec:
     helm:
       releaseName: mogenius-operator-dev
       valuesObject:
-        # Every cluster-scoped resource except the three aggregated ClusterRoles
-        # is named from this, so it has to differ from the prod release.
         fullnameOverride: mogenius-operator-dev
 
         features:
@@ -52,10 +50,15 @@ spec:
         externalKeyValueStore:
           enabled: true
           host: valkey-mogenius-operator-dev.mogenius-operator-dev.svc.cluster.local
-          username: default
-          existingSecret:
-            name: mogenius-operator-dev-valkey-credentials
-            key: default-password
+          tls:
+            enabled: true
+            caCertSecret:
+              name: mogenius-operator-dev-valkey-client-tls
+              key: ca.crt
+            clientCertSecret:
+              name: mogenius-operator-dev-valkey-client-tls
+              certKey: tls.crt
+              keyKey: tls.key
 
         global:
           cluster_name: "Homelab Dev"
