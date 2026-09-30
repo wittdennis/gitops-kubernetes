@@ -1,0 +1,24 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mogenius-operator-dev-valkey-server-tls
+spec:
+  secretName: mogenius-operator-dev-valkey-server-tls
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+    # With clientAuth.mode: Required, the operator, probes, exporter and
+    # replication links present this same certificate as their client
+    # certificate.
+    - client auth
+  dnsNames:
+    - "valkey-mogenius-operator-dev.mogenius-operator-dev.svc.cluster.local"
+  issuerRef:
+    name: cluster-ca-issuer
+    kind: ClusterIssuer
