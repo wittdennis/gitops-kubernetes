@@ -1,0 +1,63 @@
+---
+apiVersion: headscale.mogenius.com/v1alpha1
+kind: ACLPolicy
+metadata:
+  name: personal-vpn-acl-policy
+spec:
+  headscaleInstanceRef: personal-vpn
+  tagOwners:
+    "tag:hypervisor": ["infra@"]
+    "tag:parents": ["infra@"]
+    "tag:ansible": ["infra@"]
+    "tag:dns": ["infra@"]
+    "tag:k8s-home-assistant-service": ["infra@"]
+    "tag:k8s-homelab-service": ["infra@"]
+    "tag:home-assistant": ["infra@"]
+    "tag:hetzner": ["infra@"]
+    "tag:exit-node": ["infra@"]
+    "tag:loadbalancer": ["infra@"]
+    "tag:headscale": ["infra@"]
+    "tag:forgejo": ["infra@"]
+  autoApprovers:
+    exitNode: ["tag:exit-node"]
+  nodeAttrs:
+    - target: ["*"]
+      attr: ["suggest-exit-node", "suggest-exit-node-ui"]
+  grants:
+    # Full mesh for the core tailnet: everyone except tag:parents and tag:home-assistant.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer"]
+      dst: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer", "tag:headscale", "tag:forgejo"]
+      ip: ["*"]
+    - src: ["autogroup:member", "tag:dns", "tag:ansible"]
+      dst: ["tag:parents"]
+      ip: ["*"]
+    # One-way: tag:home-assistant is never a src in any grant, so it cannot initiate connections.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns"]
+      dst: ["tag:home-assistant"]
+      ip: ["*"]
+    # One-way: tag:hetzner is only a src for the loadbalancer and k8s-*-service grants below.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer", "tag:headscale"]
+      dst: ["tag:hetzner"]
+      ip: ["*"]
+    - src: ["tag:hetzner", "tag:headscale"]
+      dst: ["tag:loadbalancer", "tag:hetzner", "tag:forgejo"]
+      ip: ["*"]
+    # One-way: tag:k8s-home-assistant-service is never a src in any grant.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:hetzner"]
+      dst: ["tag:k8s-home-assistant-service"]
+      ip: ["*"]
+    # One-way: tag:k8s-homelab-service is never a src in any grant.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:hetzner"]
+      dst: ["tag:k8s-homelab-service"]
+      ip: ["*"]
+    - src: ["autogroup:member", "tag:ansible"]
+      dst: ["tag:exit-node"]
+      ip: ["*"]
+    # The exit node's vmagent scrapes node_exporters over the tailnet.
+    - src: ["tag:exit-node"]
+      dst: ["tag:parents", "tag:loadbalancer", "tag:hetzner"]
+      ip: ["*"]
+    # Internet egress via the exit node is limited to users' own untagged devices.
+    - src: ["autogroup:member"]
+      dst: ["autogroup:internet"]
+      ip: ["*"]
