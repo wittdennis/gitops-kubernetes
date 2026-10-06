@@ -486,7 +486,7 @@ spec:
               memory: 282Mi
             limits:
               cpu: 1000m
-              memory: 282Mi
+              memory: 512Mi
           sidecar:
             dashboards:
               enabled: true
