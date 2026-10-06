@@ -26,7 +26,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/paperless-ngx
     path: "."
-    targetRevision: 2.1.5
+    targetRevision: 2.1.6
     helm:
       valuesObject:
         ocr:
