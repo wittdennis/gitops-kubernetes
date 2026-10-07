@@ -1,0 +1,19 @@
+---
+# auth.derwitt.site resolves to the LAN ingress address, which the public
+# egress policy excludes along with the rest of the private ranges.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: turnstone-allow-oidc-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: turnstone
+      app.kubernetes.io/instance: turnstone
+  egress:
+    - toCIDR:
+        - 10.0.10.15/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP

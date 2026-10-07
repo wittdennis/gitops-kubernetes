@@ -1,0 +1,16 @@
+---
+# The pre-upgrade hook stops every component through the API before an image
+# change. No other turnstone pod has API credentials.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: turnstone-allow-kube-apiserver-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: turnstone
+      app.kubernetes.io/instance: turnstone
+      app.kubernetes.io/component: upgrade
+  egress:
+    - toEntities:
+        - kube-apiserver

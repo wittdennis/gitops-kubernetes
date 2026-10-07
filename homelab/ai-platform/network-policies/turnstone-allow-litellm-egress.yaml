@@ -1,0 +1,19 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: turnstone-allow-litellm-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: turnstone
+      app.kubernetes.io/instance: turnstone
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: litellm
+            app.kubernetes.io/instance: litellm
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP

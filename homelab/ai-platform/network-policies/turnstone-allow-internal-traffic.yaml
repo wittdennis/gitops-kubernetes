@@ -1,0 +1,22 @@
+---
+# Selecting the turnstone pods for both directions puts them into Cilium's
+# default deny. The remaining turnstone-* policies are the explicit allows.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: turnstone-allow-internal-traffic
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: turnstone
+      app.kubernetes.io/instance: turnstone
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: turnstone
+            app.kubernetes.io/instance: turnstone
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: turnstone
+            app.kubernetes.io/instance: turnstone

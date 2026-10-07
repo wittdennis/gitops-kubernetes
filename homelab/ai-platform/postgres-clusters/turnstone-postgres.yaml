@@ -1,0 +1,41 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: turnstone-postgres
+spec:
+  instances: 1
+  logLevel: warning
+  enablePDB: false
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  # No nodeSelector: no GPU affinity, and the ai-labeled node's Proxmox CSI
+  # volume budget is reserved for the turnstone server PVCs.
+  bootstrap:
+    initdb:
+      database: turnstone
+      owner: turnstone
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgres
+    major: 18
+  managed:
+    roles:
+      - name: turnstone
+        superuser: false
+        createdb: false
+        login: true
+  monitoring:
+    enablePodMonitor: true
+  resources:
+    requests:
+      cpu: 100m
+      ephemeral-storage: 50Mi
+      memory: 128Mi
+  storage:
+    size: 5Gi
+    storageClass: proxmox-data
+  walStorage:
+    size: 2Gi
+    storageClass: proxmox-data

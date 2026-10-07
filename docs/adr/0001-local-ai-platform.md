@@ -28,7 +28,7 @@ Key constraints:
 | Backbone | **LiteLLM** gateway | Stable OpenAI-compatible seam for all consumers; per-consumer virtual keys, budgets, model aliasing; the single point to add cloud routing. Front-ends stay pluggable behind it. |
 | Cloud routing | **Hybrid, opt-in aliases** | Local by default; explicit cloud aliases (e.g. `coding-large` → Anthropic/Gemini) fill the gap the 12 GB GPU can't. Provider keys in Vault. Preserves local-first posture with an escape hatch. |
 | Chat UI | **Open WebUI** (interim) | Cheap usable surface day one; authentik OIDC; talks to LiteLLM. Does not preclude adopting Turnstone. |
-| Front-ends | **Pluggable; Turnstone = evaluate later** | Turnstone is an agent-orchestration platform (a model *consumer*, not an OpenAI *source*) and ships Compose/Python/Git-LFS with no Helm chart. Kept as a candidate, not a committed component. |
+| Front-ends | **Pluggable; Turnstone adopted** (amended 2026-10-07) | Turnstone is an agent-orchestration platform (a model *consumer*, not an OpenAI *source*). Upstream's in-tree chart is unpublished and fails `restricted` pod security, so it runs from an owned chart (`oci://git.derwitt.site/containers/helm-charts/turnstone`). Models are declared in git as LiteLLM aliases; Anthropic aliases use LiteLLM's `/v1/messages` route to keep the native Anthropic adapter. |
 | Observability | **VictoriaMetrics scrape of LiteLLM Prometheus metrics** | Reuses the existing stack. Langfuse (Postgres + ClickHouse) deferred until prompt-level tracing is actually wanted. |
 | Cluster | **homelab** | Hub; co-located with Vault/CNPG/garage/VM-metrics. GPU workloads `nodeSelector`-pinned. |
 | Exposure | **Standard app exposure** (Traefik/Gateway route, cert-manager, external-dns) | Reachability is gated below the cluster (WireGuard + DNS on the worker LB); the cluster treats it like any other app. authentik SSO fronts human UIs. |
@@ -62,5 +62,10 @@ Talos node join · node label. Driver baking is already done in the
   attaches to; front-end churn (incl. a future Turnstone) costs no rework.
 - Platform is useful immediately (cloud-first) and self-upgrades to local
   inference when the GPU node lands.
+- Turnstone executes model tool calls (shell, file writes, web fetch) in its
+  server pod. Its boundary is `restricted` pod security plus a default-deny
+  Cilium policy that admits only LiteLLM, its Postgres, OIDC and the public
+  internet; LAN and tailnet ranges stay unreachable. Its runtime configuration
+  (users, roles, tool policies) lives in Postgres, not git.
 - Coding quality is bimodal: local for privacy/cheap, cloud alias for hard
   problems — an explicit, per-alias choice rather than a silent ceiling.

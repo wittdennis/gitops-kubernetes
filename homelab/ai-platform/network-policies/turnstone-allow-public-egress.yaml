@@ -1,0 +1,32 @@
+---
+# Model tools (web_fetch, bash) reach the public internet only. Private and
+# CGNAT ranges stay closed so tool calls cannot touch the LAN or the tailnet.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: turnstone-allow-public-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: turnstone
+      app.kubernetes.io/instance: turnstone
+      app.kubernetes.io/component: server
+  egress:
+    - toCIDRSet:
+        - cidr: 0.0.0.0/0
+          except:
+            - 10.0.0.0/8
+            - 100.64.0.0/10
+            - 169.254.0.0/16
+            - 172.16.0.0/12
+            - 192.168.0.0/16
+        - cidr: ::/0
+          except:
+            - fc00::/7
+            - fe80::/10
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP
+            - port: "443"
+              protocol: TCP

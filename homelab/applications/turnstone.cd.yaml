@@ -1,0 +1,137 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-turnstone
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: homelab
+    namespace: ai-platform
+  source:
+    repoURL: oci://git.derwitt.site/containers/helm-charts/turnstone
+    path: "."
+    targetRevision: 0.1.2
+    helm:
+      releaseName: turnstone
+      valuesObject:
+        database:
+          urlSecret:
+            name: turnstone-postgres-app
+            key: uri
+
+        secret:
+          existingSecret: turnstone-secrets
+
+        # Pod CIDR: Traefik connects from its pod addresses.
+        forwardedAllowIps: 10.244.0.0/16
+
+        oidc:
+          enabled: true
+          issuer: https://auth.derwitt.site/application/o/turnstone/
+          clientId: turnstone
+          clientSecretRef:
+            name: turnstone-secrets
+            key: oidc-client-secret
+          providerName: Authentik
+          roleClaim: groups
+          roleMap: SuperUsers:builtin-admin
+          # The setup wizard creates the first admin with a password before
+          # any OIDC login exists. Disable once that admin is in place.
+          passwordEnabled: true
+          # auth.derwitt.site resolves to a LAN address.
+          allowPrivateNetwork: true
+
+        extraEnv:
+          - name: LITELLM_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: turnstone-secrets
+                key: litellm-key
+
+        # Anthropic aliases go through LiteLLM's /v1/messages route so the
+        # native Anthropic adapter (thinking, adaptive reasoning) stays in use.
+        # The default is local: a cloud model is metered and only used when
+        # picked explicitly.
+        config:
+          extraToml: |
+            [models."xtx:qwen3.6:27b"]
+            base_url = "http://litellm.ai-platform.svc.cluster.local:4000/v1"
+            api_key = "${LITELLM_API_KEY}"
+            model = "xtx:qwen3.6:27b"
+            context_window = 73728
+
+            [models."xtx:qwen3-coder:30b"]
+            base_url = "http://litellm.ai-platform.svc.cluster.local:4000/v1"
+            api_key = "${LITELLM_API_KEY}"
+            model = "xtx:qwen3-coder:30b"
+            context_window = 32768
+
+            [models."anthropic:claude-opus-4-8"]
+            provider = "anthropic-compatible"
+            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
+            api_key = "${LITELLM_API_KEY}"
+            model = "anthropic:claude-opus-4-8"
+            context_window = 200000
+
+            [models."anthropic:claude-sonnet-5"]
+            provider = "anthropic-compatible"
+            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
+            api_key = "${LITELLM_API_KEY}"
+            model = "anthropic:claude-sonnet-5"
+            context_window = 200000
+
+            [models."anthropic:claude-haiku-4-5"]
+            provider = "anthropic-compatible"
+            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
+            api_key = "${LITELLM_API_KEY}"
+            model = "anthropic:claude-haiku-4-5"
+            context_window = 200000
+
+            [model]
+            default = "xtx:qwen3.6:27b"
+
+        server:
+          nodeSelector:
+            derwitt.site/ai: "true"
+          persistence:
+            data:
+              enabled: true
+              storageClass: proxmox-data
+              size: 5Gi
+            workspace:
+              enabled: true
+              storageClass: proxmox-data
+              size: 10Gi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 2Gi
+
+        console:
+          nodeSelector:
+            derwitt.site/ai: "true"
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+
+        route:
+          enabled: true
+          hostnames:
+            - turnstone.derwitt.site
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik
