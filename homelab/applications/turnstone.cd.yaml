@@ -42,7 +42,7 @@ spec:
           roleMap: SuperUsers:builtin-admin
           # The setup wizard creates the first admin with a password before
           # any OIDC login exists. Disable once that admin is in place.
-          passwordEnabled: true
+          passwordEnabled: false
           # auth.derwitt.site resolves to a LAN address.
           allowPrivateNetwork: true
 
