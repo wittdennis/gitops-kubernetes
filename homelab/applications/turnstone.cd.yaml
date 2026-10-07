@@ -17,14 +17,12 @@ spec:
   source:
     repoURL: oci://git.derwitt.site/containers/helm-charts/turnstone
     path: "."
-    targetRevision: 0.1.2
+    targetRevision: 0.1.3
     helm:
       releaseName: turnstone
       valuesObject:
         database:
-          urlSecret:
-            name: turnstone-postgres-app
-            key: uri
+          existingSecret: turnstone-postgres-app
 
         secret:
           existingSecret: turnstone-secrets
