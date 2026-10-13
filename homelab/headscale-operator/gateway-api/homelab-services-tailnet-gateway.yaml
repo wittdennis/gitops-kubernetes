@@ -1,0 +1,24 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: homelab-services-tailnet-gateway
+  annotations:
+    cert-manager.io/cluster-issuer: derwitt-site-cluster-issuer
+    cert-manager.io/issue-temporary-certificate: "true"
+spec:
+  gatewayClassName: tailnet-homelab-services
+  listeners:
+    - name: https-renovate-operator-api-routes
+      port: 443
+      protocol: HTTPS
+      hostname: "api.renovate.tailnet.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: api-renovate-tailnet-derwitt-site-tls

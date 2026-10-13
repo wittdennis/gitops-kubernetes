@@ -22,4 +22,4 @@ spec:
               service:
                 name: renovate-operator-api-homelab
                 port:
-                  number: 8082
+                  number: 443

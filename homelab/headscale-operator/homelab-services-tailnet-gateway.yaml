@@ -1,18 +1,16 @@
 ---
 apiVersion: headscale.mogenius.com/v1alpha1
-kind: TailnetService
+kind: TailnetGateway
 metadata:
-  name: renovate-operator-tailnet-service
+  name: homelab-services
 spec:
   headscaleInstanceRef: personal-vpn
   user: infra
-  serviceRef:
-    name: renovate-operator-renovate-operator
-    namespace: renovate-operator
-  port: 8082
-  hostname: api-renovate
+  namespace: headscale-operator
+  hostname: homelab-services
   ephemeral: false
   keyExpiry: 24h
   image: ghcr.io/tailscale/tailscale:v1.102.5 # renovate
+  proxyImage: docker.io/library/nginx:1.27.4 # renovate
   tags:
     - tag:k8s-homelab-service
