@@ -10,7 +10,7 @@ spec:
   hostname: homelab-services
   ephemeral: false
   keyExpiry: 24h
-  image: ghcr.io/tailscale/tailscale:v1.102.5 # renovate
+  image: ghcr.io/tailscale/tailscale:v1.104.1 # renovate
   proxyImage: docker.io/library/nginx:1.27.4 # renovate
   tags:
     - tag:k8s-homelab-service
