@@ -35,20 +35,34 @@ spec:
          enabled: true
         deschedulingInterval: 15m
         deschedulerPolicy:
+          metricsProviders:
+            - source: KubernetesMetrics
           profiles:
             - name: default
               pluginConfig:
                 - name: DefaultEvictor
                   args:
-                    ignorePvcPods: true
-                    evictLocalStoragePods: true
                     nodeFit: true
                     minReplicas: 2
+                    podProtections:
+                      defaultDisabled:
+                        - PodsWithLocalStorage
+                      extraEnabled:
+                        - PodsWithPVC
+                      config:
+                        PodsWithPVC:
+                          protectedStorageClasses:
+                            - name: hcloud-volumes
                 - name: RemoveDuplicates
                 - name: RemovePodsHavingTooManyRestarts
                   args:
                     podRestartThreshold: 100
                     includingInitContainers: true
+                - name: RemoveFailedPods
+                  args:
+                    minPodLifetimeSeconds: 3600
+                    excludeOwnerKinds:
+                      - Job
                 - name: RemovePodsViolatingNodeAffinity
                   args:
                     nodeAffinityType:
@@ -58,14 +72,16 @@ spec:
                 - name: RemovePodsViolatingTopologySpreadConstraint
                 - name: LowNodeUtilization
                   args:
+                    metricsUtilization:
+                      source: KubernetesMetrics
                     thresholds:
-                      cpu: 30
-                      memory: 30
-                      pods: 20
+                      cpu: 25
+                      memory: 45
+                      pods: 40
                     targetThresholds:
                       cpu: 70
-                      memory: 70
-                      pods: 100
+                      memory: 85
+                      pods: 70
               plugins:
                 balance:
                   enabled:
@@ -75,6 +91,7 @@ spec:
                 deschedule:
                   enabled:
                     - RemovePodsHavingTooManyRestarts
+                    - RemoveFailedPods
                     - RemovePodsViolatingNodeTaints
                     - RemovePodsViolatingNodeAffinity
                     - RemovePodsViolatingInterPodAntiAffinity

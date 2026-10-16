@@ -1,0 +1,68 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-descheduler-rebalance
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    name: cloud
+    namespace: kube-system
+  source:
+    repoURL: https://kubernetes-sigs.github.io/descheduler
+    targetRevision: 0.37.0
+    chart: descheduler
+    helm:
+      releaseName: descheduler-rebalance
+      values: |
+
+        # Nightly window in which single-replica workloads may be restarted to
+        # even out node usage; the continuous descheduler protects them via minReplicas.
+        kind: CronJob
+        schedule: "0 4 * * *"
+        timeZone: Europe/Berlin
+        successfulJobsHistoryLimit: 1
+        failedJobsHistoryLimit: 1
+        cmdOptions:
+          v: 3
+          logging-format: json
+        deschedulerPolicy:
+          metricsProviders:
+            - source: KubernetesMetrics
+          profiles:
+            - name: rebalance
+              pluginConfig:
+                - name: DefaultEvictor
+                  args:
+                    nodeFit: true
+                    podProtections:
+                      defaultDisabled:
+                        - PodsWithLocalStorage
+                      extraEnabled:
+                        - PodsWithPVC
+                      config:
+                        PodsWithPVC:
+                          protectedStorageClasses:
+                            - name: hcloud-volumes
+                - name: LowNodeUtilization
+                  args:
+                    metricsUtilization:
+                      source: KubernetesMetrics
+                    thresholds:
+                      cpu: 25
+                      memory: 45
+                      pods: 40
+                    targetThresholds:
+                      cpu: 70
+                      memory: 85
+                      pods: 70
+              plugins:
+                balance:
+                  enabled:
+                    - LowNodeUtilization
