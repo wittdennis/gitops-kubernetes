@@ -60,9 +60,9 @@ spec:
           resources:
             requests:
               cpu: 10m
-              memory: 114Mi
+              memory: 192Mi
             limits:
-              memory: 114Mi
+              memory: 192Mi
         startupapicheck:
           extraArgs:
             - --logging-format=json
