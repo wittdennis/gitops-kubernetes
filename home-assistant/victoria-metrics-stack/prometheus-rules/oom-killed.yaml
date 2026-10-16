@@ -1,0 +1,29 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: oom-killed-rules
+spec:
+  groups:
+    - name: oom-killed.rules
+      rules:
+        - alert: KubeContainerOOMKilled
+          annotations:
+            description: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} was OOMKilled within the last hour. Its memory limit is likely too low."
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} was OOMKilled."
+          expr: >-
+            kube_pod_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+            and on (namespace, pod, container)
+            (time() - kube_pod_container_status_last_terminated_timestamp) < 3600
+          labels:
+            severity: warning
+        - alert: KubeInitContainerOOMKilled
+          annotations:
+            description: "Init container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} was OOMKilled within the last hour. Its memory limit is likely too low."
+            summary: "{{ $labels.namespace }}/{{ $labels.pod }}/{{ $labels.container }} (init) was OOMKilled."
+          expr: >-
+            kube_pod_init_container_status_last_terminated_reason{reason="OOMKilled"} == 1
+            and on (namespace, pod, container)
+            (time() - kube_pod_init_container_status_last_terminated_timestamp) < 3600
+          labels:
+            severity: warning
