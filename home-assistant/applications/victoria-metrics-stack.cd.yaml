@@ -341,8 +341,7 @@ spec:
                       storage: 256Mi
                   storageClassName: proxmox-data
             secrets:
-              - pagerduty-routing-key
-              - healthchecks-io-watchdog-url
+              - ilert
           config:
             templates:
               - "/etc/vm/configs/**/*.tmpl"
@@ -368,13 +367,13 @@ spec:
                 target_matchers:
                   - severity = info
             route:
-              group_by: [alertname, namespace]
+              group_by: [alertname, namespace, severity]
               receiver: blackhole
               group_wait: 30s
               group_interval: 5m
               repeat_interval: 3h
               routes:
-                - receiver: healthchecks_io
+                - receiver: ilert_heartbeat
                   group_wait: 10s
                   repeat_interval: 5m
                   match:
@@ -382,19 +381,17 @@ spec:
                 - match:
                     alertname: InfoInhibitor
                   receiver: blackhole
-                - receiver: PagerDuty
+                - receiver: ilert
                   continue: false
             receivers:
               - name: blackhole
-              - name: healthchecks_io
+              - name: ilert_heartbeat
                 webhook_configs:
-                  - url_file: /etc/vm/secrets/healthchecks-io-watchdog-url/url
-              - name: PagerDuty
-                pagerduty_configs:
-                  - routing_key_file: /etc/vm/secrets/pagerduty-routing-key/routing-key
-                    severity: "{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}error{{ end }}"
-                    description: >-
-                      {{ .CommonLabels.cluster }}/{{ .GroupLabels.alertname }}: {{ .CommonAnnotations.summary }}
+                  - url_file: /etc/vm/secrets/ilert/heartbeat-url
+              - name: ilert
+                webhook_configs:
+                  - url_file: /etc/vm/secrets/ilert/integration-url
+                    send_resolved: true
           ingress:
             enabled: false
             ingressClassName: nginx
