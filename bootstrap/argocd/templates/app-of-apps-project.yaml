@@ -6,7 +6,6 @@ metadata:
   namespace: argocd
 spec:
   sourceRepos:
-    - https://github.com/wittdennis/argocd-setup
     - https://git.derwitt.site/homelab/midgard
     - https://git.derwitt.site/homelab/asgard
     - https://git.derwitt.site/homelab/yggdrasil
