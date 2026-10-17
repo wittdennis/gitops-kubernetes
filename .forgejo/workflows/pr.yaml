@@ -30,3 +30,16 @@ jobs:
       - name: lint
         run: |
           yamllint -c .yamllint .
+
+  glint:
+    runs-on: debian-13
+    permissions:
+      contents: read
+    steps:
+      - uses: https://git.derwitt.site/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: lint
+        uses: https://git.derwitt.site/actions/glint@41b77aa2f424ff98159ec950e7d2bd716b1b26b7 # v0.2.3
+        with:
+          format: text
+          sarif-file: ""
