@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-home-assistant
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: app-of-apps
+  syncPolicy:
+    automated:
+      prune: true
+  destination:
+    namespace: argocd
+    server: {{ .Values.destination.server }}
+  source:
+    path: "."
+    repoURL: https://git.derwitt.site/homelab/midgard
+    targetRevision: HEAD
+    directory:
+      exclude: "*.json"

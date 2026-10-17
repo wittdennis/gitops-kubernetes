@@ -1,0 +1,25 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: home-assistant
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://git.derwitt.site/homelab/midgard
+    - http://pajikos.github.io/home-assistant-helm-chart
+    - https://charts.derwitt.dev
+    - oci://ghcr.io/wittdennis/helm-charts/*
+  sourceNamespaces:
+    - home-assistant
+  destinations:
+    - name: home-assistant
+      namespace: home-assistant
+    - namespace: argocd
+      server: {{ .Values.destination.server }}
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "Namespace"
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

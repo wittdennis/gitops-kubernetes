@@ -3,6 +3,7 @@ extends: default
 ignore:
   - .forgejo
   - .pre-commit-config.yaml
+  - bootstrap/argocd/templates
 rules:
   line-length:
     max: 240

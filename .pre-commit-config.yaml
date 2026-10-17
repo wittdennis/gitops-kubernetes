@@ -5,6 +5,7 @@ repos:
       - id: trailing-whitespace
       - id: check-case-conflict
       - id: check-yaml
+        exclude: ^bootstrap/argocd/templates/
       - id: end-of-file-fixer
 
   - repo: https://github.com/adrienverge/yamllint

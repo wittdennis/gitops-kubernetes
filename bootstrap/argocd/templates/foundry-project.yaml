@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: foundry
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://git.derwitt.site/homelab/asgard
+    - https://charts.derwitt.dev
+    - oci://ghcr.io/wittdennis/helm-charts/*
+  sourceNamespaces:
+    - foundry
+  destinations:
+    - namespace: foundry
+      server: {{ .Values.destination.server }}
+    - namespace: foundry
+      name: cloud
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"

@@ -1,0 +1,21 @@
+---
+# Root of the Argo CD tree. Applied manually with kubectl, never by Argo CD itself.
+# No finalizer: deleting this Application must not cascade into the tree it manages.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  project: default
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+  destination:
+    namespace: argocd
+    server: https://k8s.platform.home.derwitt.net:6443
+  source:
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
+    path: bootstrap/argocd
+    targetRevision: HEAD

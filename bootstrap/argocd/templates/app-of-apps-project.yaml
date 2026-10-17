@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: app-of-apps
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://github.com/wittdennis/argocd-setup
+    - https://git.derwitt.site/homelab/midgard
+    - https://git.derwitt.site/homelab/asgard
+    - https://git.derwitt.site/homelab/yggdrasil
+  destinations:
+    - namespace: "*"
+      server: {{ .Values.destination.server }}
+  namespaceResourceWhitelist:
+    - group: "argoproj.io"
+      kind: "Application"
+    - group: "argoproj.io"
+      kind: "ApplicationSet"

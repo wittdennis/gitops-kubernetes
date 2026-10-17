@@ -1,0 +1,33 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: mogenius-ghcr
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: mogenius-ghcr
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    template:
+      mergePolicy: Merge
+      metadata:
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      data:
+        type: oci
+        name: mogenius-ghcr
+        url: oci://ghcr.io/mogenius/helm-charts/headscale-operator
+        username: pat
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: argocd/mogenius-ghcr-token
+        property: token
+      secretKey: password

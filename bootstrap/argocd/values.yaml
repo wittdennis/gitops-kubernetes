@@ -1,0 +1,5 @@
+---
+global:
+  domain: cd.derwitt.site
+destination:
+  server: https://k8s.platform.home.derwitt.net:6443

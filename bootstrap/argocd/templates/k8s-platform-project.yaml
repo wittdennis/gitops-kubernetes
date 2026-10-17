@@ -1,0 +1,64 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: k8s-platform
+  namespace: argocd
+spec:
+  sourceRepos:
+    - https://git.derwitt.site/homelab/yggdrasil
+    - https://argoproj.github.io/argo-helm
+    - https://runatlantis.github.io/helm-charts
+    - https://charts.jetstack.io
+    - https://charts.dexidp.io
+    - https://charts.external-secrets.io
+    - https://helm.releases.hashicorp.com
+    - https://kubernetes.github.io/ingress-nginx
+    - https://oauth2-proxy.github.io/manifests
+    - https://prometheus-community.github.io/helm-charts
+    - https://robusta-charts.storage.googleapis.com
+    - https://victoriametrics.github.io/helm-charts
+    - https://operator.min.io
+    - https://charts.longhorn.io
+    - https://kubernetes-sigs.github.io/external-dns/
+    - https://grafana.github.io/helm-charts
+    - https://kubernetes-sigs.github.io/descheduler
+    - https://charts.releases.teleport.dev
+    - https://chartmuseum.github.io/charts
+    - https://charts.derwitt.dev
+    - oci://ghcr.io/wittdennis/helm-charts/*
+    - https://cowboysysop.github.io/charts/
+    - https://helm.cilium.io
+    - oci://ghcr.io/siderolabs/charts/talos-cloud-controller-manager
+    - oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
+    - oci://ghcr.io/cloudhippie/charts/yopass
+    - oci://ghcr.io/kyverno/charts/kyverno
+    - https://charts.hetzner.cloud
+    - https://cloudnative-pg.github.io/charts
+    - https://meilisearch.github.io/meilisearch-kubernetes
+    - https://charts.goauthentik.io
+    - https://traefik.github.io/charts
+    - oci://ghcr.io/netbox-community/netbox-chart/netbox
+    - oci://ghcr.io/valkey-io/valkey-helm/valkey
+    - https://kubernetes-sigs.github.io/metrics-server/
+    - https://github.com/kubernetes-sigs/gateway-api
+    - https://grafana-community.github.io/helm-charts
+    - oci://ghcr.io/grafana-community/helm-charts/loki
+    - oci://ghcr.io/mogenius/helm-charts/*
+    - oci://ghcr.io/berriai/litellm-helm
+    - https://helm.openwebui.com
+    - https://github.com/intel/intel-device-plugins-for-kubernetes
+    - https://kubernetes-sigs.github.io/node-feature-discovery/charts
+    - https://otwld.github.io/ollama-helm
+    - oci://ghcr.io/tibuntu/charts/homeassistant-kubernetes-rbac
+    - oci://ghcr.io/valkey-io/valkey-helm/valkey-operator
+    - https://charts.loft.sh
+    - oci://git.derwitt.site/containers/helm-charts/*
+  sourceNamespaces:
+    - argocd
+  destinations:
+    - namespace: "*"
+      server: "*"
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

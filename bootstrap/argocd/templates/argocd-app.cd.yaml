@@ -1,0 +1,221 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: argocd
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    namespace: argocd
+    server: "{{ .Values.destination.server }}"
+  source:
+    repoURL: https://argoproj.github.io/argo-helm
+    targetRevision: 10.10.5
+    chart: argo-cd
+    helm:
+      releaseName: argocd
+      valuesObject:
+        global:
+          domain: {{ .Values.global.domain }}
+          affinity:
+            nodeAffinity:
+              matchExpressions:
+                - key: node-role.kubernetes.io/control-plane
+                  operator: NotIn
+                  values:
+                    - "true"
+        securityContext:
+          fsGroup: 1000
+          runAsUser: 1000
+          runAsGroup: 1000
+          runAsNonRoot: true
+          seccompProfile:
+            type: RuntimeDefault
+        networkPolicy:
+          create: true
+        controller:
+          replicas: 2
+          dynamicClusterDistribution: true
+          resources:
+            requests:
+              cpu: 250m
+              memory: 2Gi
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+            rules:
+              enabled: true
+              spec:
+                - alert: ArgoAppMissing
+                  expr: |
+                    absent(argocd_app_info) == 1
+                  for: 15m
+                  labels:
+                    severity: critical
+                  annotations:
+                    summary: "[Argo CD] No reported applications"
+                    description: >
+                      Argo CD has not reported any applications data for the past 15 minutes which
+                      means that it must be down or not functioning properly.  This needs to be
+                      resolved for this cloud to continue to maintain state.
+                - alert: ArgoAppNotSynced
+                  expr: |
+                    argocd_app_info{sync_status!="Synced"} == 1
+                  for: 12h
+                  labels:
+                    severity: warning
+                  annotations:
+                    summary: "[{{`{{$labels.name}}`}}] Application not synchronized"
+                    description: >
+                      The application [{{`{{$labels.name}}`}} has not been synchronized for over
+                      12 hours which means that the state of this cloud has drifted away from the
+                      state inside Git.
+        redis:
+          exporter:
+            enabled: true
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+        server:
+          autoscaling:
+            enabled: true
+            minReplicas: 2
+            maxReplicas: 5
+            targetMemoryUtilizationPercentage: 80
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+          ingress:
+            enabled: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 400Mi
+          httproute:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - cd.derwitt.site
+          grpcroute:
+            enabled: false
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - cd.derwitt.site
+            rules:
+              - matches:
+                  - headers:
+                      - name: Content-Type
+                        type: RegularExpression
+                        value: "^application/grpc.*$"
+        repoServer:
+          autoscaling:
+            enabled: true
+            minReplicas: 2
+            maxReplicas: 5
+            targetMemoryUtilizationPercentage: 80
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 150Mi
+        applicationSet:
+          replicas: 2
+          allowAnyNamespace: true
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+        notifications:
+          metrics:
+            enabled: true
+            serviceMonitor:
+              enabled: true
+        dex:
+          enabled: true
+        configs:
+          cm:
+            cluster.inClusterEnabled: "false"
+            application.resourceTrackingMethod: annotation
+            admin.enabled: "false"
+            dex.config: |
+
+              connectors:
+                - type: oidc
+                  id: authentik
+                  name: Authentik
+                  config:
+                    issuer: https://auth.derwitt.site/application/o/argocd/
+                    clientID: argocd
+                    clientSecret: "$oidc-secret:oidc.authentik.client-secret"
+                    redirectURI: http://127.0.0.1:8080/api/dex/callback
+                    insecureEnableGroups: true
+                    scopes:
+                      - openid
+                      - profile
+                      - email
+            resource.customizations: |
+              cert-manager.io/Certificate:
+                health.lua: |
+                  hs = {}
+                  if obj.status ~= nil then
+                    if obj.status.conditions ~= nil then
+                      for i, condition in ipairs(obj.status.conditions) do
+                        if condition.type == "Ready" and condition.status == "False" then
+                          hs.status = "Degraded"
+                          hs.message = condition.message
+                          return hs
+                        end
+                        if condition.type == "Ready" and condition.status == "True" then
+                          hs.status = "Healthy"
+                          hs.message = condition.message
+                          return hs
+                        end
+                      end
+                    end
+                  end
+
+                  hs.status = "Progressing"
+                  hs.message = "Waiting for certificate"
+                  return hs
+          rbac:
+            policy.default: role:readonly
+            policy.csv: |
+              p, role:org-admin, applications, *, */*, allow
+              p, role:org-admin, clusters, get, *, allow
+              p, role:org-admin, clusters, create, *, allow
+              p, role:org-admin, clusters, update, *, allow
+              p, role:org-admin, clusters, delete, *, allow
+              p, role:org-admin, repositories, get, *, allow
+              p, role:org-admin, repositories, create, *, allow
+              p, role:org-admin, repositories, update, *, allow
+              p, role:org-admin, repositories, delete, *, allow
+              g, k8s-admins, role:org-admin
+          params:
+            server.insecure: true
+            controller.diff.server.side: "true"
+            application.namespaces: foundry, home-assistant
+            applicationsetcontroller.namespaces: foundry, home-assistant
+            applicationsetcontroller.allowed.scm.providers: https://github.com/wittdennis
+            applicationsetcontroller.enable.scm.providers: false
