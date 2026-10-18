@@ -31,9 +31,23 @@ networking is Cilium + the Gateway API.
 
 ## How it bootstraps
 
-Two `ApplicationSet`s at the repo root use Argo CD's **cluster generator** to
-fan out over every registered cluster. For a cluster named `<cluster>` they
-template one `Application` per cluster, sourced from `<cluster>/…`:
+Argo CD manages itself from this repository. The root of the tree is
+`bootstrap/apps.yaml`, an `Application` applied once by hand with `kubectl`. It
+renders the `bootstrap/argocd` Helm chart onto the hub, which contains:
+
+- **`argocd`**: the Argo CD installation itself (upstream `argo-cd` chart), so
+  Argo CD upgrades and config changes go through Git like everything else.
+- **`AppProject`s**: `argocd`, `app-of-apps`, `k8s-platform`, `foundry`,
+  `home-assistant`.
+- **Repository secrets** and the ExternalSecrets for OIDC and OCI registry
+  credentials.
+- **Root `Application`s**: `platform` (this repo's root directory),
+  `foundry` (`homelab/asgard`), and `root-home-assistant` (`homelab/midgard`).
+
+`platform` syncs the two `ApplicationSet`s at the repo root, which use Argo CD's
+**cluster generator** to fan out over every registered cluster. For a cluster
+named `<cluster>` they template one `Application` per cluster, sourced from
+`<cluster>/…`:
 
 1. **`namespace-bootstraper.yaml`** (sync-wave `0`) — deploys `<cluster>/namespaces`
    to the spoke itself (`destination.server: {{ server }}`). Namespaces exist
@@ -46,14 +60,19 @@ template one `Application` per cluster, sourced from `<cluster>/…`:
 So the flow is:
 
 ```
-ApplicationSet (per cluster)
-  └─ <cluster>/applications/*.yaml   → Application (Helm chart or in-repo manifests)
-       └─ actual workloads on the target cluster
+bootstrap/apps.yaml (kubectl apply, once)
+  └─ bootstrap/argocd                 → Argo CD, AppProjects, repos, root Applications
+       └─ platform                    → ApplicationSets at the repo root
+            └─ <cluster>/applications/*.yaml → Application (Helm chart or in-repo manifests)
+                 └─ actual workloads on the target cluster
 ```
 
 ## Repository layout
 
 ```
+bootstrap/
+├── apps.yaml                  # root Application, applied manually
+└── argocd/                    # Helm chart: Argo CD, AppProjects, repos, root Applications
 <cluster>/                     # one directory per cluster: cloud, home-assistant, homelab
 ├── applications/              # Argo CD Application definitions (the app-of-apps layer)
 │   ├── <name>.cd.yaml         #   the workload — usually a Helm chart with inline valuesObject
@@ -70,7 +89,8 @@ ApplicationSet (per cluster)
   entirely through `spec.source.helm.valuesObject`.
 - **`*-resources.yaml`** — an `Application` that recurses a directory of plain
   manifests (`directory.recurse: true`) providing the app's supporting resources.
-- Everything runs under the `k8s-platform` Argo CD `AppProject`.
+- Every workload `Application` in `<cluster>/applications/` runs under the
+  `k8s-platform` `AppProject`, defined in `bootstrap/argocd`.
 
 ## Secrets
 
@@ -92,18 +112,25 @@ reference the generated Kubernetes secrets by name (`existingSecret…`).
 
 ## Bootstrapping a rebuild
 
-The self-managing loop above assumes a few things already exist on the hub —
-these are the manual prerequisites for a from-scratch rebuild:
+Manual prerequisites for a from-scratch rebuild of the hub:
 
-1. A running Argo CD on the `homelab` cluster.
-2. The `k8s-platform` `AppProject` (referenced by every `Application`; **not**
-   currently tracked in this repo).
-3. Cluster secrets registering `cloud`, `home-assistant`, and `homelab`.
-4. A reachable Vault with the platform secrets populated, plus the
-   `vault-backend-platform` `ClusterSecretStore`.
+1. An initial Argo CD install on the `homelab` cluster (e.g. `helm install` of
+   the upstream chart into `argocd`). The `argocd` `Application` adopts and
+   takes over that release on first sync.
+2. Cluster secrets registering `cloud`, `home-assistant`, and `homelab`
+   (not tracked in this repo).
+3. A reachable Vault with the platform secrets populated. The
+   `vault-backend-platform` `ClusterSecretStore` and External Secrets Operator
+   come from the tree itself, so the ExternalSecrets in `bootstrap/argocd`
+   (OIDC, OCI credentials) only resolve once those have synced.
 
-Once those are in place, applying `namespace-bootstraper.yaml` and
-`application-bootstraper.yaml` lets Argo CD reconcile the rest of the tree.
+Then apply the root:
+
+```sh
+kubectl apply -f bootstrap/apps.yaml
+```
+
+Argo CD reconciles the rest of the tree from there.
 
 ## License
 
