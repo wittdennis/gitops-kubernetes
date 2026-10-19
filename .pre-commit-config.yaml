@@ -13,3 +13,8 @@ repos:
     hooks:
       - id: yamllint
         files: \.(yaml|yml|yamllint)$
+
+  - repo: https://github.com/lukashankeln/glint
+    rev: v0.2.7
+    hooks:
+      - id: glint
