@@ -23,6 +23,9 @@ spec:
       valuesObject:
         deployment:
           kind: DaemonSet
+        resources:
+          requests:
+            memory: 160Mi
         api:
           dashboard: true
           insecure: true

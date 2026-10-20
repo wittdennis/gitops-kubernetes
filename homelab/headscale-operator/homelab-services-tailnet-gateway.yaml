@@ -14,3 +14,6 @@ spec:
   proxyImage: docker.io/library/nginx:1.31.7 # renovate
   tags:
     - tag:k8s-homelab-service
+  resources:
+    requests:
+      memory: 64Mi

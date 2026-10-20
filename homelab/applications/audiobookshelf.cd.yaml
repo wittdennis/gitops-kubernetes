@@ -32,6 +32,10 @@ spec:
         audiobookshelf:
           timezone: Europe/Berlin
 
+        resources:
+          requests:
+            memory: 128Mi
+
         # the image ships a newer ffmpeg than the version check accepts, which would make it
         # pull its own copy over the network on first start
         binaries:

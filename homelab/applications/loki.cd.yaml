@@ -90,9 +90,34 @@ spec:
             runAsUser: 101
             seccompProfile:
               type: RuntimeDefault
+          resources:
+            requests:
+              memory: 32Mi
+          metrics:
+            resources:
+              requests:
+                memory: 32Mi
 
         chunksCache:
           allocatedMemory: 1024
+
+        resultsCache:
+          allocatedMemory: 256
+
+        memcachedExporter:
+          resources:
+            requests:
+              memory: 32Mi
+
+        sidecar:
+          resources:
+            requests:
+              memory: 96Mi
+
+        lokiCanary:
+          resources:
+            requests:
+              memory: 32Mi
 
         # chart 18.13.0 ships a test.canaryServiceAddress referencing an
         # undefined loki-canary.fullname template, breaking helm template
@@ -102,6 +127,9 @@ spec:
         deploymentMode: SimpleScalable
         backend:
           replicas: 3
+          resources:
+            requests:
+              memory: 128Mi
           persistence:
             size: 10Gi
             storageClass: proxmox-data
@@ -131,6 +159,9 @@ spec:
                   name: s3-settings
         read:
           replicas: 3
+          resources:
+            requests:
+              memory: 512Mi
           extraArgs:
             - -config.expand-env=true
             - -log.level=warn
@@ -157,6 +188,9 @@ spec:
                   name: s3-settings
         write:
           replicas: 3
+          resources:
+            requests:
+              memory: 256Mi
           persistence:
             size: 10Gi
             storageClass: proxmox-data

@@ -26,6 +26,10 @@ spec:
             node.cloudprovider.kubernetes.io/platform: metal
           tolerations:
             - operator: Exists
+          plugin:
+            resources:
+              requests:
+                memory: 32Mi
 
         nodeSelector:
           node-role.kubernetes.io/control-plane: ""

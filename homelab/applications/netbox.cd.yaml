@@ -158,6 +158,9 @@ spec:
           existingSecretKey: cache-password
         worker:
           enabled: true
+          resources:
+            requests:
+              memory: 320Mi
         # housekeeping command removed in netbox 4.7
         housekeeping:
           enabled: false

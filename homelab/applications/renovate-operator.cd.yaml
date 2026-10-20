@@ -22,6 +22,9 @@ spec:
       releaseName: renovate-operator
       valuesObject:
         replicaCount: 2
+        resources:
+          requests:
+            memory: 96Mi
 
         config:
           deleteSuccessfulJobs: true

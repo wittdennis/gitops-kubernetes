@@ -35,6 +35,10 @@ spec:
             htpasswd:
               existingSecret: radicale-auth-htpasswd
 
+        resources:
+          requests:
+            memory: 64Mi
+
         persistence:
           data:
             enabled: true

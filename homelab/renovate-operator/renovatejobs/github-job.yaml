@@ -6,3 +6,4 @@ metadata:
 spec:
   templateRef:
     name: github-default
+  schedule: "45 6-19/2 * * 1-5"

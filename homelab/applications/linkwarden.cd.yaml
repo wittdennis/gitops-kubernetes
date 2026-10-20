@@ -37,6 +37,9 @@ spec:
               clientId: linkwarden
               customName: "Login"
           disablePreservation: true
+        resources:
+          requests:
+            memory: 480Mi
         persistence:
           storageClass: proxmox-data
         route:

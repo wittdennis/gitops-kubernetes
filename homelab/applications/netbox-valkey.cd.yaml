@@ -49,6 +49,9 @@ spec:
           persistence:
             size: 5Gi
             storageClass: proxmox-data
+        resources:
+          requests:
+            memory: 64Mi
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -66,6 +69,9 @@ spec:
           exporter:
             extraEnvs:
               REDIS_USER: "default"
+            resources:
+              requests:
+                memory: 32Mi
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true

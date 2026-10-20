@@ -13,6 +13,9 @@ spec:
     size: 5Gi
     storageClassName: proxmox-data
     reclaimPolicy: Delete
+  resources:
+    requests:
+      memory: 96Mi
   networking:
     tls:
       certificates:
@@ -66,6 +69,9 @@ spec:
   exporter:
     enabled: true
     image: docker.io/oliver006/redis_exporter:v1.94.0 # renovate: datasource=docker depName=oliver006/redis_exporter versioning=docker
+    resources:
+      requests:
+        memory: 32Mi
     securityContext:
       allowPrivilegeEscalation: false
       capabilities:

@@ -89,6 +89,9 @@ spec:
               secretName: azure-key-vault-seal
               secretKey: client-secret
           logFormat: json
+          resources:
+            requests:
+              memory: 160Mi
           networkPolicy:
             enabled: false
           readinessProbe:

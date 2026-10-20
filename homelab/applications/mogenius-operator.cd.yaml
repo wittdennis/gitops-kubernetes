@@ -47,6 +47,13 @@ spec:
             enabled: true
         valkey:
           enabled: false
+        resources:
+          requests:
+            memory: 576Mi
+        nodeMetrics:
+          resources:
+            requests:
+              memory: 128Mi
         persistence:
           storageClass: proxmox-data
         podSecurityContext:

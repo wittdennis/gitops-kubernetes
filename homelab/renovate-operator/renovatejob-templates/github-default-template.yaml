@@ -4,9 +4,11 @@ kind: RenovateJobTemplate
 metadata:
   name: github-default
 spec:
-  schedule: "15 6-19/2 * * 1-5"
   image: ghcr.io/renovatebot/renovate:44.171.1 # renovate
   parallelism: 5
+  resources:
+    requests:
+      memory: 512Mi
   provider:
     name: github
   webhook:

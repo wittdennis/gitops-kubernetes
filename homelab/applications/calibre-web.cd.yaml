@@ -33,6 +33,10 @@ spec:
           - name: TZ
             value: Europe/Berlin
 
+        resources:
+          requests:
+            memory: 224Mi
+
         persistence:
           config:
             enabled: true

@@ -148,7 +148,7 @@ spec:
             memory: 1024Mi
           requests:
             cpu: 100m
-            memory: 512Mi
+            memory: 256Mi
 
         # -- Specifies a livenessProbe
         livenessProbe: {}

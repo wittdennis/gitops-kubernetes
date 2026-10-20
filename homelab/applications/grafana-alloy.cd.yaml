@@ -39,6 +39,9 @@ spec:
           enabled: false
         alloy:
           stabilityLevel: "generally-available"
+          resources:
+            requests:
+              memory: 224Mi
           mounts:
             varlog: true
             extra:
