@@ -38,8 +38,8 @@ spec:
          enabled: true
         deschedulingInterval: 15m
         deschedulerPolicy:
-          metricsProviders:
-            - source: KubernetesMetrics
+          # control-plane nodes are tainted, so their free capacity can never receive evicted pods
+          nodeSelector: "!node-role.kubernetes.io/control-plane"
           profiles:
             - name: default
               pluginConfig:
@@ -67,18 +67,18 @@ spec:
                 - name: RemovePodsViolatingNodeTaints
                 - name: RemovePodsViolatingInterPodAntiAffinity
                 - name: RemovePodsViolatingTopologySpreadConstraint
+                # Utilization is measured on requests, matching what the scheduler places by.
+                # cpu and pods thresholds sit above any realistic value so memory alone decides.
                 - name: LowNodeUtilization
                   args:
-                    metricsUtilization:
-                      source: KubernetesMetrics
                     thresholds:
-                      cpu: 25
-                      memory: 45
-                      pods: 40
-                    targetThresholds:
                       cpu: 70
-                      memory: 85
+                      memory: 65
                       pods: 70
+                    targetThresholds:
+                      cpu: 90
+                      memory: 85
+                      pods: 90
               plugins:
                 balance:
                   enabled:
