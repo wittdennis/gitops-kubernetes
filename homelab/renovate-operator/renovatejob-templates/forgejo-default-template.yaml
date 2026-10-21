@@ -4,7 +4,7 @@ kind: RenovateJobTemplate
 metadata:
   name: forgejo-default
 spec:
-  image: ghcr.io/renovatebot/renovate:44.175.2 # renovate
+  image: ghcr.io/renovatebot/renovate:44.175.5 # renovate
   parallelism: 5
   resources:
     requests:
