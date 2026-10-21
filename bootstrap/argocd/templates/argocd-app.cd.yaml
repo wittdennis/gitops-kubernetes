@@ -137,7 +137,14 @@ spec:
             enabled: true
             minReplicas: 2
             maxReplicas: 5
-            targetMemoryUtilizationPercentage: 80
+            # Go heap does not shrink after manifest rendering, so memory never drives a scale-down.
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 50
           metrics:
             enabled: true
             serviceMonitor:
@@ -145,7 +152,7 @@ spec:
           resources:
             requests:
               cpu: 100m
-              memory: 150Mi
+              memory: 256Mi
         applicationSet:
           replicas: 2
           allowAnyNamespace: true
