@@ -119,8 +119,7 @@ spec:
             requests:
               memory: 32Mi
 
-        # chart 18.13.0 ships a test.canaryServiceAddress referencing an
-        # undefined loki-canary.fullname template, breaking helm template
+        # helm test pod is chart validation tooling, not part of the workload
         test:
           enabled: false
 
