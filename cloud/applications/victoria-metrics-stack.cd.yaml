@@ -483,10 +483,10 @@ spec:
           resources:
             requests:
               cpu: 14m
-              memory: 282Mi
+              memory: 512Mi
             limits:
               cpu: 1000m
-              memory: 512Mi
+              memory: 768Mi
           sidecar:
             dashboards:
               enabled: true
