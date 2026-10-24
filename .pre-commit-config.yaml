@@ -15,6 +15,6 @@ repos:
         files: \.(yaml|yml|yamllint)$
 
   - repo: https://github.com/lukashankeln/glint
-    rev: v0.2.8
+    rev: v0.2.9
     hooks:
       - id: glint
