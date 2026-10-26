@@ -64,6 +64,7 @@ spec:
             api:
               region: "homelab"
               rootDomain: ".s3.derwitt.site"
+              publicEndpoint: "https://s3.derwitt.site"
             web:
               rootDomain: ".derwitt.site"
               index: "index.html"
