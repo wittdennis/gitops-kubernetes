@@ -4,7 +4,7 @@ kind: RenovateJobTemplate
 metadata:
   name: github-default
 spec:
-  image: ghcr.io/renovatebot/renovate:44.184.1 # renovate
+  image: ghcr.io/renovatebot/renovate:44.186.1 # renovate
   parallelism: 5
   resources:
     requests:
