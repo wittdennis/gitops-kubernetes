@@ -33,6 +33,14 @@ spec:
             set -eu
 
             kubectl exec --stdin --tty homelab-garage-0 -- ./garage bucket create {{ inputs.parameters.bucket-name }}
+            # bucket lifecycle endpoints require owner permission (set-bucket-retention)
+            kubectl exec --stdin --tty homelab-garage-0 -- ./garage bucket allow --owner {{ inputs.parameters.bucket-name }} --key "${ADMIN_KEY_ID}"
+        env:
+          - name: ADMIN_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: access-key
+                name: admin-credentials
         volumeMounts:
           - name: tmp
             mountPath: /tmp
