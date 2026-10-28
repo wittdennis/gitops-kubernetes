@@ -5,12 +5,11 @@ metadata:
   name: github-default
 spec:
   image: ghcr.io/renovatebot/renovate:44.190.2 # renovate
+  schedule: "H(35-59) 6-19/2 * * 1-5"
   parallelism: 5
   resources:
     requests:
       memory: 512Mi
-  provider:
-    name: github
   webhook:
     enabled: true
     baseUrl: https://api.renovate.derwitt.dev
@@ -30,9 +29,4 @@ spec:
             "$schema": "https://docs.renovatebot.com/renovate-schema.json",
             "extends": ["local>wittdennis/renovate-config"]
         }
-  githubAppReference:
-    appIdSecretKey: client-id
-    installationIdSecretKey: installation-id
-    pemSecretKey: private-key.pem
-    secretName: github-app-config
   secretRef: renovate-env

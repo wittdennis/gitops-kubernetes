@@ -1,9 +1,0 @@
----
-apiVersion: renovate-operator.mogenius.com/v1alpha1
-kind: RenovateJob
-metadata:
-  name: github-all
-spec:
-  templateRef:
-    name: github-default
-  schedule: "45 6-19/2 * * 1-5"

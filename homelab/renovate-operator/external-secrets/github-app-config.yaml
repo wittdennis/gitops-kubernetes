@@ -23,10 +23,5 @@ spec:
     - remoteRef:
         conversionStrategy: Default
         key: /renovate-operator/github-app
-        property: installation-id
-      secretKey: installation-id
-    - remoteRef:
-        conversionStrategy: Default
-        key: /renovate-operator/github-app
         property: private-key.pem
       secretKey: private-key.pem
