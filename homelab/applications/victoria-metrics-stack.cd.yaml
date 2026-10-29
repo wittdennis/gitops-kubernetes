@@ -360,7 +360,7 @@ spec:
           enabled: true
           spec:
             image:
-              tag: v0.34.1 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
+              tag: v0.34.2 # renovate: datasource=docker depName=prom/alertmanager versioning=docker
             extraArgs:
               # restarted pods get a new IP, so peers on the old address never return
               cluster.reconnect-timeout: 5m
