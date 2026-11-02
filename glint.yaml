@@ -9,6 +9,8 @@ discovery:
     - "vendor/**"
     - "**/.git/**"
     - "**/.terraform/**"
+    # chart lives in a private ghcr package, CI has no pull credentials for it
+    - "homelab/applications/headscale-operator.cd.yaml"
 
 render:
   helm:
