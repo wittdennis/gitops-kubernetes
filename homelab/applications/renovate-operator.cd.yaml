@@ -26,6 +26,9 @@ spec:
           requests:
             memory: 96Mi
 
+        rbac:
+          ownNamespaceOnly: true
+
         config:
           deleteSuccessfulJobs: true
           logStorage:
