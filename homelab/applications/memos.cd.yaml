@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/memos
     path: "."
-    targetRevision: 2.0.0
+    targetRevision: 3.0.0
     helm:
       valuesObject:
         memos:
