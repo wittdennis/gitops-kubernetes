@@ -12,6 +12,13 @@ spec:
   syncPolicy:
     automated:
       prune: true
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: atlantis
+      namespace: atlantis
+      jsonPointers:
+        - /spec/replicas
   source:
     repoURL: https://runatlantis.github.io/helm-charts
     chart: atlantis
