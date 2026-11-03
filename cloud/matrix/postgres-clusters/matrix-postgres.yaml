@@ -1,0 +1,47 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: matrix-postgres
+spec:
+  instances: 2
+  logLevel: warning
+  enablePDB: false
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  bootstrap:
+    initdb:
+      database: synapse
+      owner: synapse
+      # Synapse refuses to start on a database with a non-C collation.
+      localeCollate: C
+      localeCType: C
+  imageCatalogRef:
+    apiGroup: postgresql.cnpg.io
+    kind: ClusterImageCatalog
+    name: postgres
+    major: 18
+  managed:
+    roles:
+      - name: synapse
+        superuser: false
+        createdb: false
+        login: true
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: backup-store
+  resources:
+    requests:
+      cpu: 100m
+      ephemeral-storage: 50Mi
+      memory: 256Mi
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  walStorage:
+    size: 5Gi
+    storageClass: longhorn

@@ -1,0 +1,99 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloud-matrix
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    name: cloud
+    namespace: matrix
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+  source:
+    # Repository: https://github.com/element-hq/ess-helm
+    # Values: https://github.com/element-hq/ess-helm/blob/main/charts/matrix-stack/values.yaml
+    repoURL: oci://ghcr.io/element-hq/ess-helm/matrix-stack
+    path: "."
+    targetRevision: 26.11.0
+    helm:
+      releaseName: matrix
+      valuesObject:
+        # Embedded in every user and room ID, cannot be changed after the first deployment.
+        serverName: jackpoint.xyz
+        certManager:
+          clusterIssuer: jackpoint-xyz-letsencrypt
+        ingress:
+          className: traefik
+          annotations:
+            traefik.ingress.kubernetes.io/router.middlewares: "traefik-redirect-to-https@kubernetescrd"
+        storage:
+          storageClassName: hcloud-volumes
+        # Secrets come from Vault via external-secrets in cloud/matrix.
+        initSecrets:
+          enabled: false
+        deploymentMarkers:
+          enabled: false
+        postgres:
+          enabled: false
+        matrixAuthenticationService:
+          enabled: false
+        elementAdmin:
+          enabled: false
+        elementWeb:
+          ingress:
+            host: chat.jackpoint.xyz
+        synapse:
+          # The media volume is a location-bound Hetzner volume; fsn1 has the most workers to fail over to.
+          nodeSelector:
+            topology.kubernetes.io/region: fsn1
+          ingress:
+            host: matrix.jackpoint.xyz
+          postgres:
+            host: matrix-postgres-rw
+            port: 5432
+            user: synapse
+            database: synapse
+            sslMode: require
+            password:
+              secret: matrix-postgres-app
+              secretKey: password
+          macaroon:
+            secret: matrix-synapse-secrets
+            secretKey: macaroon
+          registrationSharedSecret:
+            secret: matrix-synapse-secrets
+            secretKey: registration-shared-secret
+          signingKey:
+            secret: matrix-synapse-secrets
+            secretKey: signing-key
+        matrixRTC:
+          ingress:
+            host: mrtc.jackpoint.xyz
+          sfu:
+            exposedServices:
+              # The Hetzner LB is TCP only: UDP media goes to the NodePort on the
+              # workers' public IPs (opened in fw-worker), TURN/TLS rides the LB on 443.
+              rtcTcp:
+                enabled: false
+              # Clients use the advertised UDP TURN as their STUN server; without it
+              # LiveKit hands them Google/Twilio STUN servers.
+              turn:
+                enabled: true
+              # LiveKit always advertises turns:<domain>:443, reached via traefik SNI passthrough.
+              turnTLS:
+                enabled: true
+                portType: ClusterIP
+                domain: turn.jackpoint.xyz
+                tlsTerminationOnPod: true
+          livekitAuth:
+            secret:
+              secret: matrix-rtc-secrets
+              secretKey: livekit-secret
+          appserviceRegistration:
+            secret: matrix-rtc-secrets
+            secretKey: registration.yaml

@@ -1,0 +1,24 @@
+---
+# The chart's Valkey runs without authentication.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: matrix-valkey
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: matrix-valkey
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                  - matrix-matrix-rtc-sfu
+                  - matrix-matrix-rtc-authorisation-service
+      ports:
+        - protocol: TCP
+          port: 6379

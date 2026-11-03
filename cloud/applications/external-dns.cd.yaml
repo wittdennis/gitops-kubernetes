@@ -32,6 +32,7 @@ spec:
         txtOwnerId: cluster@hetzner
         sources:
           - ingress
+          - traefik-proxy
         provider:
           name: cloudflare
         env:
