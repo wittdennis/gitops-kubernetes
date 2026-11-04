@@ -134,6 +134,12 @@ spec:
                 portType: ClusterIP
                 domain: turn.jackpoint.xyz
                 tlsTerminationOnPod: true
+            # LiveKit otherwise falls back to its default TCP port and advertises an unreachable candidate.
+            additional:
+              0-no-tcp:
+                config: |
+                  rtc:
+                    tcp_port: 0
           livekitAuth:
             secret:
               secret: matrix-rtc-secrets
