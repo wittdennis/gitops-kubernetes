@@ -32,6 +32,9 @@ spec:
           defaultClass: false
           defaultClassReplicaCount: 3
           defaultFsType: ext4
+        # Volumes are thin-provisioned and mostly empty; at 100% the reserved sizes fill the nodes long before the disks do.
+        defaultSettings:
+          storageOverProvisioningPercentage: 200
         longhornManager:
           log:
             format: json

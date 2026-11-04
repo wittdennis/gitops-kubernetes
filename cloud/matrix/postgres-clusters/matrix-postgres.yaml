@@ -9,6 +9,11 @@ spec:
   enablePDB: false
   primaryUpdateStrategy: unsupervised
   enableSuperuserAccess: false
+  # Same region as Synapse; fsn1 has exactly one worker per instance.
+  affinity:
+    nodeSelector:
+      topology.kubernetes.io/region: fsn1
+    podAntiAffinityType: required
   bootstrap:
     initdb:
       database: synapse
@@ -45,9 +50,10 @@ spec:
       cpu: 100m
       ephemeral-storage: 50Mi
       memory: 256Mi
+  # CNPG replicates between instances, so each volume only needs a local copy.
   storage:
     size: 10Gi
-    storageClass: longhorn
+    storageClass: longhorn-local
   walStorage:
     size: 5Gi
-    storageClass: longhorn
+    storageClass: longhorn-local
