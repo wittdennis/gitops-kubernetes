@@ -76,10 +76,6 @@ spec:
                       algorithm: bcrypt
                     - version: 2
                       algorithm: argon2id
-          # One-shot import of the existing Synapse users into MAS; disable once it has run.
-          syn2mas:
-            enabled: true
-            dryRun: false
         elementAdmin:
           enabled: false
         elementWeb:
