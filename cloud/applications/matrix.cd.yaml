@@ -65,6 +65,17 @@ spec:
             ecdsaPrime256v1:
               secret: matrix-mas-secrets
               secretKey: ecdsa-prime256v1-private-key
+          additional:
+            # Imported Synapse hashes are bcrypt; the highest version hashes new passwords and rehashes on login.
+            0-passwords:
+              config: |
+                passwords:
+                  enabled: true
+                  schemes:
+                    - version: 1
+                      algorithm: bcrypt
+                    - version: 2
+                      algorithm: argon2id
           # One-shot import of the existing Synapse users into MAS; disable once it has run.
           syn2mas:
             enabled: true
