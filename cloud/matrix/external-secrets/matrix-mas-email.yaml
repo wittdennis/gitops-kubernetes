@@ -1,0 +1,32 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: matrix-mas-email
+spec:
+  refreshInterval: "1h"
+  target:
+    name: matrix-mas-email
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      data:
+        email.yaml: |
+          email:
+            from: '"Jackpoint" <noreply@jackpoint.xyz>'
+            reply_to: '"Jackpoint" <noreply@jackpoint.xyz>'
+            transport: smtp
+            mode: starttls
+            hostname: smtp.protonmail.ch
+            port: 587
+            username: noreply@jackpoint.xyz
+            password: {{ .password | toJson }}
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /matrix/mas
+        property: smtp-token
+      secretKey: password

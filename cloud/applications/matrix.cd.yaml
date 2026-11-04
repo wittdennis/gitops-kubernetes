@@ -76,12 +76,22 @@ spec:
                       algorithm: bcrypt
                     - version: 2
                       algorithm: argon2id
+            1-registration:
+              config: |
+                account:
+                  password_registration_enabled: true
+                  password_registration_token_required: true
+                  password_recovery_enabled: true
+            2-email:
+              configSecret: matrix-mas-email
+              configSecretKey: email.yaml
           # One-shot import of the existing Synapse users into MAS; disable once it has run.
           syn2mas:
             enabled: true
             dryRun: false
         elementAdmin:
-          enabled: false
+          ingress:
+            host: admin.jackpoint.xyz
         elementWeb:
           ingress:
             host: chat.jackpoint.xyz
