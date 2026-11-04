@@ -85,10 +85,6 @@ spec:
             2-email:
               configSecret: matrix-mas-email
               configSecretKey: email.yaml
-          # One-shot import of the existing Synapse users into MAS; disable once it has run.
-          syn2mas:
-            enabled: true
-            dryRun: false
         elementAdmin:
           ingress:
             host: admin.jackpoint.xyz
