@@ -115,6 +115,11 @@ spec:
           signingKey:
             secret: matrix-synapse-secrets
             secretKey: signing-key
+          additional:
+            0-user-directory:
+              config: |
+                user_directory:
+                  search_all_users: true
         matrixRTC:
           ingress:
             host: mrtc.jackpoint.xyz
