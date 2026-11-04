@@ -41,7 +41,34 @@ spec:
         postgres:
           enabled: false
         matrixAuthenticationService:
-          enabled: false
+          ingress:
+            host: account.jackpoint.xyz
+          postgres:
+            host: matrix-postgres-rw
+            port: 5432
+            user: mas
+            database: mas
+            sslMode: require
+            password:
+              secret: matrix-mas-postgres
+              secretKey: password
+          encryptionSecret:
+            secret: matrix-mas-secrets
+            secretKey: encryption-secret
+          synapseSharedSecret:
+            secret: matrix-mas-secrets
+            secretKey: synapse-shared-secret
+          privateKeys:
+            rsa:
+              secret: matrix-mas-secrets
+              secretKey: rsa-private-key
+            ecdsaPrime256v1:
+              secret: matrix-mas-secrets
+              secretKey: ecdsa-prime256v1-private-key
+          # One-shot import of the existing Synapse users into MAS; disable once it has run.
+          syn2mas:
+            enabled: true
+            dryRun: false
         elementAdmin:
           enabled: false
         elementWeb:

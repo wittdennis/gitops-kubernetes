@@ -1,0 +1,10 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: matrix-mas
+spec:
+  name: mas
+  owner: mas
+  cluster:
+    name: matrix-postgres

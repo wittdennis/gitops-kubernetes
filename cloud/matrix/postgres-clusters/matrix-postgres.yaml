@@ -27,6 +27,12 @@ spec:
         superuser: false
         createdb: false
         login: true
+      - name: mas
+        superuser: false
+        createdb: false
+        login: true
+        passwordSecret:
+          name: matrix-mas-postgres
   monitoring:
     enablePodMonitor: true
   plugins:

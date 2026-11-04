@@ -1,0 +1,25 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: matrix-mas-postgres
+spec:
+  refreshInterval: "1h"
+  target:
+    name: matrix-mas-postgres
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      type: kubernetes.io/basic-auth
+      data:
+        username: mas
+        password: "{{ .password }}"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /matrix/mas
+        property: postgres-password
+      secretKey: password
