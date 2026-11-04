@@ -120,6 +120,14 @@ spec:
               config: |
                 user_directory:
                   search_all_users: true
+            # Federated media is cached locally and refetched on demand; local uploads are kept.
+            1-media-retention:
+              config: |
+                media_retention:
+                  remote_media_lifetime: 90d
+            2-rooms:
+              config: |
+                forget_rooms_on_leave: true
         matrixRTC:
           ingress:
             host: mrtc.jackpoint.xyz
