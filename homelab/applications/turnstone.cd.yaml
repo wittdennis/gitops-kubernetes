@@ -53,10 +53,6 @@ spec:
                 name: turnstone-secrets
                 key: litellm-key
 
-        # Anthropic aliases go through LiteLLM's /v1/messages route so the
-        # native Anthropic adapter (thinking, adaptive reasoning) stays in use.
-        # The default is local: a cloud model is metered and only used when
-        # picked explicitly.
         config:
           extraToml: |
             [models."xtx:qwen3.6:27b"]
@@ -70,27 +66,6 @@ spec:
             api_key = "${LITELLM_API_KEY}"
             model = "xtx:qwen3-coder:30b"
             context_window = 32768
-
-            [models."anthropic:claude-opus-4-8"]
-            provider = "anthropic-compatible"
-            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
-            api_key = "${LITELLM_API_KEY}"
-            model = "anthropic:claude-opus-4-8"
-            context_window = 200000
-
-            [models."anthropic:claude-sonnet-5"]
-            provider = "anthropic-compatible"
-            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
-            api_key = "${LITELLM_API_KEY}"
-            model = "anthropic:claude-sonnet-5"
-            context_window = 200000
-
-            [models."anthropic:claude-haiku-4-5"]
-            provider = "anthropic-compatible"
-            base_url = "http://litellm.ai-platform.svc.cluster.local:4000"
-            api_key = "${LITELLM_API_KEY}"
-            model = "anthropic:claude-haiku-4-5"
-            context_window = 200000
 
             [model]
             default = "xtx:qwen3.6:27b"

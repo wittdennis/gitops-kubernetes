@@ -54,7 +54,6 @@ spec:
         masterkeySecretKey: masterkey
 
         environmentSecrets:
-          - litellm-provider-keys
           - litellm-otter-token
           - litellm-sso
 
@@ -93,18 +92,11 @@ spec:
           model_list:
             # Name aliases after the real model so the picker shows what it is
             # (and its cost tier).
-            - model_name: anthropic:claude-opus-4-8
+            # Claude Code with a Claude subscription: the client's OAuth token in
+            # Authorization is forwarded upstream, so no api_key here.
+            - model_name: "anthropic/*"
               litellm_params:
-                model: anthropic/claude-opus-4-8
-                api_key: os.environ/ANTHROPIC_API_KEY
-            - model_name: anthropic:claude-sonnet-5
-              litellm_params:
-                model: anthropic/claude-sonnet-5
-                api_key: os.environ/ANTHROPIC_API_KEY
-            - model_name: anthropic:claude-haiku-4-5
-              litellm_params:
-                model: anthropic/claude-haiku-4-5
-                api_key: os.environ/ANTHROPIC_API_KEY
+                model: "anthropic/*"
             # Local Ollama on the Arc B580 Models. One 7B-ish
             # model fits 12 GB at a time; ollama_chat/ auto-swaps them on demand.
             - model_name: b580:llama3.1:8b
