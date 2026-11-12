@@ -8,6 +8,11 @@ metadata:
     policies.kyverno.io/category: Security
     policies.kyverno.io/subject: Pod
 spec:
+  # Name-based matching only holds for pods; autogen copies would match the
+  # owning ReplicaSet and patch pod paths onto it.
+  autogen:
+    podControllers:
+      controllers: []
   matchConstraints:
     resourceRules:
       - apiGroups: [""]
