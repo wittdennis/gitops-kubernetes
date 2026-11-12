@@ -1,0 +1,7 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-homelab-platform
+  namespace: external-secrets
+automountServiceAccountToken: false

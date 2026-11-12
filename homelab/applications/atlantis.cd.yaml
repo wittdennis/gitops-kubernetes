@@ -56,6 +56,22 @@ spec:
               key: forgejo-webhook-secret
         loadEnvFromSecrets:
           - atlantis-environment
+        extraVolumes:
+          - name: vault-tokens
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: homelab
+                    audience: https://vault.derwitt.site
+                    expirationSeconds: 3600
+                - serviceAccountToken:
+                    path: cloud
+                    audience: https://vault.derwitt.dev
+                    expirationSeconds: 3600
+        extraVolumeMounts:
+          - name: vault-tokens
+            mountPath: /var/run/secrets/vault
+            readOnly: true
         volumeClaim:
           dataStorage: 5Gi
           storageClassName: proxmox-data
