@@ -45,16 +45,14 @@ spec:
         exec /shared/argocd-dex rundex
         '''
   mutations:
-    - patchType: ApplyConfiguration
-      applyConfiguration:
+    # command is an atomic list, which ApplyConfiguration may not touch.
+    - patchType: JSONPatch
+      jsonPatch:
         expression: >-
-          Object{
-            spec: Object.spec{
-              containers: [
-                Object.spec.containers{
-                  name: "dex-server",
-                  command: ["/bin/sh", "-c", variables.script]
-                }
-              ]
+          [
+            JSONPatch{
+              op: "add",
+              path: "/spec/containers/" + string(object.spec.containers.map(c, c.name).indexOf("dex-server")) + "/command",
+              value: ["/bin/sh", "-c", variables.script]
             }
-          }
+          ]

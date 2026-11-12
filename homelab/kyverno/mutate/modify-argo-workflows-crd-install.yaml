@@ -43,12 +43,20 @@ spec:
                     allowPrivilegeEscalation: false,
                     runAsNonRoot: true,
                     runAsUser: 1000,
-                    runAsGroup: 1000,
-                    capabilities: Object.spec.containers.securityContext.capabilities{
-                      drop: ["ALL"]
-                    }
+                    runAsGroup: 1000
                   }
                 }
               ]
             }
           }
+    # capabilities.drop is an atomic list, which ApplyConfiguration may not touch.
+    - patchType: JSONPatch
+      jsonPatch:
+        expression: >-
+          [
+            JSONPatch{
+              op: "add",
+              path: "/spec/containers/" + string(object.spec.containers.map(c, c.name).indexOf("apply")) + "/securityContext/capabilities",
+              value: {"drop": ["ALL"]}
+            }
+          ]
