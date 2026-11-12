@@ -45,6 +45,11 @@ spec:
           ATLANTIS_SILENCE_NO_PROJECTS: "true"
           ATLANTIS_SILENCE_VCS_STATUS_NO_PLANS: "true"
           ATLANTIS_SILENCE_VCS_STATUS_NO_PROJECTS: "true"
+          ARM_USE_OIDC: "true"
+          ARM_OIDC_TOKEN_FILE_PATH: /var/run/secrets/azure/tokens/azure-identity-token
+          ARM_CLIENT_ID: 05d9b68b-e6ce-4653-892e-95ed50f6ec48
+          ARM_TENANT_ID: 6ddad1f1-1d3f-43bf-ad7a-445edf40fd73
+          ARM_SUBSCRIPTION_ID: 0bec3e6b-1e0f-4f16-adf3-ae7405bbfb55
         environmentSecrets:
           - name: ATLANTIS_GITEA_TOKEN
             secretKeyRef:
@@ -68,9 +73,20 @@ spec:
                     path: cloud
                     audience: https://vault.derwitt.dev
                     expirationSeconds: 3600
+          # Exchanged with Entra ID by the azurerm and azuread providers and the state backend.
+          - name: azure-identity-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: azure-identity-token
+                    audience: api://AzureADTokenExchange
+                    expirationSeconds: 3600
         extraVolumeMounts:
           - name: vault-tokens
             mountPath: /var/run/secrets/vault
+            readOnly: true
+          - name: azure-identity-token
+            mountPath: /var/run/secrets/azure/tokens
             readOnly: true
         volumeClaim:
           dataStorage: 5Gi

@@ -67,27 +67,31 @@ spec:
               secret:
                 defaultMode: 420
                 secretName: vault-server-cert
+            # Exchanged with Entra ID for Key Vault access through workload identity federation.
+            - name: azure-identity-token
+              projected:
+                sources:
+                  - serviceAccountToken:
+                      path: azure-identity-token
+                      audience: api://AzureADTokenExchange
+                      expirationSeconds: 3600
           volumeMounts:
             - mountPath: /tmp
               name: tmp
             - mountPath: /vault/userconfig/vault-server-cert
               name: vault-server-cert
               readOnly: true
+            - mountPath: /var/run/secrets/azure/tokens
+              name: azure-identity-token
+              readOnly: true
           extraEnvironmentVars:
             VAULT_SEAL_TYPE: azurekeyvault
             VAULT_AZUREKEYVAULT_VAULT_NAME: pseud0r4ndom-local-vault
             VAULT_AZUREKEYVAULT_KEY_NAME: hashicorp-vault-seal-key
             VAULT_CACERT: /vault/userconfig/vault-server-cert/ca.crt
-          extraSecretEnvironmentVars:
-            - envName: AZURE_TENANT_ID
-              secretName: azure-key-vault-seal
-              secretKey: tenant-id
-            - envName: AZURE_CLIENT_ID
-              secretName: azure-key-vault-seal
-              secretKey: client-id
-            - envName: AZURE_CLIENT_SECRET
-              secretName: azure-key-vault-seal
-              secretKey: client-secret
+            AZURE_TENANT_ID: 6ddad1f1-1d3f-43bf-ad7a-445edf40fd73
+            AZURE_CLIENT_ID: bfd31406-2ab2-4b08-b04e-af14fe4c8b3c
+            AZURE_FEDERATED_TOKEN_FILE: /var/run/secrets/azure/tokens/azure-identity-token
           logFormat: json
           resources:
             requests:
