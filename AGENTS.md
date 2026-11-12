@@ -33,6 +33,16 @@ non-root, dropped capabilities, secrets sourced from Vault via external-secrets,
 and SSO in front of human UIs all remain non-negotiable for these workloads,
 exactly as everywhere else.
 
+### ServiceAccount token validation
+
+ServiceAccount tokens on `homelab` and `cloud` carry a public issuer on Azure
+blob storage (`https://pseud0r4ndomoidc.blob.core.windows.net/oidc/<cluster>`),
+published so Entra ID can verify them for workload identity federation.
+Components that validate these tokens verify them against the API server: via
+TokenReview, or via its own `https://kubernetes.default.svc/openid/v1/jwks`.
+That keeps every cluster working while Azure is unreachable. Vault's
+cross-cluster JWT mounts pin the signing keys in Terraform for the same reason.
+
 ## Agent skills
 
 ### Issue tracker
