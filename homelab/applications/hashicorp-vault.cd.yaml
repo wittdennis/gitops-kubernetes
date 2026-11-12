@@ -4,10 +4,6 @@ kind: Application
 metadata:
   name: homelab-hashicorp-vault
   namespace: argocd
-  annotations:
-    # The AZURE_* env entries are owned by an earlier client-side apply; a server-side diff
-    # cannot drop their valueFrom and fails validation.
-    argocd.argoproj.io/compare-options: ServerSideDiff=false
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
