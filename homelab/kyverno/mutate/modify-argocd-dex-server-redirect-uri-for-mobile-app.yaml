@@ -1,6 +1,6 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
 metadata:
   name: modify-argocd-dex-server-redirect-uri-for-mobile-app
   annotations:
@@ -8,43 +8,53 @@ metadata:
     policies.kyverno.io/category: Security
     policies.kyverno.io/subject: Pod
 spec:
-  rules:
-    - name: modify-argocd-dex-server-redirect-uri-for-mobile-app
-      match:
-        any:
-          - resources:
-              kinds:
-                - Pod
-              names:
-                - argocd-dex-server-*
-              operations:
-                - CREATE
-      mutate:
-        patchStrategicMerge:
-          spec:
-            containers:
-              - name: dex-server
-                command:
-                  - /bin/sh
-                  - -c
-                  # dex parses its config once at startup and `argocd-dex rundex`
-                  # spawns it immediately after writing /tmp/dex.yaml, so patching
-                  # the file from a background loop loses the race. Shadow the dex
-                  # binary on PATH instead: rundex resolves it via PATH, which makes
-                  # the wrapper the last hook before the config is read. exec keeps
-                  # the PID so rundex can still signal dex on settings changes, and
-                  # the patch is re-applied on every regenerate/restart cycle.
-                  - |
-                    set -eu
-                    mkdir -p /tmp/bin
-                    cat >/tmp/bin/dex <<'EOF'
-                    #!/bin/sh
-                    for cfg; do :; done
-                    grep -q 'argocd://auth/callback' "$cfg" ||
-                      sed -i 's|  - http://localhost:8085/auth/callback|  - http://localhost:8085/auth/callback\n  - argocd://auth/callback|' "$cfg"
-                    exec /usr/local/bin/dex "$@"
-                    EOF
-                    chmod +x /tmp/bin/dex
-                    PATH=/tmp/bin:$PATH
-                    export PATH
-                    exec /shared/argocd-dex rundex
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+  matchConditions:
+    # ReplicaSet pods only carry generateName at admission time.
+    - name: is-dex-server-pod
+      expression: >-
+        (has(object.metadata.name) && object.metadata.name.startsWith('argocd-dex-server-')) ||
+        (has(object.metadata.generateName) && object.metadata.generateName.startsWith('argocd-dex-server-'))
+  variables:
+    # dex parses its config once at startup and `argocd-dex rundex`
+    # spawns it immediately after writing /tmp/dex.yaml, so patching
+    # the file from a background loop loses the race. Shadow the dex
+    # binary on PATH instead: rundex resolves it via PATH, which makes
+    # the wrapper the last hook before the config is read. exec keeps
+    # the PID so rundex can still signal dex on settings changes, and
+    # the patch is re-applied on every regenerate/restart cycle.
+    - name: script
+      expression: |-
+        r'''set -eu
+        mkdir -p /tmp/bin
+        cat >/tmp/bin/dex <<'EOF'
+        #!/bin/sh
+        for cfg; do :; done
+        grep -q 'argocd://auth/callback' "$cfg" ||
+          sed -i 's|  - http://localhost:8085/auth/callback|  - http://localhost:8085/auth/callback\n  - argocd://auth/callback|' "$cfg"
+        exec /usr/local/bin/dex "$@"
+        EOF
+        chmod +x /tmp/bin/dex
+        PATH=/tmp/bin:$PATH
+        export PATH
+        exec /shared/argocd-dex rundex
+        '''
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{
+            spec: Object.spec{
+              containers: [
+                Object.spec.containers{
+                  name: "dex-server",
+                  command: ["/bin/sh", "-c", variables.script]
+                }
+              ]
+            }
+          }

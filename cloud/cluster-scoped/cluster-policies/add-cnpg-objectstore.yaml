@@ -1,6 +1,6 @@
 ---
-apiVersion: kyverno.io/v1
-kind: ClusterPolicy
+apiVersion: policies.kyverno.io/v1
+kind: GeneratingPolicy
 metadata:
   name: add-cnpg-objectstore
   annotations:
@@ -9,30 +9,31 @@ metadata:
       Automatically creates a CNPG ObjectStore when a namespace is labeled with big-direkt.de/postgres-backup: "true"
       This can probably be removed once ClusterObjectStore is available, see: https://github.com/cloudnative-pg/plugin-barman-cloud/issues/448
 spec:
-  background: false
-  rules:
-    - name: create-objectstore
-      skipBackgroundRequests: true
-      match:
-        any:
-          - resources:
-              kinds:
-                - Namespace
-              operations:
-                - CREATE
-                - UPDATE
-              selector:
-                matchExpressions:
-                  - key: postgres-backup
-                    operator: In
-                    values: ["true"]
-      generate:
-        synchronize: true
-        apiVersion: barmancloud.cnpg.io/v1
-        kind: ObjectStore
-        name: backup-store
-        namespace: "{{request.object.metadata.name}}"
-        data:
+  evaluation:
+    generateExisting:
+      enabled: true
+    synchronize:
+      enabled: true
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["namespaces"]
+    objectSelector:
+      matchExpressions:
+        - key: postgres-backup
+          operator: In
+          values: ["true"]
+  generate:
+    - template:
+        interpolate: cel
+        value: |
+          apiVersion: barmancloud.cnpg.io/v1
+          kind: ObjectStore
+          metadata:
+            name: backup-store
+            namespace: ((object.metadata.name))
           spec:
             configuration:
               destinationPath: s3://pseud0random-cnpg-backups-cloud/
