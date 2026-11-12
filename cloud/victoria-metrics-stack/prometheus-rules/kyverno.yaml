@@ -1,0 +1,33 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kyverno-rules
+spec:
+  groups:
+    - name: kyverno.rules
+      rules:
+        - alert: KyvernoAdmissionRejected
+          annotations:
+            description: "Kyverno webhook {{ $labels.name }} rejected {{ $value | humanize }} {{ $labels.operation }} request(s) in the last 10 minutes."
+            summary: "Kyverno rejected {{ $labels.operation }} requests via {{ $labels.name }}."
+          # Fine-grained webhook names embed the policy name; covers enforced
+          # violations and policies that fail to evaluate under failurePolicy Fail.
+          expr: >-
+            sum by (name, operation) (
+              increase(apiserver_admission_webhook_rejection_count{name=~".*kyverno.*"}[10m])
+            ) > 0
+          labels:
+            severity: warning
+        - alert: KyvernoPolicyError
+          annotations:
+            description: "Kyverno policy {{ $labels.policy_name }} failed to evaluate against {{ $labels.resource_kind }} in {{ $labels.resource_namespace }} during {{ $labels.execution_cause }}."
+            summary: "Kyverno policy {{ $labels.policy_name }} is erroring."
+          # Catches errors that never surface as rejections: failurePolicy Ignore,
+          # background scans and generate/mutate-existing runs.
+          expr: >-
+            sum by (policy_name, policy_namespace, resource_kind, resource_namespace, execution_cause) (
+              increase({__name__=~"kyverno_.+_policy_results_total", result="error"}[10m])
+            ) > 0
+          labels:
+            severity: warning
