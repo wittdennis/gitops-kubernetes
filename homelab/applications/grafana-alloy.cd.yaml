@@ -34,7 +34,7 @@ spec:
           volumes:
             extra:
               - name: tmp
-                emptydir: {}
+                emptyDir: {}
           tolerations:
             - effect: NoSchedule
               key: node-role.kubernetes.io/control-plane
