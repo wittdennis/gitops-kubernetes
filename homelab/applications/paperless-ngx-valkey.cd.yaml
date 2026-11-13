@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/valkey-io/valkey-helm/valkey
     path: "."
-    targetRevision: 0.12.1
+    targetRevision: 1.0.0
     helm:
       releaseName: paperless-ngx-valkey
       valuesObject:
