@@ -1,0 +1,41 @@
+---
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: RenovateJobTemplate
+metadata:
+  name: forgejo-juvenate
+spec:
+  image: ghcr.io/mogenius/juvenate:0.12.0
+  parallelism: 5
+  resources:
+    requests:
+      memory: 512Mi
+  provider:
+    name: forgejo
+    endpoint: https://git.derwitt.site
+  webhook:
+    enabled: true
+    authentication:
+      enabled: true
+      secretRef:
+        name: renovate-webhook-token
+        key: token
+    sync:
+      enabled: true
+  extraEnv:
+    - name: RENOVATE_BRANCH_PREFIX
+      value: juvenate/
+    - name: RENOVATE_DEPENDENCY_DASHBOARD_TITLE
+      value: Dependency Dashboard (juvenate)
+    - name: RENOVATE_HOST_RULES
+      value: '[{"matchHost":"git.derwitt.site","allowInternal":true}]'
+    - name: LOG_LEVEL
+      value: debug
+    - name: RENOVATE_REPORT_TYPE
+      value: "logging"
+    - name: RENOVATE_ONBOARDING_CONFIG
+      value: |
+        {
+          "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+          "extends": ["local>renovate/config#main"],
+        }
+  secretRef: renovate-env

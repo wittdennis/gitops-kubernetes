@@ -1,0 +1,12 @@
+---
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: GitHubAppInstallationSet
+metadata:
+  name: github-app-juvenate
+spec:
+  templateRef:
+    name: github-juvenate
+  app:
+    secretName: github-app-config
+    appIdSecretKey: client-id
+    pemSecretKey: private-key.pem

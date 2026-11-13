@@ -1,0 +1,11 @@
+---
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: RenovateJob
+metadata:
+  name: forgejo-containers-juvenate
+spec:
+  templateRef:
+    name: forgejo-juvenate
+  schedule: "0 6-19/2 * * 1-5"
+  discoveryFilters:
+    - "containers/**"
