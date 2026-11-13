@@ -5,7 +5,7 @@ metadata:
   name: mogenius-operator
 spec:
   shards: 3
-  replicas: 1
+  replicasPerShard: 1
   image: docker.io/valkey/valkey:9.1.3 # renovate: datasource=docker depName=valkey/valkey versioning=docker
   persistence:
     size: 5Gi
@@ -14,23 +14,25 @@ spec:
   resources:
     requests:
       memory: 96Mi
-  users:
-    # The operator manages the _operator/_exporter/_replication system users
-    # itself; only the application user needs declaring.
-    - name: default
-      passwordSecret:
-        name: mogenius-operator-valkey-credentials
+  acl:
+    users:
+      # The operator manages the _operator/_exporter/_replication system users
+      # itself; only the application user needs declaring.
+      - name: default
+        password:
+          secret:
+            name: mogenius-operator-valkey-credentials
+            keys:
+              - default-password
         keys:
-          - default-password
-      keys:
-        readWrite:
-          - "*"
-      channels:
-        patterns:
-          - "*"
-      commands:
-        allow:
-          - "@all"
+          readWrite:
+            - "*"
+        channels:
+          patterns:
+            - "*"
+        commands:
+          allow:
+            - "@all"
   scheduling:
     topologySpreadConstraints:
       - maxSkew: 1
