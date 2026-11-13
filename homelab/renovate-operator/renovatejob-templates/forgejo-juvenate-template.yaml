@@ -36,6 +36,6 @@ spec:
       value: |
         {
           "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-          "extends": ["local>renovate/config#main"],
+          "extends": ["local>renovate/config#main"]
         }
   secretRef: renovate-env
