@@ -45,6 +45,11 @@ spec:
             - github.com
             - git.derwitt.site
             - api.renovate.derwitt.dev
+          allowedImages:
+            - renovate/renovate
+            - docker.io/renovate/renovate
+            - ghcr.io/renovatebot/renovate
+            - ghcr.io/mogenius/juvenate
 
         externalKeyValueStore:
           host: renovate-operator-valkey.renovate-operator.svc.cluster.local
