@@ -6,6 +6,8 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   project: k8s-platform
   ignoreDifferences:
@@ -25,6 +27,8 @@ spec:
   syncPolicy:
     automated:
       prune: true
+    syncOptions:
+      - ServerSideApply=true
   destination:
     name: cloud
     namespace: vertical-pod-autoscaler

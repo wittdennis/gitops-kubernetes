@@ -6,6 +6,8 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   project: k8s-platform
   syncPolicy:
@@ -13,6 +15,8 @@ spec:
       prune: true
   # the backup workflow scales this to 0 for the duration of the backup; without this, a
   # sync landing mid-backup reasserts replicas: 1 and races the backup pod's PVC attach
+    syncOptions:
+      - ServerSideApply=true
   ignoreDifferences:
     - group: apps
       kind: Deployment

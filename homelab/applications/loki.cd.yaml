@@ -6,11 +6,15 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   project: k8s-platform
   syncPolicy:
     automated:
       prune: true
+    syncOptions:
+      - ServerSideApply=true
   destination:
     name: homelab
     namespace: loki

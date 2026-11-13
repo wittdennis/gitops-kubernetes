@@ -5,6 +5,7 @@ metadata:
   name: homelab-node-feature-discovery
   namespace: argocd
   annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
     # NFD CRDs (NodeFeatureRule) must exist before the Intel GPU chart's rule,
     # which is applied in sync-wave 2.
     argocd.argoproj.io/sync-wave: "1"

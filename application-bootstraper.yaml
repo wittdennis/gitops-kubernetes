@@ -15,13 +15,14 @@ spec:
       name: "{{ nameNormalized }}-application-bootstraper"
       annotations:
         argocd.argoproj.io/sync-wave: "1"
+        argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
     spec:
       project: k8s-platform
       syncPolicy:
         automated:
           prune: true
         syncOptions:
-          - Replace=true
+          - ServerSideApply=true
       source:
         repoURL: https://git.derwitt.site/homelab/yggdrasil
         targetRevision: HEAD

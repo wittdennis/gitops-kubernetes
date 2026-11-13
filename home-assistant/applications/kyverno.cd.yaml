@@ -8,6 +8,8 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
     - pre-delete-finalizer.argocd.argoproj.io
     - pre-delete-finalizer.argocd.argoproj.io/cleanup
+  annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   project: k8s-platform
   ignoreDifferences:

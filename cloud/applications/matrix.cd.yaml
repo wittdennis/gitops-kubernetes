@@ -6,6 +6,8 @@ metadata:
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   destination:
     name: cloud
@@ -14,6 +16,8 @@ spec:
   syncPolicy:
     automated:
       prune: true
+    syncOptions:
+      - ServerSideApply=true
   source:
     # Repository: https://github.com/element-hq/ess-helm
     # Values: https://github.com/element-hq/ess-helm/blob/main/charts/matrix-stack/values.yaml
