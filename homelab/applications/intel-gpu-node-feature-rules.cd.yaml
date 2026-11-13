@@ -5,7 +5,6 @@ metadata:
   name: homelab-intel-gpu-node-feature-rules
   namespace: argocd
   annotations:
-    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
     # NodeFeatureRule CRD is installed by the NFD app (sync-wave 1).
     argocd.argoproj.io/sync-wave: "2"
   finalizers:

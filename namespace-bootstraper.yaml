@@ -15,7 +15,6 @@ spec:
       name: "{{ nameNormalized }}-namespace-bootstraper"
       annotations:
         argocd.argoproj.io/sync-wave: "0"
-        argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
     spec:
       project: k8s-platform
       syncPolicy:

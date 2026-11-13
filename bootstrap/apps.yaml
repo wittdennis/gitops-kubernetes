@@ -6,8 +6,6 @@ kind: Application
 metadata:
   name: apps
   namespace: argocd
-  annotations:
-    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
 spec:
   project: default
   syncPolicy:

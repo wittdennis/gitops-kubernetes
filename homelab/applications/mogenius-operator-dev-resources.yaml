@@ -4,9 +4,6 @@ kind: Application
 metadata:
   name: homelab-mogenius-operator-dev-resources
   namespace: argocd
-  annotations:
-    # Argo client-side syncs record field ownership as argocd-controller with operation Update.
-    argocd.argoproj.io/client-side-apply-migration-manager: argocd-controller
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
