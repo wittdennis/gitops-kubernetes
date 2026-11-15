@@ -18,7 +18,7 @@ spec:
     namespace: proxmox-csi
   source:
     repoURL: oci://ghcr.io/sergelogvinov/charts/proxmox-csi-plugin
-    targetRevision: 0.5.15
+    targetRevision: 0.5.16
     path: "."
     helm:
       releaseName: proxmox-csi-plugin
