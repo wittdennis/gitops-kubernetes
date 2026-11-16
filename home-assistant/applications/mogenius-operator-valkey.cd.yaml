@@ -40,11 +40,12 @@ spec:
               passwordKey: "replication-password"
         replica:
           enabled: true
-          replicas: 2
+          replicas: 3
           replicationUser: "replication"
-          persistence:
-            size: 5Gi
-            storageClass: proxmox-data
+        persistence:
+          enabled: true
+          size: 5Gi
+          storageClass: proxmox-data
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -60,8 +61,9 @@ spec:
         metrics:
           enabled: true
           exporter:
-            extraEnvs:
-              REDIS_USER: "default"
+            extraEnv:
+              - name: REDIS_USER
+                value: "default"
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true

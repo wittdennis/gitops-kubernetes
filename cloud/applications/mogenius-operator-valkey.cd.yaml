@@ -38,13 +38,8 @@ spec:
             replication:
               permissions: "~* &* +psync +replconf +ping"
               passwordKey: "replication-password"
-        replica:
-          enabled: false
-          replicas: 2
-          replicationUser: "replication"
-          persistence:
-            size: 5Gi
-            storageClass: longhorn
+        # emptyDir only, so no RWO volume forces the chart default Recreate
+        deploymentStrategy: RollingUpdate
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -60,8 +55,9 @@ spec:
         metrics:
           enabled: true
           exporter:
-            extraEnvs:
-              REDIS_USER: "default"
+            extraEnv:
+              - name: REDIS_USER
+                value: "default"
             securityContext:
               allowPrivilegeEscalation: false
               readOnlyRootFilesystem: true
