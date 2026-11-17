@@ -48,7 +48,6 @@ spec:
             - docker.io/renovate/renovate
             - ghcr.io/renovatebot/renovate
             - ghcr.io/mogenius/juvenate
-            - ghcr.io/mogenius/juvenate-full
 
         externalKeyValueStore:
           host: renovate-operator-valkey.renovate-operator.svc.cluster.local
