@@ -28,7 +28,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/radicale
     path: "."
-    targetRevision: 2.1.6
+    targetRevision: 2.1.7
     helm:
       valuesObject:
         config:
