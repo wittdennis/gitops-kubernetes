@@ -19,7 +19,7 @@ spec:
   source:
     repoURL: https://charts.loft.sh
     chart: vcluster
-    targetRevision: 0.37.7
+    targetRevision: 0.38.0
     helm:
       releaseName: vcluster-mogenius-playground
       valuesObject:
