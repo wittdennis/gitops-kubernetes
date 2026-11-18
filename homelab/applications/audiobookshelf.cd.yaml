@@ -28,7 +28,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/audiobookshelf
     path: "."
-    targetRevision: 1.1.4
+    targetRevision: 1.1.5
     helm:
       valuesObject:
         audiobookshelf:
