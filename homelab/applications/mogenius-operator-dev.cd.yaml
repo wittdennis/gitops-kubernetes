@@ -39,7 +39,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/mogenius/helm-charts/mogenius-operator-dev
     path: "."
-    targetRevision: 2.35.0-develop.888
+    targetRevision: 2.35.0-develop.889
     helm:
       releaseName: mogenius-operator-dev
       valuesObject:
