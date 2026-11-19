@@ -47,5 +47,5 @@ spec:
     size: 10Gi
     storageClass: proxmox-data
   walStorage:
-    size: 20Gi
+    size: 50Gi
     storageClass: proxmox-data
