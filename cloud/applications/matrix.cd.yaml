@@ -21,7 +21,7 @@ spec:
     # Values: https://github.com/element-hq/ess-helm/blob/main/charts/matrix-stack/values.yaml
     repoURL: oci://ghcr.io/element-hq/ess-helm/matrix-stack
     path: "."
-    targetRevision: 26.11.1
+    targetRevision: 26.11.2
     helm:
       releaseName: matrix
       valuesObject:
