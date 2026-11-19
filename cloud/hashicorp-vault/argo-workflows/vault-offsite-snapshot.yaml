@@ -106,7 +106,7 @@ spec:
           seccompProfile:
             type: RuntimeDefault
         container:
-          image: docker.io/restic/restic:0.19.1 # renovate
+          image: docker.io/restic/restic:0.20.0 # renovate
           command: [sh, -c]
           args:
             - |
