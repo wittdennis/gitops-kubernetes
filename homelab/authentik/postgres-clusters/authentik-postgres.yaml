@@ -29,6 +29,7 @@ spec:
       - pg_partman_bgw
     parameters:
       max_connections: "200"
+      max_slot_wal_keep_size: "10GB"
   monitoring:
     enablePodMonitor: true
   plugins:
