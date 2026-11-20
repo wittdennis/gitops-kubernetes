@@ -330,13 +330,3 @@ spec:
           - group: ""
             kind: Secret
             name: turnstone-derwitt-site-tls
-
-    - name: tls-vcluster-mogenius-playground-routes
-      port: 443
-      protocol: TLS
-      hostname: "vcluster-mogenius-playground.derwitt.site"
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Passthrough
