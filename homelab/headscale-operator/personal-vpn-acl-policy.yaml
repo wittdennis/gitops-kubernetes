@@ -25,31 +25,63 @@ spec:
       attr: ["suggest-exit-node", "suggest-exit-node-ui"]
   grants:
     # Full mesh for the core tailnet: everyone except tag:parents and tag:home-assistant.
-    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer"]
-      dst: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer", "tag:headscale", "tag:forgejo"]
+    # tag:dns is only a dst: it never initiates connections.
+    - src:
+        [
+          "autogroup:member",
+          "tag:hypervisor",
+          "tag:ansible",
+          "tag:loadbalancer",
+        ]
+      dst:
+        [
+          "autogroup:member",
+          "tag:hypervisor",
+          "tag:ansible",
+          "tag:dns",
+          "tag:loadbalancer",
+          "tag:headscale",
+          "tag:forgejo",
+        ]
       ip: ["*"]
-    - src: ["autogroup:member", "tag:dns", "tag:ansible"]
+    # Peer visibility is bidirectional, so this puts every node in tag:dns's netmap
+    # and its MagicDNS resolves the whole tailnet without tag:dns needing outbound access.
+    - src: ["*"]
+      dst: ["tag:dns"]
+      ip: ["udp:53", "tcp:53"]
+    - src: ["autogroup:member", "tag:ansible"]
       dst: ["tag:parents"]
       ip: ["*"]
-    # One-way: tag:home-assistant is never a src in any grant, so it cannot initiate connections.
-    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns"]
+    # One-way: tag:home-assistant is only a src towards tag:dns:53.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible"]
       dst: ["tag:home-assistant"]
       ip: ["*"]
     # One-way: tag:hetzner is only a src for the loadbalancer and k8s-*-service grants below.
-    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:loadbalancer", "tag:headscale"]
+    - src:
+        [
+          "autogroup:member",
+          "tag:hypervisor",
+          "tag:ansible",
+          "tag:loadbalancer",
+          "tag:headscale",
+        ]
       dst: ["tag:hetzner"]
       ip: ["*"]
     - src: ["tag:hetzner", "tag:headscale"]
-      dst: ["tag:loadbalancer", "tag:hetzner", "tag:forgejo"]
+      dst: ["tag:loadbalancer", "tag:hetzner"]
       ip: ["*"]
-    # One-way: tag:k8s-home-assistant-service is never a src in any grant.
-    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:hetzner"]
+    # Container image pulls from the forgejo registry.
+    - src: ["tag:hetzner", "tag:headscale"]
+      dst: ["tag:forgejo"]
+      ip: ["tcp:443"]
+    # One-way: tag:k8s-home-assistant-service is only a src towards tag:dns:53.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:hetzner"]
       dst: ["tag:k8s-home-assistant-service"]
-      ip: ["*"]
-    # One-way: tag:k8s-homelab-service is never a src in any grant.
-    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:dns", "tag:hetzner"]
+      ip: ["tcp:443"]
+    # One-way: tag:k8s-homelab-service is only a src towards tag:dns:53.
+    - src: ["autogroup:member", "tag:hypervisor", "tag:ansible", "tag:hetzner"]
       dst: ["tag:k8s-homelab-service"]
-      ip: ["*"]
+      ip: ["tcp:443"]
     - src: ["autogroup:member", "tag:ansible"]
       dst: ["tag:exit-node"]
       ip: ["*"]
