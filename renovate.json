@@ -16,6 +16,13 @@
       "ignoreUnstable": false,
       "automerge": true,
       "allowedVersions": "/^\\d+\\.\\d+\\.\\d+-develop\\.\\d+$/"
+    },
+    {
+      "description": "Each ClusterImageCatalog entry is pinned to the postgres major in its `major` field; the image's tag major is the postgres major, so a new postgres major is added as a new entry, never bumped into an existing one",
+      "matchFileNames": ["**/cluster-image-catalogs/**"],
+      "matchPackageNames": ["git.derwitt.site/containers/cloudnative-pg-postgres"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
     }
   ]
 }

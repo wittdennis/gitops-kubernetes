@@ -6,4 +6,6 @@ metadata:
 spec:
   images:
     - major: 18
-      image: ghcr.io/wittdennis/cloudnative-pg-postgres-18:18.4.17 # renovate
+      image: git.derwitt.site/containers/cloudnative-pg-postgres:18.4.17 # renovate
+    - major: 19
+      image: git.derwitt.site/containers/cloudnative-pg-postgres:19.0.0 # renovate
