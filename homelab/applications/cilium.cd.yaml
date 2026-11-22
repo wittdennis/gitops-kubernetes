@@ -48,6 +48,10 @@ spec:
         ipam:
           mode: kubernetes
         kubeProxyReplacement: true
+        # gVisor pods run their own network stack, which the socket-level service translation
+        # never sees; pods get per-packet ClusterIP translation instead.
+        socketLB:
+          hostNamespaceOnly: true
         resources:
           requests:
             memory: 384Mi
