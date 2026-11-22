@@ -73,8 +73,9 @@ spec:
             entries:
               claude-subscription-directsdk-experimental:
                 settings:
-                  # Plan limit reached means stop, never paid extra usage.
-                  extra_usage: stop
+                  # Token logins cannot read plan limits, so `stop` refuses every request.
+                  # Overage is governed by the Team organization's extra usage setting.
+                  extra_usage: notify
                   # Each call is a Claude Code process of ~250 MB.
                   max_concurrent: 2
           terminal:
