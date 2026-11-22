@@ -60,10 +60,12 @@ spec:
             value: "@pseud0random:jackpoint.xyz"
           - name: MATRIX_E2EE_MODE
             value: required
-          # shortcut: bootstraps cross-signing once and writes the recovery key to the volume,
-          # replace with MATRIX_RECOVERY_KEY from Vault once the key is stored there.
-          - name: MATRIX_RECOVERY_KEY_OUTPUT_FILE
-            value: /opt/data/matrix-recovery-key
+          # Re-verifies the bot's cross-signing identity after a device or crypto store change.
+          - name: MATRIX_RECOVERY_KEY
+            valueFrom:
+              secretKeyRef:
+                name: hermes-secrets
+                key: matrix-recovery-key
 
         config:
           model:
