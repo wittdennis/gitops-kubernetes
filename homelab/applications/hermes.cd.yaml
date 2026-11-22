@@ -1,0 +1,96 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-hermes
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: ai-platform
+  source:
+    repoURL: oci://git.derwitt.site/containers/helm-charts/hermes-agent
+    path: "."
+    targetRevision: 0.1.0
+    helm:
+      releaseName: hermes-agent
+      valuesObject:
+        # Upstream image plus the Claude Code CLI and the Claude subscription model provider.
+        image:
+          registry: git.derwitt.site
+          repository: containers/hermes-agent
+          tag: 0.1.0
+
+        runtimeClassName: gvisor
+
+        apiServer:
+          keySecret:
+            name: hermes-secrets
+
+        extraEnv:
+          - name: LITELLM_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: hermes-secrets
+                key: litellm-key
+          # Long-lived token from `claude setup-token`; Claude Code prefers it over a stored login.
+          - name: CLAUDE_CODE_OAUTH_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hermes-secrets
+                key: claude-oauth-token
+          # The access token is bound to one device, which keeps the E2EE identity stable.
+          - name: MATRIX_HOMESERVER
+            value: https://matrix.jackpoint.xyz
+          - name: MATRIX_ACCESS_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: hermes-secrets
+                key: matrix-access-token
+          # Federation is open, so this is the only gate on who drives the agent.
+          - name: MATRIX_ALLOWED_USERS
+            value: "@pseud0random:jackpoint.xyz"
+          - name: MATRIX_E2EE_MODE
+            value: required
+
+        config:
+          model:
+            provider: claude-subscription-directsdk-experimental
+            default: sonnet
+          providers:
+            litellm:
+              base_url: http://litellm.ai-platform.svc.cluster.local:4000/v1
+              api_key: ${LITELLM_API_KEY}
+          plugins:
+            entries:
+              claude-subscription-directsdk-experimental:
+                settings:
+                  # Plan limit reached means stop, never paid extra usage.
+                  extra_usage: stop
+                  # Each call is a Claude Code process of ~250 MB.
+                  max_concurrent: 2
+          terminal:
+            backend: local
+          security:
+            allow_lazy_installs: false
+
+        persistence:
+          storageClass: proxmox-data
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            memory: 3Gi
+
+        nodeSelector:
+          derwitt.site/ai: "true"

@@ -1,0 +1,22 @@
+---
+# Selecting the hermes pod for both directions puts it into Cilium's default
+# deny. The remaining hermes-* policies are the explicit allows.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes-allow-internal-traffic
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hermes-agent
+      app.kubernetes.io/instance: hermes-agent
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: hermes-agent
+            app.kubernetes.io/instance: hermes-agent
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: hermes-agent
+            app.kubernetes.io/instance: hermes-agent

@@ -55,6 +55,7 @@ spec:
     - oci://ghcr.io/valkey-io/valkey-helm/valkey-operator
     - https://charts.loft.sh
     - oci://git.derwitt.site/containers/helm-charts/*
+    - https://github.com/kubernetes-sigs/agent-sandbox
   sourceNamespaces:
     - argocd
   destinations:

@@ -1,0 +1,50 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-agent-sandbox
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: agent-sandbox-system
+  # No published chart repository; the chart ships in-tree with each release tag.
+  source:
+    repoURL: https://github.com/kubernetes-sigs/agent-sandbox
+    targetRevision: v1.0.12
+    path: helm
+    helm:
+      releaseName: agent-sandbox
+      valuesObject:
+        namespace:
+          create: false
+        image:
+          tag: v1.0.12
+        controller:
+          # SandboxTemplate, SandboxClaim and SandboxWarmPool.
+          extensions: true
+        podSecurityContext:
+          runAsNonRoot: true
+          # distroless:nonroot
+          runAsUser: 65532
+          seccompProfile:
+            type: RuntimeDefault
+        containerSecurityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        resources:
+          requests:
+            cpu: 10m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
