@@ -95,6 +95,8 @@ spec:
             backend: local
           security:
             allow_lazy_installs: false
+            # Network policies decide which private addresses are reachable.
+            allow_private_urls: true
 
         persistence:
           storageClass: proxmox-data

@@ -1,0 +1,19 @@
+---
+# git.derwitt.site resolves to its LAN address, which the public egress policy
+# excludes along with the rest of the private ranges.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: hermes-allow-forgejo-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hermes-agent
+      app.kubernetes.io/instance: hermes-agent
+  egress:
+    - toCIDR:
+        - 10.0.10.19/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
