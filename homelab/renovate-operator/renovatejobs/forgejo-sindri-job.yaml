@@ -1,0 +1,11 @@
+---
+apiVersion: renovate-operator.mogenius.com/v1alpha1
+kind: RenovateJob
+metadata:
+  name: forgejo-sindri
+spec:
+  templateRef:
+    name: forgejo-default
+  schedule: "12 7-19/2 * * 1-5"
+  discoveryFilters:
+    - "sindri/**"

@@ -6,6 +6,6 @@ metadata:
 spec:
   templateRef:
     name: forgejo-juvenate-full
-  schedule: "0 6-19/2 * * 1-5"
+  schedule: "0 7-19/2 * * 1-5"
   discoveryFilters:
     - "obsidian-plugins/**"

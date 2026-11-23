@@ -6,6 +6,6 @@ metadata:
 spec:
   templateRef:
     name: forgejo-default
-  schedule: "30 6-19/2 * * 1-5"
+  schedule: "36 7-19/2 * * 1-5"
   discoveryFilters:
     - "workflows/**"

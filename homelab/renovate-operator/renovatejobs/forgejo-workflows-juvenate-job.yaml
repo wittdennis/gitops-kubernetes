@@ -6,6 +6,6 @@ metadata:
 spec:
   templateRef:
     name: forgejo-juvenate
-  schedule: "30 6-19/2 * * 1-5"
+  schedule: "48 7-19/2 * * 1-5"
   discoveryFilters:
     - "workflows/**"
