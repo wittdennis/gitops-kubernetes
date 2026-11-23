@@ -84,6 +84,13 @@ spec:
                   extra_usage: notify
                   # Each call is a Claude Code process of ~250 MB.
                   max_concurrent: 2
+          # MCP servers are managed centrally in LiteLLM; the key's MCP permissions decide which
+          # servers and tools Hermes sees.
+          mcp_servers:
+            litellm:
+              url: http://litellm.ai-platform.svc.cluster.local:4000/mcp/
+              headers:
+                Authorization: Bearer ${LITELLM_API_KEY}
           terminal:
             backend: local
           security:

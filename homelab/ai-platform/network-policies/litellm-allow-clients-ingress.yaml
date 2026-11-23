@@ -1,0 +1,30 @@
+---
+# In-cluster consumers of the model and MCP gateway.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: litellm-allow-clients-ingress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: litellm
+      app.kubernetes.io/instance: litellm
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: open-webui
+            app.kubernetes.io/instance: open-webui
+        - matchLabels:
+            app.kubernetes.io/name: hermes-agent
+            app.kubernetes.io/instance: hermes-agent
+        - matchLabels:
+            app.kubernetes.io/name: turnstone
+            app.kubernetes.io/instance: turnstone
+        - matchLabels:
+            app.kubernetes.io/name: paperless-ngx
+            app.kubernetes.io/instance: homelab-paperless-ngx
+            io.kubernetes.pod.namespace: paperless-ngx
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP

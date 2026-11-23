@@ -1,0 +1,18 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: litellm-allow-postgres-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: litellm
+      app.kubernetes.io/instance: litellm
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: litellm-postgres
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP

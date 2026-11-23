@@ -1,0 +1,19 @@
+---
+# ollama.otter.derwitt.site is the 7900 XTX workstation on the LAN, which the
+# public egress policy excludes along with the rest of the private ranges.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: litellm-allow-otter-ollama-egress
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: litellm
+      app.kubernetes.io/instance: litellm
+  egress:
+    - toCIDR:
+        - 10.0.10.24/32
+      toPorts:
+        - ports:
+            - port: "11434"
+              protocol: TCP
