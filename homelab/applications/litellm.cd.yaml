@@ -192,13 +192,11 @@ spec:
             require_auth_for_metrics_endpoint: false
           # Penpot authenticates by a per-user token in the URL, so every key granted this
           # server acts as that one Penpot user. Config-defined servers are read-only in the
-          # UI; keys and teams get them by being assigned the access group there.
+          # UI; access is granted through a UI-managed access group that lists this server.
           mcp_servers:
             penpot:
               url: os.environ/PENPOT_MCP_URL
               transport: http
-              access_groups:
-                - penpot
           general_settings:
             master_key: os.environ/PROXY_MASTER_KEY
             # UI admins sign in via authentik SSO only; the master key stays API-only.
