@@ -18,9 +18,6 @@ spec:
             app.kubernetes.io/name: hermes-agent
             app.kubernetes.io/instance: hermes-agent
         - matchLabels:
-            app.kubernetes.io/name: turnstone
-            app.kubernetes.io/instance: turnstone
-        - matchLabels:
             app.kubernetes.io/name: paperless-ngx
             app.kubernetes.io/instance: homelab-paperless-ngx
             io.kubernetes.pod.namespace: paperless-ngx

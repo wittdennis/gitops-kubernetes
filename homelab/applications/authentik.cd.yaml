@@ -67,7 +67,6 @@ spec:
             - authentik-blueprint-mfa-check
             - authentik-blueprint-headscale
             - authentik-blueprint-litellm
-            - authentik-blueprint-turnstone
             - authentik-blueprint-penpot
         authentik:
           postgresql:
