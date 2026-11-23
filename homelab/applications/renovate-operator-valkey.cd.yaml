@@ -38,9 +38,10 @@ spec:
             replication:
               permissions: "~* &* +psync +replconf +ping"
               passwordKey: "replication-password"
+        # replica mode keeps the StatefulSet so pod-0's existing volume stays the primary
         replica:
           enabled: true
-          replicas: 3
+          replicas: 1
           replicationUser: "replication"
         persistence:
           enabled: true
