@@ -58,6 +58,7 @@ spec:
         environmentSecrets:
           - litellm-otter-token
           - litellm-sso
+          - litellm-penpot-mcp
 
         envVars:
           PROXY_BASE_URL: https://llm.derwitt.site
@@ -189,6 +190,12 @@ spec:
           litellm_settings:
             callbacks: ["prometheus"]
             require_auth_for_metrics_endpoint: false
+          # Penpot authenticates by a per-user token in the URL, so every key granted this
+          # server acts as that one Penpot user.
+          mcp_servers:
+            penpot:
+              url: os.environ/PENPOT_MCP_URL
+              transport: http
           general_settings:
             master_key: os.environ/PROXY_MASTER_KEY
             # A backend that is down most of the day would otherwise be probed forever, and

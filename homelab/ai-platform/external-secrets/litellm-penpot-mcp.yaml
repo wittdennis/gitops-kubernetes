@@ -1,0 +1,27 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: litellm-penpot-mcp
+spec:
+  refreshInterval: "1h0m0s"
+  secretStoreRef:
+    name: vault-backend-platform
+    kind: ClusterSecretStore
+  target:
+    name: litellm-penpot-mcp
+    creationPolicy: Owner
+    deletionPolicy: Delete
+    # Env var name must match the os.environ/<NAME> reference in the LiteLLM proxy_config
+    # mcp_servers (see litellm.cd.yaml). The token identifies a single Penpot user.
+    template:
+      engineVersion: v2
+      mergePolicy: Replace
+      data:
+        PENPOT_MCP_URL: "http://homelab-penpot-mcp.penpot.svc.cluster.local:4401/mcp?userToken={{ .token | urlquery }}"
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        key: /ai-platform/penpot-mcp
+        property: user-token
+      secretKey: token
