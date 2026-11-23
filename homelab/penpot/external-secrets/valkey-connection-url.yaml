@@ -16,7 +16,7 @@ spec:
       engineVersion: v2
       mergePolicy: Replace
       data:
-        url: "redis://penpot:{{ .penpot_password }}@penpot-valkey.penpot.svc.cluster.local:6379"
+        url: "redis://penpot:{{ .penpot_password | urlquery }}@penpot-valkey.penpot.svc.cluster.local:6379"
   data:
     - remoteRef:
         conversionStrategy: Default
