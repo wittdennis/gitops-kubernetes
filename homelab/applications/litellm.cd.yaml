@@ -198,6 +198,8 @@ spec:
               transport: http
           general_settings:
             master_key: os.environ/PROXY_MASTER_KEY
+            # UI admins sign in via authentik SSO only; the master key stays API-only.
+            disable_env_credential_login: true
             # A backend that is down most of the day would otherwise be probed forever, and
             # the answer is already known from the fallback rate.
             background_health_checks: false
