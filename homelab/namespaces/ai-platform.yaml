@@ -5,3 +5,4 @@ metadata:
   name: ai-platform
   labels:
     pod-security.kubernetes.io/enforce: restricted
+    postgres-backup: "true"

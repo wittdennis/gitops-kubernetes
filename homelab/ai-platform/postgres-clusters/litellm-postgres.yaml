@@ -29,8 +29,11 @@ spec:
         login: true
   monitoring:
     enablePodMonitor: true
-  # LiteLLM state (virtual keys, spend logs) is recreatable; provider/master keys
-  # live in Vault, so no barman objectstore backup is configured here.
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: backup-store
   resources:
     requests:
       cpu: 100m

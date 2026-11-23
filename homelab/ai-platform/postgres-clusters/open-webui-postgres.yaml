@@ -34,8 +34,8 @@ spec:
         login: true
   monitoring:
     enablePodMonitor: true
-  # Vectors are recreatable from the source corpus, same reasoning as
-  # litellm-postgres — no barman objectstore backup configured here.
+  # Vectors are recreatable from the source corpus, so no barman objectstore
+  # backup is configured here.
   resources:
     requests:
       cpu: 100m
