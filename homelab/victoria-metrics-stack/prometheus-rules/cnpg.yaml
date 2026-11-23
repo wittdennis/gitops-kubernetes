@@ -1,0 +1,23 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cnpg-rules
+spec:
+  groups:
+    - name: cnpg.rules
+      rules:
+        - alert: CNPGWALArchivingFailing
+          annotations:
+            description: "WAL archiving of {{ $labels.namespace }}/{{ $labels.pod }} has only failed for 30m. Point-in-time recovery is stale and the WAL volume keeps filling."
+            summary: "CNPG WAL archiving of {{ $labels.namespace }}/{{ $labels.pod }} is failing."
+          # Unarchived WAL stays on the WAL volume until it is full and Postgres stops.
+          # seconds_since_last_archival is -1 while a cluster has never archived, so
+          # failed and archived counts are compared instead.
+          expr: >-
+            sum by (namespace, pod) (increase(cnpg_pg_stat_archiver_failed_count[15m])) > 0
+            unless
+            sum by (namespace, pod) (increase(cnpg_pg_stat_archiver_archived_count[15m])) > 0
+          for: 15m
+          labels:
+            severity: critical
