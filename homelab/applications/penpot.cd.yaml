@@ -1,0 +1,166 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-penpot
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+  # the backup workflow scales the backend to 0 while restic reads the assets volume
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: homelab-penpot-backend
+      namespace: penpot
+      jsonPointers:
+        - /spec/replicas
+  destination:
+    name: homelab
+    namespace: penpot
+  source:
+    repoURL: oci://ghcr.io/penpot/penpot-helm/penpot
+    path: "."
+    targetRevision: 1.14.0
+    helm:
+      valuesObject:
+        config:
+          publicUri: https://design.derwitt.site
+          # oidc-registration lets first-time SSO users in while password sign-up stays off
+          flags: "disable-registration enable-oidc-registration enable-login-with-oidc disable-login-with-password disable-email-verification enable-smtp enable-mcp"
+          telemetryEnabled: false
+          existingSecret: penpot-secret-key
+          secretKeys:
+            apiSecretKey: key
+          postgresql:
+            host: penpot-postgres-rw.penpot.svc.cluster.local
+            database: penpot
+            existingSecret: penpot-postgres-app
+            secretKeys:
+              usernameKey: username
+              passwordKey: password
+          redis:
+            existingSecret: valkey-connection-url
+            secretKeys:
+              redisUriKey: url
+          smtp:
+            enabled: true
+            defaultFrom: "Penpot <noreply@derwitt.site>"
+            host: smtp.protonmail.ch
+            port: "587"
+            username: noreply@derwitt.site
+            tls: true
+            existingSecret: email-settings
+            secretKeys:
+              passwordKey: password
+          providers:
+            existingSecret: penpot-oidc
+            secretKeys:
+              oidcClientSecretKey: client-secret
+            oidc:
+              enabled: true
+              baseURI: https://auth.derwitt.site/application/o/penpot/
+              clientID: penpot
+              roles: ""
+              scopes: "openid profile email"
+
+        backend:
+          image:
+            repository: docker.io/penpotapp/backend
+          # assets PVC is RWO
+          updateStrategy:
+            type: Recreate
+          extraEnvs:
+            # auth.derwitt.site resolves to a private address, which the SSRF guard blocks for OIDC discovery
+            - name: PENPOT_SSRF_ALLOWED_HOSTS
+              value: auth.derwitt.site
+          podSecurityContext:
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: 1Gi
+
+        frontend:
+          image:
+            repository: docker.io/penpotapp/frontend
+          podSecurityContext:
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: 64Mi
+
+        exporter:
+          image:
+            repository: docker.io/penpotapp/exporter
+          podSecurityContext:
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: 256Mi
+
+        mcp:
+          image:
+            repository: docker.io/penpotapp/mcp
+          podSecurityContext:
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: 128Mi
+
+        adminConsole:
+          image:
+            repository: docker.io/penpotapp/admin-console
+          podSecurityContext:
+            fsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containerSecurityContext:
+            capabilities:
+              drop:
+                - ALL
+
+        persistence:
+          assets:
+            storageClass: proxmox-data
+            size: 20Gi
+
+        gateway:
+          enabled: true
+          hostnames:
+            - design.derwitt.site
+          parentRefs:
+            - group: gateway.networking.k8s.io
+              kind: Gateway
+              name: derwitt-site-gateway
+              namespace: traefik

@@ -1,0 +1,24 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: homelab-penpot-resources
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: k8s-platform
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:
+      - ServerSideApply=true
+  destination:
+    name: homelab
+    namespace: penpot
+  source:
+    repoURL: https://git.derwitt.site/homelab/yggdrasil
+    targetRevision: HEAD
+    path: "homelab/penpot"
+    directory:
+      recurse: true

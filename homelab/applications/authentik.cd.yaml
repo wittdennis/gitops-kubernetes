@@ -68,6 +68,7 @@ spec:
             - authentik-blueprint-headscale
             - authentik-blueprint-litellm
             - authentik-blueprint-turnstone
+            - authentik-blueprint-penpot
         authentik:
           postgresql:
             host: authentik-postgres-rw.authentik.svc.cluster.local

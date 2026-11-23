@@ -56,6 +56,7 @@ spec:
     - https://charts.loft.sh
     - oci://git.derwitt.site/containers/helm-charts/*
     - https://github.com/kubernetes-sigs/agent-sandbox
+    - oci://ghcr.io/penpot/penpot-helm/penpot
   sourceNamespaces:
     - argocd
   destinations:

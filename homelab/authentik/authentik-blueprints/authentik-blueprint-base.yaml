@@ -41,6 +41,13 @@ data:
       - model: authentik_core.group
         state: present
         identifiers:
+          name: Penpot Users
+        attrs:
+          users:
+            - !Find [authentik_core.user, [username, dennis]]
+      - model: authentik_core.group
+        state: present
+        identifiers:
           name: Headscale Admins
         attrs:
           users:
