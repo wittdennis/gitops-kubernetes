@@ -28,7 +28,7 @@ spec:
   source:
     repoURL: oci://ghcr.io/wittdennis/helm-charts/calibre-web
     path: "."
-    targetRevision: 1.1.7
+    targetRevision: 1.1.8
     helm:
       valuesObject:
         env:
