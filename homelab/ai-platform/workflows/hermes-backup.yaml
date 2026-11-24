@@ -1,0 +1,105 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: hermes-backup
+spec:
+  schedules:
+    - "46 3 * * *"
+  concurrencyPolicy: "Replace"
+  startingDeadlineSeconds: 0
+  successfulJobsHistoryLimit: 1
+  workflowSpec:
+    entrypoint: main
+    onExit: exit-handler
+    podMetadata:
+      labels:
+        network-policy/allow-default-tenant-s3-traffic: apply
+        network-policy/allow-kube-apiserver-traffic: apply
+        network-policy/allow-backup-egress: apply
+    securityContext:
+      runAsNonRoot: true
+      seccompProfile:
+        type: RuntimeDefault
+    serviceAccountName: hermes-workflows
+    templates:
+      - name: main
+        dag:
+          tasks:
+            - name: scale-down
+              arguments:
+                parameters:
+                  - name: name
+                    value: hermes-agent
+                  - name: namespace
+                    value: ai-platform
+                  - name: replicaCount
+                    value: "0"
+                  - name: type
+                    value: statefulset
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true
+
+            - name: backup
+              dependencies: [scale-down]
+              templateRef:
+                template: restic-backup
+                name: restic-backup
+                clusterScope: true
+              arguments:
+                parameters:
+                  - name: host
+                    value: hermes
+                  - name: repository
+                    value: s3:https://nbg1.your-objectstorage.com/pseud0random-backups/hermes
+                  - name: secretName
+                    value: hermes-backup-settings
+                  - name: paths
+                    value: /mnt/data
+                  - name: excludes
+                    value: >-
+                      --exclude /mnt/data/.cache
+                      --exclude /mnt/data/cache
+                      --exclude /mnt/data/audio_cache
+                      --exclude /mnt/data/image_cache
+                      --exclude /mnt/data/models_dev_cache.json
+                      --exclude /mnt/data/logs
+                  - name: retention
+                    value: --keep-daily 7 --keep-weekly 4 --keep-monthly 6
+                  # Hermes data is owner-only (0600) under uid 10000.
+                  - name: podSpecPatch
+                    value: |
+                      volumes:
+                        - name: data
+                          persistentVolumeClaim:
+                            claimName: data-hermes-agent-0
+                            readOnly: true
+                      containers:
+                        - name: main
+                          securityContext:
+                            runAsUser: 10000
+                            runAsGroup: 10000
+                          volumeMounts:
+                            - name: data
+                              mountPath: /mnt/data
+                              readOnly: true
+
+      - name: exit-handler
+        steps:
+          - - name: scale-up
+              arguments:
+                parameters:
+                  - name: name
+                    value: hermes-agent
+                  - name: namespace
+                    value: ai-platform
+                  - name: replicaCount
+                    value: "1"
+                  - name: type
+                    value: statefulset
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true

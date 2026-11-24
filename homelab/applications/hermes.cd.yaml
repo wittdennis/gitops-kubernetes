@@ -13,6 +13,15 @@ spec:
       prune: true
     syncOptions:
       - ServerSideApply=true
+  # The backup workflow scales this to 0 for the duration of the backup; a sync landing
+  # mid-backup would reassert replicas: 1 and race the backup pod's PVC attach.
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: hermes-agent
+      namespace: ai-platform
+      jsonPointers:
+        - /spec/replicas
   destination:
     name: homelab
     namespace: ai-platform
