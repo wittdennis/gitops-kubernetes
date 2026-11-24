@@ -4,7 +4,7 @@ kind: RenovateJobTemplate
 metadata:
   name: forgejo-juvenate
 spec:
-  image: ghcr.io/mogenius/juvenate:0.17.5 # renovate
+  image: ghcr.io/mogenius/juvenate:0.17.6 # renovate
   parallelism: 5
   resources:
     requests:
