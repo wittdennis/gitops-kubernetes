@@ -77,6 +77,16 @@ spec:
           # assets PVC is RWO
           updateStrategy:
             type: Recreate
+          # backend and frontend both mount the RWO assets PVC, so they must share a node
+          podLabels:
+            penpot.derwitt.site/assets-volume: "true"
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: kubernetes.io/hostname
+                  labelSelector:
+                    matchLabels:
+                      penpot.derwitt.site/assets-volume: "true"
           extraEnvs:
             # auth.derwitt.site resolves to a private address, which the SSRF guard blocks for OIDC discovery
             - name: PENPOT_SSRF_ALLOWED_HOSTS
@@ -96,6 +106,15 @@ spec:
         frontend:
           image:
             repository: docker.io/penpotapp/frontend
+          podLabels:
+            penpot.derwitt.site/assets-volume: "true"
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - topologyKey: kubernetes.io/hostname
+                  labelSelector:
+                    matchLabels:
+                      penpot.derwitt.site/assets-volume: "true"
           podSecurityContext:
             fsGroup: 1001
             seccompProfile:
