@@ -27,7 +27,7 @@ spec:
         namespace:
           create: false
         image:
-          tag: v1.0.12
+          tag: v1.0.12 # renovate: datasource=docker depName=registry.k8s.io/agent-sandbox/agent-sandbox-controller versioning=docker
         controller:
           # SandboxTemplate, SandboxClaim and SandboxWarmPool.
           extensions: true
