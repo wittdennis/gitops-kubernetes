@@ -52,12 +52,28 @@ spec:
                 name: scale-workload
                 clusterScope: true
 
+            - name: scale-down-frontend
+              arguments:
+                parameters:
+                  - name: name
+                    value: homelab-penpot-frontend
+                  - name: namespace
+                    value: penpot
+                  - name: replicaCount
+                    value: "0"
+                  - name: type
+                    value: deployment
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true
+
             - name: retrieve-db-backup
-              dependencies: [scale-down]
+              dependencies: [scale-down, scale-down-frontend]
               template: retrieve-db-backups
 
             - name: upload-backup
-              dependencies: [scale-down, retrieve-db-backup]
+              dependencies: [scale-down, scale-down-frontend, retrieve-db-backup]
               templateRef:
                 template: restic-backup
                 name: restic-backup
@@ -168,6 +184,21 @@ spec:
                 parameters:
                   - name: name
                     value: homelab-penpot-backend
+                  - name: namespace
+                    value: penpot
+                  - name: replicaCount
+                    value: "1"
+                  - name: type
+                    value: deployment
+              templateRef:
+                template: scale-workload
+                name: scale-workload
+                clusterScope: true
+            - name: scale-up-frontend
+              arguments:
+                parameters:
+                  - name: name
+                    value: homelab-penpot-frontend
                   - name: namespace
                     value: penpot
                   - name: replicaCount
