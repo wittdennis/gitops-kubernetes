@@ -5,7 +5,7 @@ metadata:
   name: forgejo-sindri-juvenate
 spec:
   templateRef:
-    name: forgejo-juvenate
+    name: forgejo-juvenate-full
   schedule: "24 7-19/2 * * 1-5"
   discoveryFilters:
     - "sindri/**"
