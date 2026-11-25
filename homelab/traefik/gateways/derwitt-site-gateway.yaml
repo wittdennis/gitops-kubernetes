@@ -247,6 +247,20 @@ spec:
             kind: Secret
             name: wildcard-s3-derwitt-site-tls
 
+    - name: https-garage-admin-routes
+      port: 443
+      protocol: HTTPS
+      hostname: "garage.derwitt.site"
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: garage-admin-derwitt-site-tls
+
     - name: https-links-routes
       port: 443
       protocol: HTTPS

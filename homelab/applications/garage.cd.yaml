@@ -122,7 +122,6 @@ spec:
               port: 3900
             web:
               port: 3902
-            # NOTE: the admin API is excluded for now as it is not consistent across nodes
 
         routes:
           s3:
@@ -136,6 +135,15 @@ spec:
               hostnames:
                 - s3.derwitt.site
                 - "*.s3.derwitt.site"
+          admin:
+            enabled: true
+            parentRefs:
+              - group: gateway.networking.k8s.io
+                kind: Gateway
+                name: derwitt-site-gateway
+                namespace: traefik
+            hostnames:
+              - garage.derwitt.site
 
         ingress:
           s3:
