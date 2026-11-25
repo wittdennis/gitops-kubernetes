@@ -36,7 +36,7 @@ spec:
         image:
           registry: git.derwitt.site
           repository: containers/hermes-agent
-          tag: 0.1.2 # renovate: datasource=docker depName=git.derwitt.site/containers/hermes-agent versioning=docker
+          tag: 0.1.3 # renovate: datasource=docker depName=git.derwitt.site/containers/hermes-agent versioning=docker
 
         runtimeClassName: gvisor
 
