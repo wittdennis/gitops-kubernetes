@@ -23,5 +23,5 @@ spec:
   # (and other device labels) based on detected hardware.
   source:
     repoURL: https://github.com/intel/intel-device-plugins-for-kubernetes
-    targetRevision: v0.37.1
+    targetRevision: v0.37.2
     path: deployments/nfd/overlays/node-feature-rules
