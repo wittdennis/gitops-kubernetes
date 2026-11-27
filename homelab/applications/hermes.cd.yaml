@@ -28,7 +28,7 @@ spec:
   source:
     repoURL: oci://git.derwitt.site/containers/helm-charts/hermes-agent
     path: "."
-    targetRevision: 0.1.2
+    targetRevision: 0.2.0
     helm:
       releaseName: hermes-agent
       valuesObject:

@@ -37,6 +37,9 @@ spec:
                     value: "0"
                   - name: type
                     value: statefulset
+                  # Hermes drains in-flight work on SIGTERM for up to 1890s (chart default).
+                  - name: timeout
+                    value: 1980s
               templateRef:
                 template: scale-workload
                 name: scale-workload
